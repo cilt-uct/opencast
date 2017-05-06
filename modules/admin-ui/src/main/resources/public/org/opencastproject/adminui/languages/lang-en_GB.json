@@ -816,7 +816,13 @@
                   "WRONG_METADATA": "Metadata needs correction",
                   "WRONG_SERIES_PUBLICATION": "Wrong series or publication channel",
                   "WRONG_WORKFLOW": "Wrong workflow",
-                  "PROCESSING_FAILURE": "Processing failure"
+                  "PROCESSING_FAILURE":"Processing failure",
+                  "RECORDING_FAILURE" : "Recording failure",
+                  "CONSENT" : "Consent required",
+                  "MEDIA_UNUSABLE" : "Unusable audio or video",
+                  "EVENT_INFO" : "Event information",
+                  "MEDIA_INFO" : "Media information",
+                  "MEDIA_QUALITY" : "Poor quality audio or video"
                }
             },
             "METADATA": {
