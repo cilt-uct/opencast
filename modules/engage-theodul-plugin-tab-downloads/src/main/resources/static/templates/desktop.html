@@ -66,7 +66,7 @@
                         <td></td>
                    <% } %>
 		  <td>
-                    <a class="btn btn-default" href="<%= item.url +
+                    <a class="btn btn-default" href="<%= item.url.replace('http://media', 'https://media') +
 				downloadURL + type + "." +
 				item.mimetype.substring(item.mimetype.lastIndexOf("/")+1,
 				item.mimetype.length).replace('mpeg', 'mp3') %>" role="button" download="<%= item.id %>">
