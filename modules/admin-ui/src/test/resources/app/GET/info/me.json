@@ -87,6 +87,8 @@
     "adminRole": "ROLE_ADMIN",
     "properties": {
       "adminui.chunksize": "2024",
+      "adminui.minSegmentLength": "2",
+      "adminui.series_prepopulate.enable": "false",
       "adminui.user.external_role_display": "false",
       "engageui.annotations.enable": "false",
       "engageui.link_download.enable": "false",
@@ -98,6 +100,9 @@
       "org.opencastproject.admin.help.restdocs.url": "/rest_docs.html",
       "org.opencastproject.admin.mediamodule.url": "/engage/ui",
       "player": "/engage/theodul/ui/core.html",
+      "admin.editor.segment.start_length": 3000,
+      "admin.editor.segment.end_length": 3000,
+      "admin.editor.segment.minimum_length": 500,
       "admin.shortcut.editor.split_at_current_time": "v",
       "admin.shortcut.editor.play_ending_of_current_segment": "n",
       "admin.shortcut.editor.clear_list": "ctrl+backspace",
