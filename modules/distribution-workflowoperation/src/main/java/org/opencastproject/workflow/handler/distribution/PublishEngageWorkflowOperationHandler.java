@@ -322,7 +322,7 @@ public class PublishEngageWorkflowOperationHandler extends AbstractWorkflowOpera
           // nothing to do here. other publication strategies can be added to this list later on
           break;
         default:
-          retractFromEngage(mediaPackage);
+          retractFromEngage(mediaPackage, false);
       }
 
       List<Job> jobs = new ArrayList<Job>();
@@ -725,10 +725,10 @@ public class PublishEngageWorkflowOperationHandler extends AbstractWorkflowOpera
  * Removes every Publication for Searchindex from Mediapackage
  * Removes Mediapackage from Searchindex
    * @param mediaPackage Mediapackage
-   * @param mediaPackageForSearch Mediapackage prepared for searchIndex
+   * @param doPersistenceUpdate whether the mediapackage should be removed from the persistence layer as well
    * @throws WorkflowOperationException
    */
-  private void retractFromEngage(MediaPackage mediaPackage) throws WorkflowOperationException {
+  private void retractFromEngage(MediaPackage mediaPackage, boolean doPersistenceUpdate) throws WorkflowOperationException {
     List<Job> jobs = new ArrayList<Job>();
     Set<String> elementIds = new HashSet<String>();
     try {
@@ -757,7 +757,7 @@ public class PublishEngageWorkflowOperationHandler extends AbstractWorkflowOpera
 
         Job deleteSearchJob = null;
         logger.info("Retracting already published Elements for Mediapackage: {}", mediaPackage.getIdentifier().toString());
-        deleteSearchJob = searchService.delete(mediaPackage.getIdentifier().toString());
+        deleteSearchJob = searchService.delete(mediaPackage.getIdentifier().toString(), doPersistenceUpdate);
         if (deleteSearchJob != null) {
           jobs.add(deleteSearchJob);
         }
@@ -773,6 +773,16 @@ public class PublishEngageWorkflowOperationHandler extends AbstractWorkflowOpera
     } catch (UnauthorizedException | NotFoundException ex) {
       logger.error("Retraction failed of Mediapackage: { }", mediaPackage.getIdentifier().toString(), ex);
     }
+  }
+
+  /**
+ * Removes every Publication for Searchindex from Mediapackage
+ * Removes Mediapackage from Searchindex
+   * @param mediaPackage Mediapackage
+   * @throws WorkflowOperationException
+   */
+  private void retractFromEngage(MediaPackage mediaPackage) throws WorkflowOperationException {
+    retractFromEngage(mediaPackage, true);
   }
 
   /** OSGi DI */
