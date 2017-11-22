@@ -405,20 +405,6 @@ public final class SearchServiceImpl extends AbstractJobProducer implements Sear
   }
 
   /**
-   * {@inheritDoc}
-   *
-   * @see org.opencastproject.search.api.SearchService#delete(java.lang.String,boolean)
-   */
-  public Job delete(String mediaPackageId, boolean doPersistenceUpdate) throws SearchException, UnauthorizedException, NotFoundException {
-    try {
-      return serviceRegistry.createJob(JOB_TYPE, Operation.Delete.toString(),
-                                         Arrays.asList(new String[]{mediaPackageId, Boolean.toString(doPersistenceUpdate)}), deleteJobLoad);
-    } catch (ServiceRegistryException e) {
-      throw new SearchException(e);
-    }
-  }
-
-  /**
    * Immediately removes the given mediapackage from the search service.
    *
    * @param mediaPackageId
@@ -431,7 +417,7 @@ public final class SearchServiceImpl extends AbstractJobProducer implements Sear
    * @throws NotFoundException
    *           if the mediapackage did not exist
    */
-  public boolean deleteSynchronously(String mediaPackageId, boolean doPersistenceUpdate) throws SearchException, UnauthorizedException,
+  public boolean deleteSynchronously(String mediaPackageId) throws SearchException, UnauthorizedException,
           NotFoundException {
     SearchResult result;
     try {
@@ -445,18 +431,16 @@ public final class SearchServiceImpl extends AbstractJobProducer implements Sear
       logger.info("Removing mediapackage {} from search index", mediaPackageId);
 
       Date now = new Date();
-      if (doPersistenceUpdate) {
-        try {
-          persistence.deleteMediaPackage(mediaPackageId, now);
-          logger.info("Removed mediapackage {} from search persistence", mediaPackageId);
-        } catch (NotFoundException e) {
-          // even if mp not found in persistence, it might still exist in search index.
-          logger.info("Could not find mediapackage with id {} in persistence, but will try remove it from index, anyway.",
-                  mediaPackageId);
-        } catch (SearchServiceDatabaseException e) {
-          logger.error("Could not delete media package with id {} from persistence storage", mediaPackageId);
-          throw new SearchException(e);
-        }
+      try {
+        persistence.deleteMediaPackage(mediaPackageId, now);
+        logger.info("Removed mediapackage {} from search persistence", mediaPackageId);
+      } catch (NotFoundException e) {
+        // even if mp not found in persistence, it might still exist in search index.
+        logger.info("Could not find mediapackage with id {} in persistence, but will try remove it from index, anyway.",
+                mediaPackageId);
+      } catch (SearchServiceDatabaseException e) {
+        logger.error("Could not delete media package with id {} from persistence storage", mediaPackageId);
+        throw new SearchException(e);
       }
 
       return indexManager.delete(mediaPackageId, now);
@@ -620,11 +604,7 @@ public final class SearchServiceImpl extends AbstractJobProducer implements Sear
           return null;
         case Delete:
           String mediapackageId = arguments.get(0);
-          boolean doPersistenceUpdate = true;
-          if (arguments.size() > 1 && (arguments.get(1).equalsIgnoreCase("true") || arguments.get(1).equalsIgnoreCase("false"))) {
-            doPersistenceUpdate = Boolean.valueOf(arguments.get(1));
-          }
-          boolean deleted = deleteSynchronously(mediapackageId, doPersistenceUpdate);
+          boolean deleted = deleteSynchronously(mediapackageId);
           return Boolean.toString(deleted);
         default:
           throw new IllegalStateException("Don't know how to handle operation '" + operation + "'");
