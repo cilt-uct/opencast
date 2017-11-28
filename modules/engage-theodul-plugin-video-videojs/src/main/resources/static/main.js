@@ -1211,6 +1211,17 @@ define(['require', 'jquery', 'underscore', 'backbone', 'basil', 'bowser', 'engag
     var videoDisplays = videoDataView.model.get('ids');
     var videoSources = videoDataView.model.get('videoSources');
 
+    for (var key in videoSources) {
+      if (videoSources[key].length === 0) {
+        delete videoSources[key];
+
+        var spliceIdx = videoDisplays.indexOf(key);
+        if (spliceIdx > -1) {
+          videoDisplays.splice(spliceIdx, 1);
+        }
+      }
+    }
+
     var src = (videoSources && videoSources['audio']) ? videoSources['audio'] : [];
     var tempVars = {
       ids: videoDataView.model.get('ids'),
