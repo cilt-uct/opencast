@@ -386,7 +386,7 @@
 
   <feature name="opencast-adminpresentation">
     <feature start-level="80">opencast-core</feature>
-
+    <feature start-level="81">ssh</feature>
     <bundle start-level="82">mvn:org.opencastproject/opencast-admin-ui/${project.version}</bundle>
     <bundle start-level="82">mvn:org.opencastproject/opencast-animate-api/${project.version}</bundle>
     <bundle start-level="82">mvn:org.opencastproject/opencast-animate-remote/${project.version}</bundle>
