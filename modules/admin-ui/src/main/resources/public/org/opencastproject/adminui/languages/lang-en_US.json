@@ -820,6 +820,7 @@
              "PROCESSING_FAILURE" : "Processing failure",
              "RECORDING_FAILURE" : "Recording failure",
              "CONSENT" : "Consent required",
+             "AUTOTRIM" : "Automatically trimmed",
              "MEDIA_UNUSABLE" : "Unusable audio or video",
              "EVENT_INFO" : "Event information",
              "MEDIA_INFO" : "Media information",
