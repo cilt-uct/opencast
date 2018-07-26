@@ -585,7 +585,7 @@ public class CaptureAgentStateServiceImpl implements CaptureAgentStateService, M
   protected void setupAgentCache(int count, TimeUnit unit) {
     // Setup the agent cache
     RemovalListener<String, Object> removalListener = new RemovalListener<String, Object>() {
-      private Set<String> ignoredStates = new LinkedHashSet<>(Arrays.asList(AgentState.UNKNOWN, AgentState.OFFLINE));
+      private Set<String> ignoredStates = new LinkedHashSet<>(Arrays.asList(AgentState.OFFLINE));
       @Override
       public void onRemoval(RemovalNotification<String, Object> removal) {
         if (RemovalCause.EXPIRED.equals(removal.getCause())) {
