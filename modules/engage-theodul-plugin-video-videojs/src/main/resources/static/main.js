@@ -1184,7 +1184,7 @@ define(['require', 'jquery', 'underscore', 'backbone', 'basil', 'bowser', 'engag
     Engage.log('Video: Calculating Aspect ratio');
     var as1 = 0;
     for (var flavor in videoResultions) {
-      if ((aspectRatio == null) || (as1 < videoResultions[flavor])) {
+      if (flavor !== 'composite' && ((aspectRatio == null) || (as1 < videoResultions[flavor][1]))) {
         as1 = videoResultions[flavor][1];
         aspectRatio = videoResultions[flavor];
         id_generated_videojs_flash_component = 'videojs_videodisplay_' + flavor + '_flash_api';
@@ -1210,6 +1210,17 @@ define(['require', 'jquery', 'underscore', 'backbone', 'basil', 'bowser', 'engag
     Engage.log('Video: Rendering video displays');
     var videoDisplays = videoDataView.model.get('ids');
     var videoSources = videoDataView.model.get('videoSources');
+
+    for (var key in videoSources) {
+      if (videoSources[key].length === 0) {
+        delete videoSources[key];
+
+        var spliceIdx = videoDisplays.indexOf(key);
+        if (spliceIdx > -1) {
+          videoDisplays.splice(spliceIdx, 1);
+        }
+      }
+    }
 
     var src = (videoSources && videoSources['audio']) ? videoSources['audio'] : [];
     var tempVars = {

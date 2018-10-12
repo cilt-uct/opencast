@@ -130,6 +130,7 @@ public class TrackImpl extends AbstractMediaPackageElement implements Track {
    * @param duration
    *          the duration
    */
+  @Override
   public void setDuration(Long duration) {
     this.duration = duration;
   }
