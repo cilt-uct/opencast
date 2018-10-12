@@ -64,6 +64,14 @@ public interface Track extends MediaPackageElement {
   Long getDuration();
 
   /**
+   * Set the track duration in milliseconds or <code>null</code> if the duration is not available.
+   * @param duration
+   *
+   * @return the track duration
+   */
+  void setDuration(Long duration);
+
+  /**
    * Returns the track's description with details about framerate, codecs etc.
    *
    * @return the track description.

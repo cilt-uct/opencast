@@ -947,6 +947,11 @@ public class ToolsEndpoint implements ManagedService {
     // Check for single segment to ignore
     if (segments.size() == 1) {
       Tuple<Long, Long> singleSegment = segments.get(0);
+
+      if (mediaPackage.getDuration() == null) {
+        mediaPackage.getTracks()[0].setDuration(singleSegment.getB());
+      }
+
       if (singleSegment.getA() == 0 && singleSegment.getB() >= mediaPackage.getDuration())
         segments.remove(0);
     }

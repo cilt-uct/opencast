@@ -419,7 +419,14 @@ define(['require', 'jquery', 'underscore', 'backbone', 'basil', 'bootbox', 'enga
       $('#' + id_str_loginlogout).html(translate('login', 'Log in'));
       $('#' + id_loginlogout).click(login);
     }
-    $('#' + id_dropdownMenuLoginInfo).removeClass('disabled');
+    if(window.location.href.indexOf("ltimode") > -1) {
+      $("#navigation_wrapper_top").detach();
+      if ($('#engage_controls_second').length > 0) {
+        $('#engage_controls_second').detach();
+      }
+    } else {
+      $("#" + id_dropdownMenuLoginInfo).removeClass("disabled");
+    }
   }
 
   var ControlsView = Backbone.View.extend({

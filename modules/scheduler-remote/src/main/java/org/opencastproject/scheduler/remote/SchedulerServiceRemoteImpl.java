@@ -395,6 +395,17 @@ public class SchedulerServiceRemoteImpl extends RemoteBase implements SchedulerS
           Opt<Set<String>> userIds, Opt<MediaPackage> mediaPackage, Opt<Map<String, String>> wfProperties,
           Opt<Map<String, String>> caMetadata, Opt<Opt<Boolean>> optOut, String origin)
                   throws NotFoundException, UnauthorizedException, SchedulerTransactionLockException,
+                  SchedulerConflictException, SchedulerException  {
+
+    updateEvent(eventId, startDateTime, endDateTime, captureAgentId, userIds,
+                mediaPackage, wfProperties, caMetadata, optOut, origin, false);
+  }
+
+  @Override
+  public void updateEvent(String eventId, Opt<Date> startDateTime, Opt<Date> endDateTime, Opt<String> captureAgentId,
+          Opt<Set<String>> userIds, Opt<MediaPackage> mediaPackage, Opt<Map<String, String>> wfProperties,
+          Opt<Map<String, String>> caMetadata, Opt<Opt<Boolean>> optOut, String origin, boolean skipConflictChecks)
+                  throws NotFoundException, UnauthorizedException, SchedulerTransactionLockException,
                   SchedulerConflictException, SchedulerException {
     logger.debug("Start updating event {}.", eventId);
     HttpPut put = new HttpPut("/" + eventId);

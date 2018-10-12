@@ -562,7 +562,7 @@ public abstract class AbstractEventEndpoint {
                           @RestResponse(responseCode = SC_NOT_FOUND, description = "If the event has not been found."),
                           @RestResponse(responseCode = SC_NO_CONTENT, description = "The method doesn't return any content") })
   public Response updateEventScheduling(@PathParam("eventId") String eventId,
-          @FormParam("scheduling") String scheduling)
+          @FormParam("scheduling") String scheduling, @FormParam("skipConflictCheck") boolean skipConflictCheck)
           throws NotFoundException, UnauthorizedException, SearchIndexException {
     if (StringUtils.isBlank(scheduling))
       return RestUtil.R.badRequest("Missing parameters");

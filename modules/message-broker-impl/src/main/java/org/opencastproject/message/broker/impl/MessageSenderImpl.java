@@ -29,11 +29,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.Serializable;
+import java.util.concurrent.TimeUnit;
 
 import javax.jms.Destination;
 import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.Session;
+
 
 /**
  * A class built to send JMS messages through ActiveMQ.
@@ -56,7 +58,8 @@ public class MessageSenderImpl extends MessageBaseFacility implements MessageSen
       return;
     }
     try {
-      synchronized (this) {
+        long startTime = System.nanoTime();
+
         Session session = getSession();
         // This shouldn't happen after a connection has been successfully
         // established at least once, but better be safe than sorry.
@@ -74,12 +77,13 @@ public class MessageSenderImpl extends MessageBaseFacility implements MessageSen
           destination = session.createTopic(destinationId);
         }
 
-        // Tell the producer to send the message
-        logger.trace("Sent message: " + message.hashCode() + " : " + Thread.currentThread().getName());
-
         // Send the message
         getMessageProducer().send(destination, message);
-      }
+
+        // Log time taken to send
+        long elapsed = System.nanoTime() - startTime;
+        logger.trace("Sent message to destination {} in {} ms", destinationId, TimeUnit.NANOSECONDS.toMillis(elapsed));
+
     } catch (JMSException e) {
       logger.error("Had an exception while trying to send a message", e);
     }
