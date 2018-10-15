@@ -401,16 +401,6 @@ public class SchedulerServiceRemoteImpl extends RemoteBase implements SchedulerS
                 mediaPackage, wfProperties, caMetadata, optOut, origin, false);
   }
 
-  @Override
-  public void updateEvent(String eventId, Opt<Date> startDateTime, Opt<Date> endDateTime, Opt<String> captureAgentId,
-          Opt<Set<String>> userIds, Opt<MediaPackage> mediaPackage, Opt<Map<String, String>> wfProperties,
-          Opt<Map<String, String>> caMetadata, Opt<Opt<Boolean>> optOut, String origin, boolean skipConflictChecks)
-                  throws NotFoundException, UnauthorizedException, SchedulerTransactionLockException,
-                  SchedulerConflictException, SchedulerException {
-    updateEvent(eventId, startDateTime, endDateTime, captureAgentId, userIds,
-                mediaPackage, wfProperties, caMetadata, optOut, origin, false);
-  }
-
   public void updateEvent(String eventId, Opt<Date> startDateTime, Opt<Date> endDateTime, Opt<String> captureAgentId,
           Opt<Set<String>> userIds, Opt<MediaPackage> mediaPackage, Opt<Map<String, String>> wfProperties,
           Opt<Map<String, String>> caMetadata, Opt<Opt<Boolean>> optOut, String origin, boolean skipConflictChecks)
