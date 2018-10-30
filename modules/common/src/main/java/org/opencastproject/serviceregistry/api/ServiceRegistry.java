@@ -504,6 +504,21 @@ public interface ServiceRegistry {
   List<String> getJobPayloads(String operation) throws ServiceRegistryException;
 
   /**
+   * Return the payload of a batch of jobs for a specified operation type.
+   *
+   * @param operation
+   *          Operation type to get payload for
+   * @param offset
+   *          Offset of the first result
+   * @param limit
+   *          Upper bound for the number of results to return
+   * @return Serialized workflows
+   * @throws ServiceRegistryException
+   *          if there is a problem accessing the service registry
+   */
+  List<String> getJobPayloads(String operation, int offset, int limit) throws ServiceRegistryException;
+
+  /**
    * Get the list of active jobs.
    *
    * @return list of active jobs

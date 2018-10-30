@@ -281,40 +281,46 @@ public class WorkflowServiceSolrIndex implements WorkflowServiceIndex {
       logger.info("The workflow index is empty, looking for workflows to index");
       // this may be a new index, so get all of the existing workflows and index them
       List<String> workflowPayloads;
+      int jobCurrentCounter = 0;
+      int jobPreviousCounter = 0;
+      int jobLimit = 1000;
 
-      try {
-        workflowPayloads =  serviceRegistry.getJobPayloads(WorkflowServiceImpl.Operation.START_WORKFLOW.toString());
-      } catch (ServiceRegistryException e) {
-        logger.error("Unable to load the workflows jobs: {}", e.getMessage());
-        throw new ServiceException(e.getMessage());
-      }
-
-      final int total = workflowPayloads.size();
-      if (total == 0) {
-        logger.info("No workflows found. Repopulating index finished.");
-        return;
-      }
-
-      logger.info("Populating the workflow index with {} workflows", total);
-
-      int current = 0;
-      for (String payload : workflowPayloads) {
-        current++;
-        WorkflowInstance instance = null;
+      do {
+        jobPreviousCounter = jobCurrentCounter;
         try {
-          instance = WorkflowParser.parseWorkflowInstance(payload);
-          Organization organization = instance.getOrganization();
-          securityService.setOrganization(organization);
-          securityService.setUser(SecurityUtil.createSystemUser(systemUserName, organization));
-          index(instance);
-        } catch (WorkflowParsingException | WorkflowDatabaseException e) {
-          logger.warn("Skipping restoring of workflow {}", payload, e);
+          workflowPayloads =  serviceRegistry.getJobPayloads(WorkflowServiceImpl.Operation.START_WORKFLOW.toString(), jobCurrentCounter, jobLimit);
+        } catch (ServiceRegistryException e) {
+          logger.error("Unable to load the workflows jobs: {}", e.getMessage());
+          throw new ServiceException(e.getMessage());
         }
-        if (current % 100 == 0) {
-          logger.info("Indexing workflow {}/{} ({} percent done)", current, total, current * 100 / total);
-        }
-      }
 
+        jobCurrentCounter += workflowPayloads.size();
+        final int total = jobCurrentCounter - jobPreviousCounter;
+        if (total == 0) {
+          logger.info("No workflows found. Repopulating index finished.");
+          return;
+        }
+
+        logger.info("Populating the workflow index with a batch of {} workflows", total);
+
+        int current = 0;
+        for (String payload : workflowPayloads) {
+          current++;
+          WorkflowInstance instance = null;
+          try {
+            instance = WorkflowParser.parseWorkflowInstance(payload);
+            Organization organization = instance.getOrganization();
+            securityService.setOrganization(organization);
+            securityService.setUser(SecurityUtil.createSystemUser(systemUserName, organization));
+            index(instance);
+          } catch (WorkflowParsingException | WorkflowDatabaseException e) {
+            logger.warn("Skipping restoring of workflow {}", payload, e);
+          }
+          if (current % 100 == 0) {
+            logger.info("Indexing workflow {}/{} ({} percent done)", current, total, current * 100 / total);
+          }
+        }
+      } while (jobCurrentCounter != 0 && jobCurrentCounter % jobLimit == 0 && jobCurrentCounter != jobPreviousCounter);
 
       logger.info("Finished populating the workflow search index");
     }

@@ -708,7 +708,7 @@ public class ServiceRegistryInMemoryImpl implements ServiceRegistry {
   }
 
   @Override
-  public List<String> getJobPayloads(String operation) throws ServiceRegistryException {
+  public List<String> getJobPayloads(String operation, int offset, int limit) throws ServiceRegistryException {
     List<String> result = new ArrayList<>();
     for (String serializedJob : jobs.values()) {
       try {
@@ -721,6 +721,11 @@ public class ServiceRegistryInMemoryImpl implements ServiceRegistry {
       }
     }
     return result;
+  }
+
+  @Override
+  public List<String> getJobPayloads(String operation) throws ServiceRegistryException {
+    return getJobPayloads(operation, 0, 0);
   }
 
   /**
