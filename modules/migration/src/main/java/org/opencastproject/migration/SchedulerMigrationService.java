@@ -22,8 +22,6 @@ package org.opencastproject.migration;
 
 import static com.entwinemedia.fn.Equality.eq;
 import static com.entwinemedia.fn.Prelude.chuck;
-import static com.entwinemedia.fn.data.Opt.none;
-import static java.lang.String.format;
 
 import org.opencastproject.mediapackage.MediaPackageBuilderFactory;
 import org.opencastproject.metadata.dublincore.DublinCoreCatalog;
@@ -134,18 +132,13 @@ public class SchedulerMigrationService {
     } catch (NotFoundException e) {
       throw new ConfigurationException(CFG_ORGANIZATION, String.format("Could not find organization '%s'", orgId), e);
     }
-    SecurityUtil.runAs(securityService, org, SecurityUtil.createSystemUser(cc, org), new Effect0() {
-      @Override
-      protected void run() {
-        // check if migration is needed
-        try {
-          int size = schedulerService.search(none(), none(), none(), none(), none()).size();
-          if (size > 0) {
-            logger.info("There are already '{}' existing scheduled events, skip scheduler migration!", size);
-            return;
-          }
-        } catch (UnauthorizedException | SchedulerException e) {
-          logger.error("Unable to read existing scheduled events, skip scheduler migration!", e);
+    SecurityUtil.runAs(securityService, org, SecurityUtil.createSystemUser(cc, org), () -> {
+      // check if migration is needed
+      try {
+        int size = schedulerService.getEventCount();
+        if (size > 0) {
+          logger.info("There are already '{}' existing scheduled events, skip scheduler migration!", size);
+          return;
         }
 
         try {
