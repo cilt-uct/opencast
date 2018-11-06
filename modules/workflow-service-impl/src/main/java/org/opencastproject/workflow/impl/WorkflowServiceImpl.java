@@ -2385,31 +2385,39 @@ public class WorkflowServiceImpl extends AbstractIndexProducer implements Workfl
 
     int instancesCleaned = 0;
     int cleaningFailed = 0;
+    int jobCounter = 0;
+    int prevJobCounter = 0;
+    final int limit = 1000; //arbitrarily chosen. make this configurable?
 
-    WorkflowQuery query = new WorkflowQuery().withState(state).withDateBefore(DateUtils.addDays(new Date(), -buffer))
-            .withCount(Integer.MAX_VALUE);
-    for (WorkflowInstance workflowInstance : getWorkflowInstances(query).getItems()) {
-      try {
-        remove(workflowInstance.getId());
-        instancesCleaned++;
-      } catch (WorkflowDatabaseException e) {
-        throw e;
-      } catch (UnauthorizedException e) {
-        throw e;
-      } catch (NotFoundException e) {
-        // Since we are in a cleanup operation, we don't have to care about NotFoundExceptions
-        logger.debug("Workflow instance '{}' could not be removed: {}", workflowInstance.getId(),
-                ExceptionUtils.getStackTrace(e));
-      } catch (WorkflowParsingException e) {
-        logger.warn("Workflow instance '{}' could not be removed: {}", workflowInstance.getId(),
-                ExceptionUtils.getStackTrace(e));
-        cleaningFailed++;
-      } catch (WorkflowStateException e) {
-        logger.warn("Workflow instance '{}' could not be removed: {}", workflowInstance.getId(),
-                ExceptionUtils.getStackTrace(e));
-        cleaningFailed++;
+    do {
+      prevJobCounter = jobCounter;
+      WorkflowQuery query = new WorkflowQuery().withState(state).withDateBefore(DateUtils.addDays(new Date(), -buffer))
+              .withCount(limit);
+      WorkflowInstances[] wfInstances = getWorkflowInstances(query).getItems();
+      jobCounter += wfInstances.length;
+      for (WorkflowInstance workflowInstance : wfInstances) {
+        try {
+          remove(workflowInstance.getId());
+          instancesCleaned++;
+        } catch (WorkflowDatabaseException e) {
+          throw e;
+        } catch (UnauthorizedException e) {
+          throw e;
+        } catch (NotFoundException e) {
+          // Since we are in a cleanup operation, we don't have to care about NotFoundExceptions
+          logger.debug("Workflow instance '{}' could not be removed: {}", workflowInstance.getId(),
+                  ExceptionUtils.getStackTrace(e));
+        } catch (WorkflowParsingException e) {
+          logger.warn("Workflow instance '{}' could not be removed: {}", workflowInstance.getId(),
+                  ExceptionUtils.getStackTrace(e));
+          cleaningFailed++;
+        } catch (WorkflowStateException e) {
+          logger.warn("Workflow instance '{}' could not be removed: {}", workflowInstance.getId(),
+                  ExceptionUtils.getStackTrace(e));
+          cleaningFailed++;
+        }
       }
-    }
+    } while (jobCounter != prevJobCounter && jobCounter % limit == 0);
 
     if (instancesCleaned == 0 && cleaningFailed == 0) {
       logger.info("No workflow instances found to clean up");
