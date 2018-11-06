@@ -2393,7 +2393,7 @@ public class WorkflowServiceImpl extends AbstractIndexProducer implements Workfl
       prevJobCounter = jobCounter;
       WorkflowQuery query = new WorkflowQuery().withState(state).withDateBefore(DateUtils.addDays(new Date(), -buffer))
               .withCount(limit);
-      WorkflowInstances[] wfInstances = getWorkflowInstances(query).getItems();
+      WorkflowInstance[] wfInstances = getWorkflowInstances(query).getItems();
       jobCounter += wfInstances.length;
       for (WorkflowInstance workflowInstance : wfInstances) {
         try {
