@@ -620,6 +620,8 @@ EventManager.prototype = {
         }
         else if (jqXhr.status === 200) {
           //1. WHY OH WHY IS A CONFLICT'S RESPONSE 200 INSTEAD OF 409?!?!?!?!?
+          //Note to past self: its 200 because when you ASK for conflicts, and there ARE conflicts, you GET the conflicts.
+          //                   more importantly, don't conflate opencast conflicts with HTTP processing type conflicts, they are different!
           //2. DC does not always contain proper event times
    /*       var conflicts = res.split('###');
           var conflictArrResponse = [];
