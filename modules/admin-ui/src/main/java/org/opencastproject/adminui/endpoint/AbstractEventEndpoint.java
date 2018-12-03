@@ -171,7 +171,9 @@ import org.slf4j.LoggerFactory;
 
 import java.net.URI;
 import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.time.Instant;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -563,7 +565,7 @@ public abstract class AbstractEventEndpoint {
                           @RestResponse(responseCode = SC_NO_CONTENT, description = "The method doesn't return any content") })
   public Response updateEventScheduling(@PathParam("eventId") String eventId,
           @FormParam("scheduling") String scheduling, @FormParam("skipConflictCheck") boolean skipConflictCheck)
-          throws NotFoundException, UnauthorizedException, SearchIndexException {
+          throws NotFoundException, UnauthorizedException, SearchIndexException, IndexServiceException {
     if (StringUtils.isBlank(scheduling))
       return RestUtil.R.badRequest("Missing parameters");
 
@@ -576,8 +578,7 @@ public abstract class AbstractEventEndpoint {
     } catch (ParseException e) {
       return RestUtil.R.badRequest("The UTC dates in the scheduling object is not valid");
     } catch (SchedulerException e) {
-      logger.error("Unable to update scheduling technical metadata of event {}: {}", eventId,
-              ExceptionUtils.getStackTrace(e));
+      logger.error("Unable to update scheduling technical metadata of event {}: {}", eventId, e);
       throw new WebApplicationException(e, SC_INTERNAL_SERVER_ERROR);
     } catch (IllegalStateException e) {
       return RestUtil.R.badRequest(e.getMessage());
@@ -585,7 +586,7 @@ public abstract class AbstractEventEndpoint {
   }
 
   private void updateEventScheduling(String scheduling, Event event) throws NotFoundException, UnauthorizedException,
-    SchedulerException, JSONException, ParseException {
+    SchedulerException, JSONException, ParseException, SearchIndexException, IndexServiceException {
     final TechnicalMetadata technicalMetadata = getSchedulerService().getTechnicalMetadata(event.getIdentifier());
     final org.codehaus.jettison.json.JSONObject schedulingJson = new org.codehaus.jettison.json.JSONObject(
             scheduling);
@@ -640,6 +641,39 @@ public abstract class AbstractEventEndpoint {
     if (!start.isNone() || !end.isNone() || !agentId.isNone() || !agentConfiguration.isNone() || !optOut.isNone()) {
       getSchedulerService()
         .updateEvent(event.getIdentifier(), start, end, agentId, Opt.none(), Opt.none(), Opt.none(), agentConfiguration, optOut, SchedulerService.ORIGIN);
+      // We want to keep the bibliographic meta data in sync
+      updateBibliographicMetadata(event, agentId, start, end);
+    }
+  }
+
+  private void updateBibliographicMetadata(Event event, Opt<String> agentId, Opt<Date> start, Opt<Date> end)
+    throws IndexServiceException, SearchIndexException, NotFoundException, UnauthorizedException {
+    final MetadataList metadataList = getIndexService().getMetadataListWithAllEventCatalogUIAdapters();
+    final Opt<MetadataCollection> optMetadataByAdapter = metadataList
+      .getMetadataByAdapter(getIndexService().getCommonEventCatalogUIAdapter());
+    if (optMetadataByAdapter.isSome()) {
+      final MetadataCollection collection = optMetadataByAdapter.get();
+      if (start.isSome() && collection.getOutputFields().containsKey("startDate")) {
+        final Opt<String> pattern = collection.getOutputFields().get("startDate").getPattern();
+        if (pattern.isSome()) {
+          final SimpleDateFormat sdf = new SimpleDateFormat(pattern.get());
+          sdf.setTimeZone(TimeZone.getTimeZone(ZoneId.of("UTC")));
+          final MetadataField.Type type = collection.getOutputFields().get("startDate").getType();
+          collection.updateStringField(collection.getOutputFields().get("startDate"), sdf.format(start.get()));
+          collection.getOutputFields().get("startDate").setPattern(pattern);
+          collection.getOutputFields().get("startDate").setType(type);
+        }
+      }
+      if (start.isSome() && end.isSome() && collection.getOutputFields().containsKey("duration")) {
+        final MetadataField.Type type = collection.getOutputFields().get("duration").getType();
+        final long duration = end.get().getTime() - start.get().getTime();
+        collection.updateStringField(collection.getOutputFields().get("duration"), duration + "");
+        collection.getOutputFields().get("duration").setType(type);
+      }
+      if (agentId.isSome() && collection.getOutputFields().containsKey("location")) {
+        collection.updateStringField(collection.getOutputFields().get("location"), agentId.get());
+      }
+      getIndexService().updateEventMetadata(event.getIdentifier(), metadataList, getIndex());
     }
   }
 
@@ -2072,7 +2106,8 @@ public abstract class AbstractEventEndpoint {
       for (WorkflowDefinition wflDef : workflowsDefinitions) {
         if (wflDef.containsTag(tags)) {
 
-          workflows.add(obj(f("id", v(wflDef.getId())), f("title", v(nul(wflDef.getTitle()).getOr(""))),
+          workflows.add(obj(f("id", v(wflDef.getId())), f("tags", arr(wflDef.getTags())),
+                  f("title", v(nul(wflDef.getTitle()).getOr(""))),
                   f("description", v(nul(wflDef.getDescription()).getOr(""))),
                   f("displayOrder", v(wflDef.getDisplayOrder())),
                   f("configuration_panel", v(nul(wflDef.getConfigurationPanel()).getOr("")))));

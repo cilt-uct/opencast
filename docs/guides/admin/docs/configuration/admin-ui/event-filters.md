@@ -1,8 +1,5 @@
-Admin UI Configuration
-===================
-
-Configuring the events filters
---------------------------------
+Events Filters Configuration
+----------------------------
 
 At the top right of the admin UI a set of predefined filters for events are available, displayed with a description and
 the amount of events currently matching that filter. By default, the following filters are visible:
@@ -70,10 +67,3 @@ currently not possible.
 
 Be advised that a too big amount of filters can lead to filters disappearing from view depending on the width of the
 user's screen.
-
-
-Available Language Configuration
---------------------------------
-
-The admin UI is translated into a number of languages by default.  If you wish to restrict the languages available to
-your users, add the relevant locale code to `etc/org.opencastproject.adminui.endpoint.LanguageServiceEndpoint.cfg`.
