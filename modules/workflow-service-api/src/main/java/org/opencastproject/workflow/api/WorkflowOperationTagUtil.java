@@ -53,6 +53,7 @@ public final class WorkflowOperationTagUtil {
 
   private static final String PLUS = "+";
   private static final String MINUS = "-";
+  private static final String SEPARATOR = ",";
 
   public static TagDiff createTagDiff(final String tagList) {
     final String[] targetTags = ArrayUtils.nullToEmpty(StringUtils.split(tagList, ","));
@@ -61,13 +62,15 @@ public final class WorkflowOperationTagUtil {
     final List<String> addTags = new ArrayList<>();
     final List<String> overrideTags = new ArrayList<>();
 
-    for (final String tag : targetTags) {
-      if (tag.startsWith(MINUS)) {
-        removeTags.add(tag);
-      } else if (tag.startsWith(PLUS)) {
-        addTags.add(tag);
-      } else {
-        overrideTags.add(tag);
+    if (tagList != null) {
+      for (final String tag : StringUtils.split(tagList, SEPARATOR)) {
+        if (tag.startsWith(MINUS)) {
+          removeTags.add(tag);
+        } else if (tag.startsWith(PLUS)) {
+          addTags.add(tag);
+        } else {
+          overrideTags.add(tag);
+        }
       }
     }
 
