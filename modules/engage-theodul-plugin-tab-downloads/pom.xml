@@ -2,9 +2,9 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.opencastproject</groupId>
-  <artifactId>opencast-engage-theodul-plugin-tab-slidetext</artifactId>
+  <artifactId>opencast-engage-theodul-plugin-tab-downloads</artifactId>
   <packaging>bundle</packaging>
-  <name>Opencast :: engage-theodul-plugin-tab-slidetext</name>
+  <name>Opencast :: engage-theodul-plugin-tab-downloads</name>
   <parent>
     <groupId>org.opencastproject</groupId>
     <artifactId>base</artifactId>
@@ -79,7 +79,7 @@
               *
             </Import-Package>
             <Export-Package>
-              org.opencastproject.engage.theodul.plugin.tab.slidetext;version=${project.version}
+              org.opencastproject.engage.theodul.plugin.tab.downloads;version=${project.version}
             </Export-Package>
             <Service-Component>
               OSGI-INF/engage-plugin.xml
