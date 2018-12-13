@@ -650,7 +650,7 @@ EventManager.prototype = {
               .then(function(events) {
                 d.reject(events);
               });
-          });       
+          });
         }
         else if (jqXhr.status === 400) {
           d.reject({error: 'Please complete the form fully prior to submission'});
@@ -814,7 +814,7 @@ EventManager.prototype = {
             contentType: false
           })
           .done(function(res) {
-            
+
           })
           .fail(function(err) {
           });
@@ -1404,7 +1404,7 @@ EventManager.prototype = {
                       tmpObj.title = !isNaN(tmpObj.title.substring(tmpObj.title.lastIndexOf(' ') + 1)) ?
                                        tmpObj.title.substring(0, tmpObj.title.lastIndexOf(' ')) :
                                        tmpObj.title;
-                      
+
                       return tmpObj;
                     })
                     .reduce(function(base, ev) {
@@ -1528,6 +1528,9 @@ EventManager.prototype = {
                        }
                        else if (track.type.indexOf('composite') > -1) {
                          videoName = 'Side by side';
+                       }
+                       else if (track.type.indexOf('pic-in-pic') > -1) {
+                         videoName = 'Picture-in-Picture';
                        }
 
                        return {
@@ -1758,7 +1761,7 @@ EventManager.prototype = {
   },
   logEventRemoval: function(eventStrOrArr) {
     this.eventRemovalCache = Array.isArray(eventStrOrArr) ? eventStrOrArr : [eventStrOrArr];
-    
+
     this.emit('promptremoval',
       this.events.filter(function(event) {
         return this.eventRemovalCache.indexOf(event.id) > -1
@@ -1818,7 +1821,7 @@ EventManager.prototype = {
         }.bind(this));
 
       this.removeSelection(successes);
-      
+
     }.bind(this));
   },
   deleteEventsSynchronously: function(eventIdsArr) {
@@ -2031,7 +2034,7 @@ EventManager.prototype = {
   emit: function(event, target, field) {
     event = event || 'complete';
     target = typeof target != 'undefined' ? target : this.events;
- 
+
     if (this.listeners.hasOwnProperty(event)) {
       this.listeners[event].forEach(function(fnObj) {
         var fnTarget = (fnObj.opts || {}).target || target;
