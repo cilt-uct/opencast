@@ -154,7 +154,7 @@ angular.module('adminNg.controllers')
     });
 
     $scope.$on('NO_ACTIVE_TRANSACTION', function () {
-      if ($scope.activeTransaction) {
+      if ($scope.activeTransaction && !$scope.hasSubmitted) {
         $scope.activeTransaction = false;
         if (notificationId) {
           Notifications.remove(notificationId, NOTIFICATION_CONTEXT);
