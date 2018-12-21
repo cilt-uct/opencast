@@ -36,6 +36,7 @@ import static org.opencastproject.scheduler.impl.SchedulerUtil.toKey;
 import static org.opencastproject.scheduler.impl.SchedulerUtil.toReviewStatus;
 import static org.opencastproject.scheduler.impl.SchedulerUtil.toValue;
 import static org.opencastproject.scheduler.impl.SchedulerUtil.uiAdapterToFlavor;
+import static org.opencastproject.security.api.SecurityConstants.GLOBAL_ADMIN_ROLE;
 import static org.opencastproject.util.EqualsUtil.ne;
 import static org.opencastproject.util.Log.getHumanReadableTimeString;
 import static org.opencastproject.util.RequireUtil.notEmpty;
@@ -806,13 +807,22 @@ public class SchedulerServiceImpl extends AbstractIndexProducer implements Sched
           Opt<Map<String, String>> caMetadata, Opt<Opt<Boolean>> optOutOption, String modificationOrigin)
                   throws NotFoundException, UnauthorizedException, SchedulerException {
     updateEventInternal(mpId, modificationOrigin, startDateTime, endDateTime, captureAgentId, userIds, mediaPackage,
-            wfProperties, caMetadata, optOutOption, Opt.<String> none());
+            wfProperties, caMetadata, optOutOption, Opt.<String> none(), false);
+  }
+
+  @Override
+  public void updateEvent(final String mpId, Opt<Date> startDateTime, Opt<Date> endDateTime, Opt<String> captureAgentId,
+          Opt<Set<String>> userIds, Opt<MediaPackage> mediaPackage, Opt<Map<String, String>> wfProperties,
+          Opt<Map<String, String>> caMetadata, Opt<Opt<Boolean>> optOutOption, String modificationOrigin, boolean skipConflictCheck)
+                  throws NotFoundException, UnauthorizedException, SchedulerException {
+    updateEventInternal(mpId, modificationOrigin, startDateTime, endDateTime, captureAgentId, userIds, mediaPackage,
+            wfProperties, caMetadata, optOutOption, Opt.<String> none(), skipConflictCheck);
   }
 
   private void updateEventInternal(final String mpId, String modificationOrigin, Opt<Date> startDateTime,
           Opt<Date> endDateTime, Opt<String> captureAgentId, Opt<Set<String>> userIds, Opt<MediaPackage> mediaPackage,
           Opt<Map<String, String>> wfProperties, Opt<Map<String, String>> caMetadata, Opt<Opt<Boolean>> optOutOption,
-          Opt<String> trxId) throws NotFoundException, SchedulerException {
+          Opt<String> trxId, boolean skipConflictCheck) throws NotFoundException, SchedulerException {
     notEmpty(mpId, "mpId");
     notEmpty(modificationOrigin, "modificationOrigin");
     notNull(startDateTime, "startDateTime");
@@ -883,7 +893,8 @@ public class SchedulerServiceImpl extends AbstractIndexProducer implements Sched
         boolean propertyChanged = captureAgentId.isSome() || startDateTime.isSome() || endDateTime.isSome();
 
         // Check for conflicting events
-        if (!isNewOptOut && (readyForRecording || (propertyChanged && !oldOptOut))) {
+        if (!isNewOptOut && (readyForRecording || (propertyChanged && !oldOptOut))
+            && (!isAdmin() || (isAdmin() && !skipConflictCheck))) {
           List<MediaPackage> conflictingEvents = $(findConflictingEvents(captureAgentId.getOr(agentId),
                   startDateTime.getOr(start), endDateTime.getOr(end))).filter(new Fn<MediaPackage, Boolean>() {
                     @Override
@@ -993,6 +1004,17 @@ public class SchedulerServiceImpl extends AbstractIndexProducer implements Sched
       logger.error("Failed to update event with id '{}': {}", mpId, getStackTrace(e));
       throw new SchedulerException(e);
     }
+  }
+
+  private boolean isAdmin() {
+    if (securityService.getUser().hasRole(GLOBAL_ADMIN_ROLE)) {
+      return true;
+    }
+    else if (securityService.getUser().hasRole(securityService.getOrganization().getAdminRole())) {
+      return true;
+    }
+
+    return false;
   }
 
   private Opt<AccessControlList> loadEpisodeAclFromAsset(Snapshot snapshot) {
@@ -2323,7 +2345,7 @@ public class SchedulerServiceImpl extends AbstractIndexProducer implements Sched
         try {
           updateEventInternal(mpId, schedulingSource, Opt.some(startDateTime), Opt.some(endDateTime),
                   Opt.some(captureAgentId), Opt.some(userIds), Opt.some(mediaPackage), Opt.some(wfProperties),
-                  Opt.some(caMetadata), Opt.some(optOut), Opt.some(id));
+                  Opt.some(caMetadata), Opt.some(optOut), Opt.some(id), false);
           assetManager.setProperty(trxp.source().mk(mpId, schedulingSource));
         } catch (NotFoundException e) {
           logger.error("Unable to find previous found event {}: {}", mpId, getStackTrace(e));

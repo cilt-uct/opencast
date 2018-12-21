@@ -327,6 +327,9 @@ public interface SchedulerService {
    *          the optional opt out status to update
    * @param modificationOrigin
    *          the origin of the modifier which updates the event
+   * @param skipConflictCheck
+   *          whether to skip conflict check for the proposed scheduling
+   *          Note that only admin users are able to skip conflict checking
    * @throws NotFoundException
    *           if event with specified ID cannot be found
    * @throws UnauthorizedException
@@ -341,6 +344,12 @@ public interface SchedulerService {
   void updateEvent(String mediaPackageId, Opt<Date> startDateTime, Opt<Date> endDateTime, Opt<String> captureAgentId,
           Opt<Set<String>> userIds, Opt<MediaPackage> mediaPackage, Opt<Map<String, String>> wfProperties,
           Opt<Map<String, String>> caMetadata, Opt<Opt<Boolean>> optOut, String modificationOrigin)
+                  throws NotFoundException, UnauthorizedException, SchedulerConflictException,
+                  SchedulerTransactionLockException, SchedulerException;
+
+  void updateEvent(String mediaPackageId, Opt<Date> startDateTime, Opt<Date> endDateTime, Opt<String> captureAgentId,
+          Opt<Set<String>> userIds, Opt<MediaPackage> mediaPackage, Opt<Map<String, String>> wfProperties,
+          Opt<Map<String, String>> caMetadata, Opt<Opt<Boolean>> optOut, String modificationOrigin, boolean skipConflictCheck)
                   throws NotFoundException, UnauthorizedException, SchedulerConflictException,
                   SchedulerTransactionLockException, SchedulerException;
 

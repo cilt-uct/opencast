@@ -587,6 +587,11 @@ public abstract class AbstractEventEndpoint {
 
   private void updateEventScheduling(String scheduling, Event event) throws NotFoundException, UnauthorizedException,
     SchedulerException, JSONException, ParseException, SearchIndexException, IndexServiceException {
+    updateEventScheduling(scheduling, event, false);
+  }
+
+  private void updateEventScheduling(String scheduling, Event event, boolean skipConflictCheck) throws NotFoundException, UnauthorizedException,
+    SchedulerException, JSONException, ParseException, SearchIndexException, IndexServiceException {
     final TechnicalMetadata technicalMetadata = getSchedulerService().getTechnicalMetadata(event.getIdentifier());
     final org.codehaus.jettison.json.JSONObject schedulingJson = new org.codehaus.jettison.json.JSONObject(
             scheduling);
@@ -640,7 +645,8 @@ public abstract class AbstractEventEndpoint {
 
     if (!start.isNone() || !end.isNone() || !agentId.isNone() || !agentConfiguration.isNone() || !optOut.isNone()) {
       getSchedulerService()
-        .updateEvent(event.getIdentifier(), start, end, agentId, Opt.none(), Opt.none(), Opt.none(), agentConfiguration, optOut, SchedulerService.ORIGIN);
+        .updateEvent(event.getIdentifier(), start, end, agentId, Opt.none(), Opt.none(), Opt.none(), agentConfiguration,
+                     optOut, SchedulerService.ORIGIN, skipConflictCheck);
       // We want to keep the bibliographic meta data in sync
       updateBibliographicMetadata(event, agentId, start, end);
     }
