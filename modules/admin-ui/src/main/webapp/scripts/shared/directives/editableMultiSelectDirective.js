@@ -71,8 +71,9 @@ angular.module('adminNg.directives')
         });
       };
 
-      scope.onBlur = function (event) {
+      scope.onBlur = function () {
         if (!scope.removedValue) {
+          scope.addCurrentValue();
           scope.leaveEditMode();
         } else {
           $timeout(function () {
@@ -83,21 +84,26 @@ angular.module('adminNg.directives')
       };
 
       scope.leaveEditMode = function () {
+        scope.data.value = '';
         scope.editMode = false;
       };
 
       scope.keyUp = function (event) {
         if (event.keyCode === 13) {
           // ENTER
-          if (angular.isDefined(scope.data.value)) {
-            scope.addValue(scope.params.value, scope.data.value);
-          }
+          scope.addCurrentValue();
           scope.data.value = '';
         } else if (event.keyCode === 27) {
           // ESC
           scope.leaveEditMode();
         }
         event.stopPropagation();
+      };
+
+      scope.addCurrentValue = function () {
+        if (angular.isDefined(scope.data.value) && scope.data.value) {
+          scope.addValue(scope.params.value, scope.data.value);
+        }
       };
 
       scope.addValue = function (model, value) {
@@ -108,8 +114,8 @@ angular.module('adminNg.directives')
 
           if (value && model.indexOf(value) === -1) {
             model.push(value);
+            scope.submit();
           }
-          scope.submit();
         }
       };
 
