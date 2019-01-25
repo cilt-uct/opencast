@@ -28,7 +28,7 @@
           <div class="buttons">
             <select chosen pre-select-from="video.workflows" class="workflow"
                                                              ng-disabled="!video.workflows || video.workflows.length === 0"
-                                                             data-width="'175px'"
+                                                             data-width="'200px'"
                                                              data-disable-search-threshold="0"
                                                              ng-model="video.workflow"
                                                              ng-options="workflow.id as workflow.name for workflow in video.workflows | orderBy: 'displayOrder':true" />
@@ -406,7 +406,7 @@
               <div class="buttons">
                 <select chosen pre-select-from="video.workflows" class="workflow"
                                                                  ng-disabled="!video.workflows || video.workflows.length === 0"
-                                                                 data-width="'175px'"
+                                                                 data-width="'200px'"
                                                                  data-disable-search-threshold="0"
                                                                  ng-model="video.workflow"
                                                                  ng-options="workflow.id as workflow.name for workflow in video.workflows | orderBy: 'displayOrder':true" />
