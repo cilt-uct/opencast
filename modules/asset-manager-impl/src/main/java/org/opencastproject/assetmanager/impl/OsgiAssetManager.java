@@ -44,6 +44,7 @@ import org.opencastproject.workspace.api.Workspace;
 
 import com.entwinemedia.fn.data.Opt;
 
+import org.apache.commons.lang3.BooleanUtils;
 import org.osgi.service.component.ComponentContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -53,6 +54,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
 import javax.persistence.EntityManagerFactory;
@@ -152,7 +154,8 @@ public class OsgiAssetManager implements AssetManager, TieredStorageAssetManager
             workspace,
             systemUserName);
     // compose with security
-    delegate = new AssetManagerWithSecurity(withMessaging, authSvc, secSvc);
+    boolean includeUIRoles = BooleanUtils.toBoolean(Objects.toString(cc.getProperties().get("includeUIRoles"), null));
+    delegate = new AssetManagerWithSecurity(withMessaging, authSvc, secSvc, includeUIRoles);
     for (RemoteAssetStore ras : remotes) {
       delegate.addRemoteAssetStore(ras);
     }
