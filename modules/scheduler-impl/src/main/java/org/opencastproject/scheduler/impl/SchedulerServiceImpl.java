@@ -106,6 +106,7 @@ import org.opencastproject.util.XmlNamespaceBinding;
 import org.opencastproject.util.XmlNamespaceContext;
 import org.opencastproject.util.data.Effect0;
 import org.opencastproject.util.data.Option;
+import org.opencastproject.util.data.functions.Misc;
 import org.opencastproject.util.data.functions.Strings;
 import org.opencastproject.workspace.api.Workspace;
 
@@ -115,6 +116,7 @@ import com.entwinemedia.fn.data.Opt;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 
 import net.fortuna.ical4j.model.Period;
 import net.fortuna.ical4j.model.ValidationException;
@@ -135,6 +137,7 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
+import java.lang.reflect.Type;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -154,7 +157,6 @@ import java.util.Set;
 import java.util.TimeZone;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -186,6 +188,8 @@ public class SchedulerServiceImpl extends AbstractIndexProducer implements Sched
 
   private static final String SNAPSHOT_OWNER = SchedulerService.JOB_TYPE;
 
+  private static final Gson gson = new Gson();
+
   /**
    * Deserializes properties stored in string columns of the extended event table
    * @param props Properties as retrieved from the DB
@@ -195,7 +199,8 @@ public class SchedulerServiceImpl extends AbstractIndexProducer implements Sched
     if (props == null || props.trim().isEmpty()) {
       return new HashMap<>();
     }
-    return (Map<String, String>)new Gson().fromJson(props, Map.class);
+    Type type = new TypeToken<Map<String, String>>() { }.getType();
+    return gson.fromJson(props, type);
   }
 
   /** The last modified cache */
@@ -561,10 +566,8 @@ public class SchedulerServiceImpl extends AbstractIndexProducer implements Sched
 
       final Organization org = securityService.getOrganization();
       final User user = securityService.getUser();
-      //counter for index into the list of mediapackages
-      final AtomicInteger counter = new AtomicInteger(0);
       periods.parallelStream().forEach(event -> SecurityUtil.runAs(securityService, org, user, () -> {
-        final int currentCounter = counter.getAndIncrement();
+        final int currentCounter = periods.indexOf(event);
         MediaPackage mediaPackage = (MediaPackage) templateMp.clone();
         Date startDate = new Date(event.getStart().getTime());
         Date endDate = new Date(event.getEnd().getTime());
@@ -596,7 +599,7 @@ public class SchedulerServiceImpl extends AbstractIndexProducer implements Sched
         try {
           mediaPackage = updateDublincCoreCatalog(mediaPackage, dc);
         } catch (Exception e) {
-          throw new RuntimeException(e);
+          Misc.chuck(e);
         }
         mediaPackage.setTitle(newTitle);
 
@@ -622,7 +625,7 @@ public class SchedulerServiceImpl extends AbstractIndexProducer implements Sched
           persistEvent(mediaPackageId, modificationOrigin, checksum, Opt.some(startDateTime), Opt.some(endDateTime), Opt.some(captureAgentId), Opt.some(userIds), Opt.some(mediaPackage), Opt.some(wfProperties),
                 Opt.some(finalCaProperties), Opt.some(optOut), schedulingSource);
         } catch (Exception e) {
-          throw new RuntimeException(e);
+          Misc.chuck(e);
         }
 
         // Send updates
@@ -642,7 +645,6 @@ public class SchedulerServiceImpl extends AbstractIndexProducer implements Sched
     } catch (SchedulerException e) {
       throw e;
     } catch (Exception e) {
-      logger.error("Failed to create events: {}", getStackTrace(e));
       throw new SchedulerException(e);
     } finally {
       // Update last modified
@@ -725,7 +727,7 @@ public class SchedulerServiceImpl extends AbstractIndexProducer implements Sched
       boolean propertyChanged = captureAgentId.isSome() || startDateTime.isSome() || endDateTime.isSome();
 
       // Check for conflicting events
-      if (!isNewOptOut && (readyForRecording || (propertyChanged && !oldOptOut))) {
+      if (!isNewOptOut && readyForRecording || !isNewOptOut && propertyChanged && !oldOptOut) {
         List<MediaPackage> conflictingEvents = $(findConflictingEvents(captureAgentId.getOr(agentId),
                 startDateTime.getOr(start), endDateTime.getOr(end))).filter(new Fn<MediaPackage, Boolean>() {
                     @Override
@@ -824,7 +826,6 @@ public class SchedulerServiceImpl extends AbstractIndexProducer implements Sched
     } catch (SchedulerException e) {
       throw e;
     } catch (Exception e) {
-      logger.error("Failed to update event with id '{}': {}", mpId, getStackTrace(e));
       throw new SchedulerException(e);
     }
   }
@@ -1073,8 +1074,6 @@ public class SchedulerServiceImpl extends AbstractIndexProducer implements Sched
     } catch (NotFoundException e) {
       throw e;
     } catch (Exception e) {
-      logger.error("Failed to get opt out status of event with mediapackage '{}': {}", mediaPackageId,
-              getStackTrace(e));
       throw new SchedulerException(e);
     }
   }
@@ -1084,7 +1083,6 @@ public class SchedulerServiceImpl extends AbstractIndexProducer implements Sched
     try {
       return persistence.countEvents();
     } catch (Exception e) {
-      logger.error("Failed to search for events: {}", getStackTrace(e));
       throw new SchedulerException(e);
     }
   }
@@ -1097,7 +1095,6 @@ public class SchedulerServiceImpl extends AbstractIndexProducer implements Sched
           .map(ExtendedEventDto::getMediaPackageId)
           .map(this::getEventMediaPackage).collect(Collectors.toList());
     } catch (Exception e) {
-      logger.error("Failed to search for events: {}", getStackTrace(e));
       throw new SchedulerException(e);
     }
   }
@@ -1112,7 +1109,6 @@ public class SchedulerServiceImpl extends AbstractIndexProducer implements Sched
       }
       return Opt.some(getEventMediaPackage(result.get(0).getMediaPackageId()));
     } catch (Exception e) {
-      logger.error("Failed to search for events: {}", getStackTrace(e));
       throw new SchedulerException(e);
     }
   }
@@ -1127,7 +1123,6 @@ public class SchedulerServiceImpl extends AbstractIndexProducer implements Sched
       }
       return Opt.some(getEventMediaPackage(result.get(0).getMediaPackageId()));
     } catch (Exception e) {
-      logger.error("Failed to search for events: {}", getStackTrace(e));
       throw new SchedulerException(e);
     }
   }
@@ -1210,7 +1205,6 @@ public class SchedulerServiceImpl extends AbstractIndexProducer implements Sched
       TimeZone.setDefault(null);
       return new ArrayList<>(events);
     } catch (Exception e) {
-      logger.error("Failed to search for conflicting events: {}", getStackTrace(e));
       throw new SchedulerException(e);
     }
   }
@@ -1332,8 +1326,6 @@ public class SchedulerServiceImpl extends AbstractIndexProducer implements Sched
     } catch (NotFoundException e) {
       throw e;
     } catch (Exception e) {
-      logger.error("Failed to update review status of event with mediapackage '{}': {}", mediaPackageId,
-              getStackTrace(e));
       throw new SchedulerException(e);
     }
   }
@@ -1351,7 +1343,6 @@ public class SchedulerServiceImpl extends AbstractIndexProducer implements Sched
     } catch (NotFoundException e) {
       throw e;
     } catch (Exception e) {
-      logger.error("Failed to get review status of event with mediapackage '{}': {}", mediaPackageId, getStackTrace(e));
       throw new SchedulerException(e);
     }
   }
@@ -1376,7 +1367,6 @@ public class SchedulerServiceImpl extends AbstractIndexProducer implements Sched
       }
       return lastModified;
     } catch (Exception e) {
-      logger.error("Failed to get last modified of agent with id '{}': {}", captureAgentId, getStackTrace(e));
       throw new SchedulerException(e);
     }
   }
@@ -1394,7 +1384,6 @@ public class SchedulerServiceImpl extends AbstractIndexProducer implements Sched
               Opt.some(end.toDate()), Opt.none());
       logger.debug("Found {} events from search.", finishedEvents.size());
     } catch (Exception e) {
-      logger.error("Unable to search for finished events: {}", getStackTrace(e));
       throw new SchedulerException(e);
     }
 
@@ -1463,7 +1452,6 @@ public class SchedulerServiceImpl extends AbstractIndexProducer implements Sched
     } catch (NotFoundException e) {
       throw e;
     } catch (Exception e) {
-      logger.error("Failed to update recording status of event with mediapackage '{}': {}", id, getStackTrace(e));
       throw new SchedulerException(e);
     }
   }
@@ -1483,7 +1471,6 @@ public class SchedulerServiceImpl extends AbstractIndexProducer implements Sched
     } catch (NotFoundException e) {
       throw e;
     } catch (Exception e) {
-      logger.error("Failed to get recording status of event with mediapackage '{}': {}", id, getStackTrace(e));
       throw new SchedulerException(e);
     }
   }
@@ -1499,7 +1486,6 @@ public class SchedulerServiceImpl extends AbstractIndexProducer implements Sched
     } catch (NotFoundException e) {
       throw e;
     } catch (Exception e) {
-      logger.error("Failed to delete recording status of event with mediapackage '{}': {}", id, getStackTrace(e));
       throw new SchedulerException(e);
     }
   }
@@ -1513,7 +1499,6 @@ public class SchedulerServiceImpl extends AbstractIndexProducer implements Sched
               dto -> new RecordingImpl(dto.getMediaPackageId(), dto.getRecordingState(), dto.getRecordingLastHeard()))
           );
     } catch (Exception e) {
-      logger.error("Failed to get known recording states: {}", getStackTrace(e));
       throw new SchedulerException(e);
     }
   }
@@ -1641,7 +1626,6 @@ public class SchedulerServiceImpl extends AbstractIndexProducer implements Sched
         lastModifiedCache.put(entry.getKey(), generateLastModifiedHash(lastModifiedDate));
       }
     } catch (Exception e) {
-      logger.error("Failed to retrieve last modified for CA: {}", getStackTrace(e));
       throw new SchedulerException(e);
     }
   }
