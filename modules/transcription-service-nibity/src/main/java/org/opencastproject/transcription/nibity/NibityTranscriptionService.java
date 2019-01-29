@@ -105,9 +105,9 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
   static final String TRANSCRIPT_COLLECTION = "transcripts";
   private static final int CONNECTION_TIMEOUT = 60000; // ms, 1 minute
   private static final int SOCKET_TIMEOUT = 60000; // ms, 1 minute
-  private static final int ACCESS_TOKEN_MINIMUN_TIME = 60000; // ms , 1 minute
+  private static final int ACCESS_TOKEN_MINIMUM_TIME = 60000; // ms , 1 minute
   // Default wf to attach transcription results to mp
-  public static final String DEFAULT_WF_DEF = "attach-google-speech-transcripts";
+  public static final String DEFAULT_WF_DEF = "attach-nibity-transcripts";
   private static final long DEFAULT_COMPLETION_BUFFER = 300; // in seconds, default is 5 minutes
   private static final long DEFAULT_DISPATCH_INTERVAL = 60; // in seconds, default is 1 minute
   private static final long DEFAULT_MAX_PROCESSING_TIME = 5 * 60 * 60; // in seconds, default is 5 hours
@@ -115,12 +115,14 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
   private static final int DEFAULT_CLEANUP_RESULTS_DAYS = 7;
   private static final boolean DEFAULT_PROFANITY_FILTER = false;
   private static final String DEFAULT_LANGUAGE = "en-US";
+
+  // Nibity API
   private static final String GOOGLE_SPEECH_URL = "https://speech.googleapis.com/v1";
   private static final String GOOGLE_AUTH2_URL = "https://www.googleapis.com/oauth2/v4/token";
   private static final String REQUEST_PATH = "/speech:longrunningrecognize";
   private static final String RESULT_PATH = "/operations/";
   private static final String INVALID_TOKEN = "-1";
-  private static final String PROVIDER = "Google Speech";
+  private static final String PROVIDER = "Nibity";
 
   // Global configuration (custom.properties)
   public static final String ADMIN_URL_PROPERTY = "org.opencastproject.admin.ui.url";
@@ -130,13 +132,6 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
   // Cluster name
   private static final String CLUSTER_NAME_PROPERTY = "org.opencastproject.environment.name";
   private String clusterName = "";
-
-  // The events we are interested in receiving notifications
-  public interface JobEvent {
-
-    String COMPLETED_WITH_RESULTS = "recognitions.completed_with_results";
-    String FAILED = "recognitions.failed";
-  }
 
   /**
    * Service dependencies
@@ -163,8 +158,7 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
    * Service configuration options
    */
   public static final String ENABLED_CONFIG = "enabled";
-  public static final String NIBITY_LANGUAGE = "google.speech.language";
-  public static final String PROFANITY_FILTER = "google.speech.profanity.filter";
+  public static final String NIBITY_LANGUAGE = "nibity.language";
   public static final String WORKFLOW_CONFIG = "workflow";
   public static final String DISPATCH_WORKFLOW_INTERVAL_CONFIG = "workflow.dispatch.interval";
   public static final String COMPLETION_CHECK_BUFFER_CONFIG = "completion.check.buffer";
@@ -181,7 +175,6 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
    * Service configuration values
    */
   private boolean enabled = false; // Disabled by default
-  private boolean profanityFilter = DEFAULT_PROFANITY_FILTER;
   private String language = DEFAULT_LANGUAGE;
   private String workflowDefinitionId = DEFAULT_WF_DEF;
   private long workflowDispatchInterval = DEFAULT_DISPATCH_INTERVAL;
@@ -225,14 +218,6 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
           logger.info("Default access token endpoint will be used");
         }
 
-        // profanity filter to use
-        Option<String> profanityOpt = OsgiUtil.getOptCfg(cc.getProperties(), PROFANITY_FILTER);
-        if (profanityOpt.isSome()) {
-          profanityFilter = Boolean.parseBoolean(profanityOpt.get());
-          logger.info("Profanity filter is set to {}", profanityFilter);
-        } else {
-          logger.info("Default profanity filter will be used");
-        }
         // Language model to be used
         Option<String> languageOpt = OsgiUtil.getOptCfg(cc.getProperties(), NIBITY_LANGUAGE);
         if (languageOpt.isSome()) {
@@ -463,7 +448,6 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
     JSONObject container = new JSONObject();
     configValues.put("languageCode", languageCode);
     configValues.put("enableWordTimeOffsets", true);
-    configValues.put("profanityFilter", profanityFilter);
     audioValues.put("uri", audioUrl);
     container.put("config", configValues);
     container.put("audio", audioValues);
@@ -786,7 +770,7 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
 
   protected String getRefreshAccessToken() throws TranscriptionServiceException, IOException {
     // Check that token hasn't expired
-    if ((!INVALID_TOKEN.equals(accessToken)) && (System.currentTimeMillis() < (tokenExpiryTime - ACCESS_TOKEN_MINIMUN_TIME))) {
+    if ((!INVALID_TOKEN.equals(accessToken)) && (System.currentTimeMillis() < (tokenExpiryTime - ACCESS_TOKEN_MINIMUM_TIME))) {
       return accessToken;
     }
     return refreshAccessToken(clientId, clientSecret, clientToken);
