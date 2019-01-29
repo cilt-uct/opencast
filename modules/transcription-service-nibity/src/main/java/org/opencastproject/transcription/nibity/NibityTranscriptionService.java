@@ -20,12 +20,11 @@
  */
 package org.opencastproject.transcription.nibity;
 
-import org.opencastproject.archive.api.Archive;
-import org.opencastproject.archive.api.HttpMediaPackageElementProvider;
-import org.opencastproject.archive.api.Query;
-import org.opencastproject.archive.api.ResultItem;
-import org.opencastproject.archive.api.ResultSet;
-import org.opencastproject.archive.base.QueryBuilder;
+import org.opencastproject.assetmanager.api.AssetManager;
+import org.opencastproject.assetmanager.api.fn.Enrichments;
+import org.opencastproject.assetmanager.api.query.AQueryBuilder;
+import org.opencastproject.assetmanager.api.query.AResult;
+import org.opencastproject.assetmanager.util.Workflows;
 import org.opencastproject.job.api.AbstractJobProducer;
 import org.opencastproject.job.api.Job;
 import org.opencastproject.kernel.mail.SmtpService;
@@ -84,11 +83,12 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -147,13 +147,14 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
   private OrganizationDirectoryService organizationDirectoryService;
   private Workspace workspace;
   private NibityTranscriptionDatabase database;
-  protected Archive<?> archive = null;
-  private HttpMediaPackageElementProvider httpMediaPackageElementProvider;
+  private AssetManager assetManager;
   private WorkflowService workflowService;
   private WorkingFileRepository wfr;
   private SmtpService smtpService;
 
   // Only used by unit tests!
+  private Workflows wfUtil;
+
   private enum Operation {
     StartTranscription
   }
@@ -162,7 +163,7 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
    * Service configuration options
    */
   public static final String ENABLED_CONFIG = "enabled";
-  public static final String GOOGLE_SPEECH_LANGUAGE = "google.speech.language";
+  public static final String NIBITY_LANGUAGE = "google.speech.language";
   public static final String PROFANITY_FILTER = "google.speech.profanity.filter";
   public static final String WORKFLOW_CONFIG = "workflow";
   public static final String DISPATCH_WORKFLOW_INTERVAL_CONFIG = "workflow.dispatch.interval";
@@ -233,7 +234,7 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
           logger.info("Default profanity filter will be used");
         }
         // Language model to be used
-        Option<String> languageOpt = OsgiUtil.getOptCfg(cc.getProperties(), GOOGLE_SPEECH_LANGUAGE);
+        Option<String> languageOpt = OsgiUtil.getOptCfg(cc.getProperties(), NIBITY_LANGUAGE);
         if (languageOpt.isSome()) {
           language = languageOpt.get();
           logger.info("Language used is {}", language);
@@ -333,7 +334,7 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
   }
 
   @Override
-  public Job startTranscription(String mpId, Track track, String language) throws TranscriptionServiceException {
+  public Job startTranscription(String mpId, Track track) throws TranscriptionServiceException {
     if (!enabled) {
       throw new TranscriptionServiceException(
               "This service is disabled. If you want to enable it, please update the service configuration.");
@@ -411,6 +412,11 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
       logger.warn("Transcription error. State in db could not be updated to error for mpId {}, jobId {}", mpId, jobId);
       throw new TranscriptionServiceException("Could not update transcription job control db", e);
     }
+  }
+
+ @Override
+  public String getLanguage() {
+    return language;
   }
 
   @Override
@@ -876,15 +882,8 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
     this.database = service;
   }
 
-  /**
-   * @param archive the archive to set
-   */
-  public void setArchive(Archive<?> archive) {
-    this.archive = archive;
-  }
-
-  public void setHttpMediaPackageElementProvider(HttpMediaPackageElementProvider httpMediaPackageElementProvider) {
-    this.httpMediaPackageElementProvider = httpMediaPackageElementProvider;
+  public void setAssetManager(AssetManager service) {
+    this.assetManager = service;
   }
 
   public void setWorkflowService(WorkflowService service) {
@@ -909,6 +908,11 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
   @Override
   protected OrganizationDirectoryService getOrganizationDirectoryService() {
     return organizationDirectoryService;
+  }
+
+  // Only used by unit tests!
+  void setWfUtil(Workflows wfUtil) {
+    this.wfUtil = wfUtil;
   }
 
   class WorkflowDispatcher implements Runnable {
@@ -977,41 +981,35 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
             securityService.setOrganization(defaultOrg);
             securityService.setUser(SecurityUtil.createSystemUser(systemAccount, defaultOrg));
 
-            //Find from archive
-            final Query q = QueryBuilder.query().mediaPackageId(mpId).onlyLastVersion(true);
-            final ResultSet result = archive.findForAdministrativeRead(q, httpMediaPackageElementProvider.getUriRewriter());
-
-            if (result.getItems().isEmpty()) {
+            // Find the episode
+            final AQueryBuilder q = assetManager.createQuery();
+            final AResult r = q.select(q.snapshot()).where(q.mediaPackageId(mpId).and(q.version().isLatest())).run();
+            if (r.getSize() == 0) {
               // Media package not archived yet? Skip until next time.
               logger.warn("Media package {} has not been archived yet. Skipped.", mpId);
               continue;
             }
 
-            ResultItem item = result.getItems().get(0);
-            String orgId = item.getOrganizationId();
-            Organization organization = organizationDirectoryService.getOrganization(orgId);
+            String org = Enrichments.enrich(r).getSnapshots().head2().getOrganizationId();
+            Organization organization = organizationDirectoryService.getOrganization(org);
             if (organization == null) {
-              logger.warn("Media package {} has an unknown organization {}. Skipped.", mpId, orgId);
+              logger.warn("Media package {} has an unknown organization {}. Skipped.", mpId, org);
               continue;
             }
             securityService.setOrganization(organization);
-
-            logger.info("Organisation is {}", organization);
 
             // Build workflow
             Map<String, String> params = new HashMap<String, String>();
             params.put("transcriptionJobId", jobId);
             WorkflowDefinition wfDef = workflowService.getWorkflowDefinitionById(workflowDefinitionId);
-            ConfiguredWorkflow wf = new ConfiguredWorkflow(wfDef, params);
-
-            logger.info("Transcription workflow is {}", wfDef);
 
             // Apply workflow
-            List<String> mpList = new ArrayList<>();
-            mpList.add(mpId);
-
-            List<WorkflowInstance> wfList = archive.applyWorkflow(wf,
-                    httpMediaPackageElementProvider.getUriRewriter(), mpList);
+            // wfUtil is only used by unit tests
+            Workflows workflows = wfUtil != null ? wfUtil : new Workflows(assetManager, workspace, workflowService);
+            Set<String> mpIds = new HashSet<String>();
+            mpIds.add(mpId);
+            List<WorkflowInstance> wfList = workflows
+                    .applyWorkflowToLatestVersion(mpIds, ConfiguredWorkflow.workflow(wfDef, params)).toList();
             String wfId = wfList.size() > 0 ? Long.toString(wfList.get(0).getId()) : "Unknown";
 
             // Update state in the database
@@ -1019,7 +1017,7 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
             logger.info("Attach transcription workflow {} scheduled for mp {}, google speech job {}", new String[]{wfId,
               mpId, jobId});
           } catch (Exception e) {
-            logger.warn("Attach transcription workflow could NOT be scheduled for mp {}, google speech job {}, {}: {}",
+            logger.warn("Attach transcription workflow could NOT be scheduled for mp {}, nibity job {}, {}: {}",
                     new String[]{mpId, jobId, e.getClass().getName(), e.getMessage()});
           }
         }

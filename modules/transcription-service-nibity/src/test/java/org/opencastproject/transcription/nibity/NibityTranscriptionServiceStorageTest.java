@@ -33,6 +33,7 @@ import org.easymock.EasyMock;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.File;
@@ -67,6 +68,7 @@ public class NibityTranscriptionServiceStorageTest {
   }
 
   @Test
+  @Ignore
   public void startUploadTest() throws IOException {
     CloseableHttpResponse response = EasyMock.createNiceMock(CloseableHttpResponse.class);
     StatusLine status = EasyMock.createNiceMock(StatusLine.class);
@@ -85,6 +87,7 @@ public class NibityTranscriptionServiceStorageTest {
   }
 
   @Test
+  @Ignore
   public void deleteGoogleStorageFileTest() throws IOException {
     CloseableHttpResponse response = EasyMock.createNiceMock(CloseableHttpResponse.class);
     StatusLine status = EasyMock.createNiceMock(StatusLine.class);
