@@ -64,13 +64,20 @@ import org.apache.commons.io.FilenameUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpHeaders;
 import org.apache.http.HttpStatus;
+import org.apache.http.NameValuePair;
+import org.apache.http.auth.AuthScope;
+import org.apache.http.auth.UsernamePasswordCredentials;
+import org.apache.http.client.CredentialsProvider;
 import org.apache.http.client.config.RequestConfig;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
-import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.client.HttpClients;
+import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -83,6 +90,7 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -170,6 +178,8 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
   public static final String GOOGLE_CLOUD_REFRESH_TOKEN = "google.cloud.refresh.token";
   public static final String GOOGLE_CLOUD_BUCKET = "google.cloud.storage.bucket";
   public static final String GOOGLE_CLOUD_TOKEN_ENDPOINT_URL = "google.cloud.token.endpoint.url";
+  public static final String NIBITY_CLIENT_ID = "nibity.client.id";
+  public static final String NIBITY_CLIENT_KEY = "nibity.client.key";
 
   /**
    * Service configuration values
@@ -185,6 +195,8 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
   private String clientId;
   private String clientSecret;
   private String clientToken;
+  private String nibityClientId;
+  private String nibityClientKey;
   private String accessToken = INVALID_TOKEN;
   private String tokenEndpoint = GOOGLE_AUTH2_URL;
   private String storageBucket;
@@ -217,6 +229,13 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
         } else {
           logger.info("Default access token endpoint will be used");
         }
+
+        // Nibity API client ID and key
+        nibityClientId = OsgiUtil.getComponentContextProperty(cc, NIBITY_CLIENT_ID);
+        nibityClientKey = OsgiUtil.getComponentContextProperty(cc, NIBITY_CLIENT_KEY);
+
+        // TODO remove for production
+        logger.info("Nibity API auth details: client id {} key {}", nibityClientId, nibityClientKey);
 
         // Language model to be used
         Option<String> languageOpt = OsgiUtil.getOptCfg(cc.getProperties(), NIBITY_LANGUAGE);
@@ -359,7 +378,7 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
       // may be doing the same thing
       database.updateJobControl(jobId, NibityTranscriptionJobControl.Status.TranscriptionComplete.name());
 
-      // Delete audio file from Google storage
+      // Delete media file from Google storage
       deleteStorageFile(mpId, token);
 
       // Save results in file system if there exist
@@ -425,43 +444,59 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
   }
 
   /**
-   * Asynchronous Requests and Responses call to Google Speech API
-   * https://cloud.google.com/speech-to-text/docs/basics
+   * Asynchronous Requests and Responses call to Nibity API
+   * https://documenter.getpostman.com/view/5815470/RznFpyb6
+   * https://api.nibity.com/v1/{id}/submit
    */
   void createRecognitionsJob(String mpId, Track track, String languageCode) throws TranscriptionServiceException, IOException {
+
+    String mediaUrl = uploadMediaFileToGoogleStorage(mpId, track);
+
+    if (mediaUrl == null) {
+      throw new TranscriptionServiceException("Could not create recognition job: unable to upload media to storage");
+    }
+
+    logger.info("Media URL in intermediate storage: {}", mediaUrl);
+
+    CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
+    credentialsProvider.setCredentials(AuthScope.ANY,
+      new UsernamePasswordCredentials(nibityClientKey, ""));
+
+    CloseableHttpClient httpClient = HttpClientBuilder.create().setDefaultCredentialsProvider(credentialsProvider).build();
+    CloseableHttpResponse response = null;
+
     // Use default language if not set by workflow
     if (languageCode == null || languageCode.isEmpty()) {
       languageCode = language;
     }
-    String audioUrl;
-    audioUrl = uploadAudioFileToGoogleStorage(mpId, track);
-    CloseableHttpClient httpClient = makeHttpClient();
-    CloseableHttpResponse response = null;
-    String token = getRefreshAccessToken();
-    if (token.equals(INVALID_TOKEN) || audioUrl == null) {
-      throw new TranscriptionServiceException("Could not create recognition job. Audio file or access token invalid");
-    }
 
-    // Create json for configuration and audio file 
+    // Create json for configuration and media file 
     JSONObject configValues = new JSONObject();
     JSONObject audioValues = new JSONObject();
     JSONObject container = new JSONObject();
     configValues.put("languageCode", languageCode);
     configValues.put("enableWordTimeOffsets", true);
-    audioValues.put("uri", audioUrl);
+    audioValues.put("uri", mediaUrl);
     container.put("config", configValues);
     container.put("audio", audioValues);
 
+    String apiUrl = "https://api.nibity.com/v1/" + nibityClientId + "/submit";
+
+    List <NameValuePair> nvps = new ArrayList<NameValuePair>();
+    nvps.add(new BasicNameValuePair("media[0][name]", mpId));
+    nvps.add(new BasicNameValuePair("media[0][url]", mediaUrl));
+    nvps.add(new BasicNameValuePair("ref", "Test submission reference"));
+    nvps.add(new BasicNameValuePair("notes", "Test submission notes"));
+    nvps.add(new BasicNameValuePair("retain", "168"));
+
     try {
-      HttpPost httpPost = new HttpPost(GOOGLE_SPEECH_URL + REQUEST_PATH);
-      logger.debug("Url to invoke Google speech service: {}", httpPost.getURI().toString());
-      StringEntity params = new StringEntity(container.toJSONString());
-      httpPost.addHeader("Authorization", "Bearer " + token); // add the authorization header to the request;
-      httpPost.addHeader(HttpHeaders.CONTENT_TYPE, "application/json; charset=utf-8");
-      httpPost.setEntity(params);
+      HttpPost httpPost = new HttpPost(apiUrl);
+      httpPost.setEntity(new UrlEncodedFormEntity(nvps, "UTF-8"));
+
       response = httpClient.execute(httpPost);
       int code = response.getStatusLine().getStatusCode();
       HttpEntity entity = response.getEntity();
+
       String jsonString = EntityUtils.toString(response.getEntity());
       JSONParser jsonParser = new JSONParser();
       JSONObject jsonObject = (JSONObject) jsonParser.parse(jsonString);
@@ -471,24 +506,27 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
           logger.info("Recognitions job has been successfully created");
 
           /**
-           * Response returned is a json object: { "name":
-           * "7612202767953098924", "metadata": { "@type":
-           * "type.googleapis.com/google.cloud.speech.v1.LongRunningRecognizeMetadata",
-           * "progressPercent": 90, "startTime": "2017-07-20T16:36:55.033650Z",
-           * "lastUpdateTime": "2017-07-20T16:37:17.158630Z" } }
+           * Response returned is a json object: { "Earnings Call 2018": { "id": "2477", "length": 3218.797, "status": 500 } }
            */
-          String jobId = (String) jsonObject.get("name");
-          logger.info(String.format(
-                  "Transcription for mp %s has been submitted. Job id: %s", mpId,
-                  jobId));
+          JSONObject result = (JSONObject) jsonObject.get(mpId);
 
-          database.storeJobControl(mpId, track.getIdentifier(), jobId, NibityTranscriptionJobControl.Status.Progress.name(),
+          String jobId = (String) result.get("id");
+          long jobStatus = (Long) result.get("status");
+
+          logger.info(String.format(
+                  "Transcription for mp %s has been submitted. Job id: %s status %s", mpId, jobId, jobStatus));
+
+          if (jobStatus == 500) {
+              database.storeJobControl(mpId, track.getIdentifier(), jobId, NibityTranscriptionJobControl.Status.Progress.name(),
                   track.getDuration() == null ? 0 : track.getDuration().longValue(), PROVIDER);
-          EntityUtils.consume(entity);
+              EntityUtils.consume(entity);
+          } else {
+              logger.warn("Unknown job status {} in JSON response: {}", jsonString);
+          }
           return;
+
         default:
-          JSONObject errorObj = (JSONObject) jsonObject.get("error");
-          logger.warn("Invalid argument returned, status: {} with message: {}", code, (String) errorObj.get("message"));
+          logger.warn("Invalid argument returned, status: {} with message: {}", code, jsonString);
           break;
       }
       throw new TranscriptionServiceException("Could not create recognition job. Status returned: " + code);
@@ -776,29 +814,29 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
     return refreshAccessToken(clientId, clientSecret, clientToken);
   }
 
-  protected String uploadAudioFileToGoogleStorage(String mpId, Track track)
+  protected String uploadMediaFileToGoogleStorage(String mpId, Track track)
           throws TranscriptionServiceException, IOException {
-    File audioFile;
-    String audioUrl = null;
+    File mediaFile;
+    String mediaUrl = null;
     String fileExtension;
-    int audioRespone;
+    int mediaResponse;
     CloseableHttpClient httpClientStorage = makeHttpClient();
     NibityTranscriptionServiceStorage storage = new NibityTranscriptionServiceStorage();
     try {
-      audioFile = workspace.get(track.getURI());
-      fileExtension = FilenameUtils.getExtension(audioFile.getName());
-      long fileSize = audioFile.length();
+      mediaFile = workspace.get(track.getURI());
+      fileExtension = FilenameUtils.getExtension(mediaFile.getName());
+      long fileSize = mediaFile.length();
       String contentType = track.getMimeType().toString();
       String token = getRefreshAccessToken();
       // Upload file to google cloud storage
-      audioRespone = storage.startUpload(httpClientStorage, storageBucket, mpId, fileExtension,
-              audioFile, String.valueOf(fileSize), contentType, token);
-      if (audioRespone == HttpStatus.SC_OK) {
-        audioUrl = String.format("gs://%s/%s.%s", storageBucket, mpId, fileExtension);
-        return audioUrl;
+      mediaResponse = storage.startUpload(httpClientStorage, storageBucket, mpId, fileExtension,
+              mediaFile, String.valueOf(fileSize), contentType, token);
+      if (mediaResponse == HttpStatus.SC_OK) {
+        mediaUrl = String.format("gs://%s/%s.%s", storageBucket, mpId, fileExtension);
+        return mediaUrl;
       }
-      logger.error("Errow when uploading audio to Google Storage, error code: {}", audioRespone);
-      return audioUrl;
+      logger.error("Errow when uploading audio to Google Storage, error code: {}", mediaResponse);
+      return mediaUrl;
     } catch (Exception e) {
       throw new TranscriptionServiceException("Error reading audio track", e);
     }
