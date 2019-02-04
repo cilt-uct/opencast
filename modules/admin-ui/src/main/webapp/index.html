@@ -29,7 +29,7 @@
       <script type="text/javascript" src="lib/moment-with-locales.js"></script>
   </head>
   <body ng-cloak ng-controller="ApplicationCtrl" ng-click="bodyClicked()">
-    <header ng-controller="NavCtrl" class="primary-header">
+    <header ng-controller="NavCtrl" class="primary-header" ng-hide="isLti">
       <div class="header-branding">
         <a href="/" target="_self" class="logo">
           <img src="img/opencast-white.svg" alt="Opencast Logo" />

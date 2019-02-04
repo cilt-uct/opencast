@@ -1,4 +1,4 @@
-<section class="action-nav-bar">
+<section class="action-nav-bar" ng-hide="isLti">
   <admin-ng-nav></admin-ng-nav>
   <nav>
     <a href="#/events/events" ng-class="{active: resource == 'events'}" translate="EVENTS.EVENTS.NAVIGATION.EVENTS" with-role="ROLE_UI_EVENTS_VIEW">
@@ -31,14 +31,32 @@
                                                              data-width="'200px'"
                                                              data-disable-search-threshold="0"
                                                              ng-model="video.workflow"
+                                                             ng-if="!isLti"
                                                              ng-options="workflow.id as workflow.name for workflow in video.workflows | orderBy: 'displayOrder':true" />
 
-              <a ng-click="submit()"
-                 ng-class="{disabled: activeTransaction}"
-                 class="save-and-close-button"
-                 translate="{{ video.workflow ? 'VIDEO_TOOL.BUTTONS.PROCESS' : 'VIDEO_TOOL.BUTTONS.SAVE' }}">
-                <!-- Save and Continue -->
-              </a>
+            <a ng-click="submit()"
+                ng-class="{disabled: activeTransaction}"
+                ng-hide="isLti"
+                class="save-and-close-button"
+                translate="{{ video.workflow ? 'VIDEO_TOOL.BUTTONS.PROCESS' : 'VIDEO_TOOL.BUTTONS.SAVE' }}">
+              <!-- Save and Continue -->
+            </a>
+
+            <a ng-click="submit()"
+                ng-show="isLti"
+                ng-class="{disabled: submitButton}"
+                class="return-button"
+                translate="{{ 'Cancel' }}">
+                <!-- Cancel -->
+            </a>
+
+            <a ng-click="saveAndPublish()"
+                ng-show="isLti"
+                ng-class="{disabled: submitButton}"
+                class="save-and-close-button"
+                translate="{{ 'VIDEO_TOOL.BUTTONS.PROCESS' }}">
+                <!-- Save and Continue using default org workflow -->
+            </a>
           </div>
         </div>
       </div>
@@ -70,13 +88,13 @@
               <nav class="modal-nav view-controller-secondary">
                 <a ng-class="{active: area === 'segments'}" ng-if="tab === 'editor'"
                                                             ng-click="openArea('segments')" translate>VIDEO_TOOL.AREAS.SEGMENTS</a>
-                <a ng-class="{active: area === 'metadata'}"
+                <a ng-class="{active: area === 'metadata'}" ng-hide="isLti"
                    ng-click="openArea('metadata')" translate>VIDEO_TOOL.AREAS.METADATA</a>
-                <a ng-class="{active: area === 'thumbnail'}" ng-if="tab === 'editor'"
+                <a ng-class="{active: area === 'thumbnail'}" ng-if="tab === 'editor'" ng-hide="isLti"
                                                              ng-click="openArea('thumbnail')" translate>VIDEO_TOOL.AREAS.THUMBNAIL</a>
-                <a ng-class="{active: area === 'tracks'}" ng-if="tab === 'editor'"
+                <a ng-class="{active: area === 'tracks'}" ng-if="tab === 'editor'" ng-hide="isLti"
                                                           ng-click="openArea('tracks')" translate>VIDEO_TOOL.AREAS.TRACKS</a>
-                <a ng-class="{active: area === 'comments'}"
+                <a ng-class="{active: area === 'comments'}" ng-hide="isLti"
                    ng-click="openArea('comments')" translate>VIDEO_TOOL.AREAS.COMMENTS</a>
               </nav>
             </div>
@@ -399,23 +417,44 @@
 
           <div data-admin-ng-notifications="" type="warning" show="activeTransaction" context="video-editor-event-access"></div>
           <div class="video-editor-actions-toolbar">
+            <div class="video-nav-controls" ng-hide="isLti">
+                <a class="return-button" ng-click="navigateTo('/events/events')" translate>VIDEO_TOOL.BUTTONS.CLOSE</a>
+            </div>
 
             <div data-admin-ng-notifications=""></div>
 
             <div class="video-save-panel" ng-if="tab === 'editor' && player.adapter">
               <div class="buttons">
-                <select chosen pre-select-from="video.workflows" class="workflow"
-                                                                 ng-disabled="!video.workflows || video.workflows.length === 0"
-                                                                 data-width="'200px'"
-                                                                 data-disable-search-threshold="0"
-                                                                 ng-model="video.workflow"
-                                                                 ng-options="workflow.id as workflow.name for workflow in video.workflows | orderBy: 'displayOrder':true" />
+                  <select chosen pre-select-from="video.workflows" class="workflow"
+                    ng-disabled="!video.workflows || video.workflows.length === 0"
+                    data-width="'200px'"
+                    data-disable-search-threshold="0"
+                    ng-model="video.workflow"
+                    ng-if="!isLti"
+                    ng-options="workflow.id as workflow.name for workflow in video.workflows | orderBy: 'displayOrder':true" />
 
                   <a ng-click="submit()"
-                     ng-class="{disabled: activeTransaction || sanityCheckFlags()}"
-                     class="save-and-close-button"
-                     translate="{{ video.workflow ? 'VIDEO_TOOL.BUTTONS.PROCESS' : 'VIDEO_TOOL.BUTTONS.SAVE' }}">
-                    <!-- Save and Continue -->
+                      ng-class="{disabled: activeTransaction}"
+                      ng-hide="isLti"
+                      class="save-and-close-button"
+                      translate="{{ video.workflow ? 'VIDEO_TOOL.BUTTONS.PROCESS' : 'VIDEO_TOOL.BUTTONS.SAVE' }}">
+                      <!-- Save and Continue -->
+                  </a>
+
+                  <a ng-click="submit()"
+                      ng-show="isLti"
+                      ng-class="{disabled: submitButton}"
+                      class="return-button"
+                      translate="{{ 'Cancel' }}">
+                      <!-- Cancel -->
+                  </a>
+
+                  <a ng-click="saveAndPublish()"
+                      ng-show="isLti"
+                      ng-class="{disabled: submitButton}"
+                      class="save-and-close-button"
+                      translate="{{ 'VIDEO_TOOL.BUTTONS.PROCESS' }}">
+                      <!-- Save and Continue using default org workflow -->
                   </a>
 
                   <a class="return-button" ng-click="leave()" translate>VIDEO_TOOL.BUTTONS.CLOSE</a>
