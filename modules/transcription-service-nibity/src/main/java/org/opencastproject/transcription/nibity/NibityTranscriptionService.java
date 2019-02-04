@@ -465,22 +465,7 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
     CloseableHttpClient httpClient = HttpClientBuilder.create().setDefaultCredentialsProvider(credentialsProvider).build();
     CloseableHttpResponse response = null;
 
-    // Use default language if not set by workflow
-    if (languageCode == null || languageCode.isEmpty()) {
-      languageCode = language;
-    }
-
-    // Create json for configuration and media file 
-    JSONObject configValues = new JSONObject();
-    JSONObject audioValues = new JSONObject();
-    JSONObject container = new JSONObject();
-    configValues.put("languageCode", languageCode);
-    configValues.put("enableWordTimeOffsets", true);
-    audioValues.put("uri", mediaUrl);
-    container.put("config", configValues);
-    container.put("audio", audioValues);
-
-    String apiUrl = "https://api.nibity.com/v1/" + nibityClientId + "/submit";
+    String submitUrl = "https://api.nibity.com/v1/" + nibityClientId + "/submit";
 
     List <NameValuePair> nvps = new ArrayList<NameValuePair>();
     nvps.add(new BasicNameValuePair("media[0][name]", mpId));
@@ -490,7 +475,7 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
     nvps.add(new BasicNameValuePair("retain", "168"));
 
     try {
-      HttpPost httpPost = new HttpPost(apiUrl);
+      HttpPost httpPost = new HttpPost(submitUrl);
       httpPost.setEntity(new UrlEncodedFormEntity(nvps, "UTF-8"));
 
       response = httpClient.execute(httpPost);
@@ -545,32 +530,40 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
   }
 
   /**
-   * Get transcription job result: GET /v1/operations/{name}
+   * Get transcription job result:
+   * POST https://api.nibity.com/v1/{id}/check/ with files[0]=jobId
+   *   response: { "3765": { "auth": 504, "transcript_id": 7645 }, "3766": { "auth": 504, "transcript_id": 7735 } }
    *
-   * "response": { "@type":
-   * "type.googleapis.com/google.cloud.speech.v1.LongRunningRecognizeResponse",
-   * "results": [ { "alternatives": [ { "transcript": "Four score and
-   * twenty...", "confidence": 0.97186122, "words": [ { "startTime": "1.300s",
-   * "endTime": "1.400s", "word": "Four" }, { "startTime": "1.400s", "endTime":
-   * "1.600s", "word": "score" }, { "startTime": "1.600s", "endTime": "1.600s",
-   * "word": "and" }, { "startTime": "1.600s", "endTime": "1.900s", "word":
-   * "twenty" }, ] } ] }
+   * POST https://api.nibity.com/v1/{id}/transcript/ with transcripts[0]=transcript_id
+   *   response: the transcript itself
    */
   boolean getAndSaveJobResults(String jobId) throws TranscriptionServiceException, IOException {
-    CloseableHttpClient httpClient = makeHttpClient();
-    CloseableHttpResponse response = null;
+
     String mpId = "unknown";
     JSONArray resultsArray = null;
     String token = getRefreshAccessToken();
     if (token.equals(INVALID_TOKEN)) {
       return false;
     }
+
+    CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
+    credentialsProvider.setCredentials(AuthScope.ANY,
+      new UsernamePasswordCredentials(nibityClientKey, ""));
+
+    CloseableHttpClient httpClient = HttpClientBuilder.create().setDefaultCredentialsProvider(credentialsProvider).build();
+    CloseableHttpResponse response = null;
+
+    String checkUrl = "https://api.nibity.com/v1/" + nibityClientId + "/check";
+    String collectUrl = "https://api.nibity.com/v1/" + nibityClientId + "/transcript";
+
+    List <NameValuePair> nvps = new ArrayList<NameValuePair>();
+    nvps.add(new BasicNameValuePair("files[0]", jobId));
+
     try {
-      HttpGet httpGet = new HttpGet(GOOGLE_SPEECH_URL + RESULT_PATH + jobId);
-      logger.debug("Url to invoke Google speech service: {}", httpGet.getURI().toString());
-      // add the authorization header to the request;
-      httpGet.addHeader("Authorization", "Bearer " + token);
-      response = httpClient.execute(httpGet);
+      HttpPost httpPost = new HttpPost(checkUrl);
+      httpPost.setEntity(new UrlEncodedFormEntity(nvps, "UTF-8"));
+
+      response = httpClient.execute(httpPost);
       int code = response.getStatusLine().getStatusCode();
 
       switch (code) {
@@ -580,10 +573,16 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
           String jsonString = EntityUtils.toString(entity);
           JSONParser jsonParser = new JSONParser();
           JSONObject jsonObject = (JSONObject) jsonParser.parse(jsonString);
-          Boolean jobDone = (Boolean) jsonObject.get("done");
-          if (jobDone) {
-            resultsArray = getTranscriptionResult(jsonObject);
+
+          JSONObject result = (JSONObject) jsonObject.get(jobId);
+
+          long auth = (Long) result.get("auth");
+          long transcriptId = (Long) result.get("transcript_id");
+
+          if (auth == 504) {
+            resultsArray = getTranscriptionResult(transcriptId);
           }
+
           NibityTranscriptionJobControl jc = database.findByJob(jobId);
           if (jc != null) {
             mpId = jc.getMediaPackageId();
@@ -596,6 +595,7 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
             return true;
           }
           return false;
+
         case HttpStatus.SC_NOT_FOUND: // 404
           logger.warn("Job not found: {}", jobId);
           break;
@@ -637,7 +637,7 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
    * @throws org.opencastproject.transcription.api.TranscriptionServiceException
    * @throws java.io.IOException
    */
-  public String getTranscriptionResults(String jobId)
+  public String getTranscriptionResults(long transcriptId)
           throws TranscriptionServiceException, IOException {
     CloseableHttpClient httpClient = makeHttpClient();
     CloseableHttpResponse response = null;
@@ -690,6 +690,7 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
   }
 
   @Override
+  // Called by the attach workflow operation
   public MediaPackageElement getGeneratedTranscription(String mpId, String jobId)
           throws TranscriptionServiceException {
     try {

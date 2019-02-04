@@ -101,11 +101,13 @@ public class NibityTranscriptionRestService extends AbstractJobProducerEndpoint 
           @Context HttpServletRequest request) throws TranscriptionServiceException, IOException {
     logger.debug("REST endpoint getTranscriptionResult called with job id: '{}'", jobId);
     String jobResult = null;
+    /*
     try {
       jobResult = service.getTranscriptionResults(jobId);
     } catch (TranscriptionServiceException e) {
       throw new TranscriptionServiceException("Could not get transcription result", e);
     }
+    */
     return Response.ok(jobResult).build();
   }
 
