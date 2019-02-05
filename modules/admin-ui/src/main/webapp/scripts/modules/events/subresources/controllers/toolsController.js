@@ -215,10 +215,10 @@ angular.module('adminNg.controllers')
 
     $scope.saveAndPublish = function () {
       $scope.video.workflows.some(function(wf) {
-          if (wf.name.indexOf('UCT') > -1) {
-              $scope.video.workflow = wf.id;
-              return true;
-          }
+        if (wf.name.indexOf('UCT') > -1) {
+          $scope.video.workflow = wf.id;
+          return true;
+        }
       });
 
       $scope.submit();
