@@ -25,12 +25,18 @@ import static org.opencastproject.mediapackage.MediaPackageElementFlavor.flavor;
 import static org.opencastproject.mediapackage.MediaPackageElementFlavor.parseFlavor;
 
 import org.opencastproject.assetmanager.api.AssetManager;
+import org.opencastproject.assetmanager.api.Snapshot;
+import org.opencastproject.assetmanager.api.query.AQueryBuilder;
+import org.opencastproject.assetmanager.api.query.ARecord;
+import org.opencastproject.assetmanager.api.query.AResult;
 import org.opencastproject.assetmanager.util.WorkflowPropertiesUtil;
 import org.opencastproject.composer.api.ComposerService;
 import org.opencastproject.composer.api.EncoderException;
 import org.opencastproject.mediapackage.Attachment;
 import org.opencastproject.mediapackage.MediaPackage;
 import org.opencastproject.mediapackage.MediaPackageElement;
+import org.opencastproject.mediapackage.MediaPackageElementBuilder;
+import org.opencastproject.mediapackage.MediaPackageElementBuilderFactory;
 import org.opencastproject.mediapackage.MediaPackageElementFlavor;
 import org.opencastproject.mediapackage.MediaPackageException;
 import org.opencastproject.mediapackage.Publication;
@@ -49,10 +55,20 @@ import org.opencastproject.util.data.Tuple;
 import org.opencastproject.workflow.handler.distribution.InternalPublicationChannel;
 import org.opencastproject.workspace.api.Workspace;
 
+import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.io.IOUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.charset.StandardCharsets;
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -66,6 +82,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 public final class ThumbnailImpl {
   /** Name of the thumbnail type workflow property */
@@ -133,6 +150,8 @@ public final class ThumbnailImpl {
     }
   }
 
+  private static final Logger logger = LoggerFactory.getLogger(ThumbnailImpl.class.getName());
+
   private final MediaPackageElementFlavor previewFlavor;
   private final String previewProfileDownscale;
   private final MediaPackageElementFlavor uploadedFlavor;
@@ -154,6 +173,11 @@ public final class ThumbnailImpl {
   private final String tempThumbnailId;
   private URI tempThumbnail;
   private MimeType tempThumbnailMimeType;
+
+  // codediff CAST-588
+  private String archiveBasePath;
+  private boolean thumbnailHackEnabled = false;
+  // codediff END
 
   private boolean thumbnailAutoDistribution;
 
@@ -185,6 +209,10 @@ public final class ThumbnailImpl {
     this.tempThumbnailMimeType = null;
     this.tempThumbnailFileName = null;
     this.thumbnailAutoDistribution = config.getThumbnailAutoDistribution();
+    // codediff CAST-588
+     this.archiveBasePath = config.getArchiveBasePath();
+     this.thumbnailHackEnabled = config.getThumbnailHackEnabled();
+     // codediff END
   }
 
   private Optional<Attachment> getThumbnailPreviewForMediaPackage(final MediaPackage mp) {
@@ -427,10 +455,86 @@ public final class ThumbnailImpl {
     return Arrays.stream(mp.getPublications()).filter(p -> p.getChannel().equalsIgnoreCase(channelId)).findAny();
   }
 
+  // codediff CAST-588
+  private IntStream toIntStream(final String s) {
+    try {
+      return IntStream.of(Integer.parseInt(s));
+    } catch (final NumberFormatException e) {
+      return IntStream.empty();
+    }
+  }
+
+  private String hackUriToLocalPath(final Track track) {
+    final File basePath = new File(this.archiveBasePath + "/" + track.getMediaPackage().getIdentifier().compact() + "/" + track.getIdentifier());
+    final int maxVersion = Arrays.stream(basePath.listFiles()).flatMapToInt(f -> toIntStream(f.getName())).sorted().max()
+      .getAsInt();
+    return basePath.getAbsolutePath() + "/" + Integer.toString(maxVersion) + "/" + FilenameUtils
+      .getName(track.getURI().toASCIIString());
+  }
+
+  private String hackUriToSwitchPath(final Track track, final String mpId) {
+    final AQueryBuilder q = assetManager.createQuery();
+    final AResult result = q.select(q.snapshot()).where(q.mediaPackageId(mpId).and(q.version().isLatest())).run();
+    final ARecord firstResult = result.getRecords().toList().get(0);
+    final Snapshot snapshot = firstResult.getSnapshot().get();
+    final String fileExtension = FilenameUtils.getExtension(track.getURI().getPath());
+    final File basePath = new File(String
+      .format("%s/%s/%s/%s/%s.%s", this.archiveBasePath, snapshot.getOrganizationId(), mpId,
+        snapshot.getVersion().toString(), track.getIdentifier(), fileExtension));
+    logger.info("ArchiveBase: {}, basePath.abs: {}", this.archiveBasePath, basePath.getAbsolutePath());
+    return basePath.getAbsolutePath();
+  }
+
+  private List<Attachment> hackImageTakeLocalThumbnail(final Track sourceTrack, final double time, final String mpId)
+    throws IOException, EncoderException {
+    final String realPath = hackUriToSwitchPath(sourceTrack, mpId);
+
+    final File tempFile = File.createTempFile("thumb", ".jpg");
+    final String outFilename = tempFile.getAbsolutePath();
+    final String timeStr = hackFormatFfmpegTime(time);
+    final Process myProcess = Runtime.getRuntime().exec(
+      new String[] { "ffmpeg", "-y", "-ss", timeStr, "-i", realPath, "-r", "1", "-frames:v", "1", "-filter:v",
+        "yadif,scale=320:-1", outFilename });
+    while (true) {
+      try {
+        if (myProcess.waitFor() != 0) {
+          throw new EncoderException(
+            "Process exited, error output: " + IOUtils.toString(myProcess.getErrorStream(), StandardCharsets.UTF_8));
+        }
+        break;
+      } catch (final InterruptedException ignored) {
+      }
+    }
+    final String aid = UUID.randomUUID().toString();
+    try (InputStream is = new FileInputStream(tempFile)) {
+      final URI thumbnailUri = workspace.put(mpId, aid, tempFile.getName(), is);
+      tempFile.delete();
+      final MediaPackageElementBuilder builder = MediaPackageElementBuilderFactory.newInstance().newElementBuilder();
+      final Attachment attachment = (Attachment) builder.elementFromURI(thumbnailUri, Attachment.TYPE, null);
+      return Collections.singletonList(attachment);
+    }
+  }
+
+  private String hackFormatFfmpegTime(final double time) {
+    final DecimalFormatSymbols ffmpegFormat = new DecimalFormatSymbols();
+    ffmpegFormat.setDecimalSeparator('.');
+    final DecimalFormat df = new DecimalFormat("0.00000", ffmpegFormat);
+    return df.format(time);
+  }
+  // codediff END
+
   private MediaPackageElement chooseThumbnail(final MediaPackage mp, final Track track, final double position)
     throws PublicationException, MediaPackageException, EncoderException, IOException, NotFoundException,
     UnknownFileTypeException {
-    tempThumbnail = composerService.imageSync(track, encodingProfile, position).get(0).getURI();
+
+    // codediff CAST-588
+    if (!thumbnailHackEnabled) {
+      tempThumbnail = composerService.imageSync(track, encodingProfile, position).get(0).getURI();
+    } else {
+        tempThumbnail = hackImageTakeLocalThumbnail(track, position, mp.getIdentifier().compact()).get(0).getURI();
+    }
+    // codediff END
+
     tempThumbnailMimeType = MimeTypes.fromURI(tempThumbnail);
     tempThumbnailFileName = tempThumbnail.getPath().substring(tempThumbnail.getPath().lastIndexOf('/') + 1);
 
