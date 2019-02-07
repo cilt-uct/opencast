@@ -124,5 +124,9 @@ angular.module('adminNg.controllers')
       event.preventDefault();
       ResourceModal.show('new-series-modal');
     });
+
+    $scope.$on('isLtiMode', function() {
+      $scope.isLti = true;
+    });
   }
 ]);

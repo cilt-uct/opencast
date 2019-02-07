@@ -212,5 +212,16 @@ angular.module('adminNg.controllers')
     $scope.$on('$destroy', function () {
       Notifications.removeAll(LOCAL_CONTEXT);
     });
+
+    $scope.saveAndPublish = function () {
+      $scope.video.workflows.some(function(wf) {
+        if (wf.name.indexOf('UCT') > -1) {
+          $scope.video.workflow = wf.id;
+          return true;
+        }
+      });
+
+      $scope.submit();
+    };
   }
 ]);
