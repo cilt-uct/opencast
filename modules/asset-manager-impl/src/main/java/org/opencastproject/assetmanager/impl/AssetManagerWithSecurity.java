@@ -163,7 +163,7 @@ public class AssetManagerWithSecurity extends AssetManagerDecorator<TieredStorag
   private Predicate mkAuthPredicate(final String action) {
     final AQueryBuilder q = q();
     return secSvc.getUser().getRoles().stream()
-            .filter((role) -> includeUIRoles || !role.getName().startsWith("ROLE_UI_"))
+            .filter((role) -> includeUIRoles || !(role.getName().startsWith("ROLE_UI_") || role.getName().startsWith("ROLE_CAPTURE_AGENT_")))
             .map((role) -> mkSecurityProperty(q, role.getName(), action).eq(true))
             .reduce(Predicate::or)
             .orElseGet(() -> q.always().not())
