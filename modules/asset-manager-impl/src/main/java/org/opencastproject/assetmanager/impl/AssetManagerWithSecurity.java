@@ -88,6 +88,10 @@ public class AssetManagerWithSecurity extends AssetManagerDecorator<TieredStorag
     // Allow this if:
     //  - no previous snapshot exists
     //  - the user has write access to the previous snapshot
+    if (r.getSize() < 1) {
+      // if it's the first snapshot, ensure that old, leftover properties are removed
+      deleteProperties(mediaPackageId);
+    }
     if (r.getSize() < 1 || isAuthorized(mediaPackageId, WRITE_ACTION)) {
       final Snapshot snapshot = super.takeSnapshot(owner, mp);
       final AccessControlList acl = authSvc.getActiveAcl(mp).getA();
