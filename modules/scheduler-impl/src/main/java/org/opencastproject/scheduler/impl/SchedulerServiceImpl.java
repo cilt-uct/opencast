@@ -564,7 +564,9 @@ public class SchedulerServiceImpl extends AbstractIndexProducer implements Sched
 
       final Organization org = securityService.getOrganization();
       final User user = securityService.getUser();
-      periods.parallelStream().forEach(event -> SecurityUtil.runAs(securityService, org, user, () -> {
+      periods.parallelStream().forEach(event -> SecurityUtil.runAs(securityService, org, user, new Effect0() {
+        @Override
+        protected void run() {
         final int currentCounter = periods.indexOf(event);
         MediaPackage mediaPackage = (MediaPackage) templateMp.clone();
         Date startDate = new Date(event.getStart().getTime());
@@ -638,7 +640,7 @@ public class SchedulerServiceImpl extends AbstractIndexProducer implements Sched
             logger.warn("Failed to delete media package element", e);
           }
         }
-      }));
+      }});
       return scheduledEvents;
     } catch (SchedulerException e) {
       throw e;
@@ -1740,7 +1742,9 @@ public class SchedulerServiceImpl extends AbstractIndexProducer implements Sched
     final String destinationId = SchedulerItem.SCHEDULER_QUEUE_PREFIX + WordUtils.capitalize(indexName);
     final Organization organization = new DefaultOrganization();
     final User user = SecurityUtil.createSystemUser(systemUserName, organization);
-    SecurityUtil.runAs(securityService, organization, user, () -> {
+    SecurityUtil.runAs(securityService, organization, user, new Effect0() {
+      @Override
+      protected void run() {
       int current = 0;
 
       AQueryBuilder query = assetManager.createQuery();
@@ -1815,7 +1819,7 @@ public class SchedulerServiceImpl extends AbstractIndexProducer implements Sched
           throw new ServiceException(e.getMessage());
         }
       }
-    });
+      }});
 
     SecurityUtil.runAs(securityService, organization, user, new Effect0() {
       @Override
