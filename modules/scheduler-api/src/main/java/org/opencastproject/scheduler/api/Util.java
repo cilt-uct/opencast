@@ -33,6 +33,10 @@ import java.util.List;
 import java.util.TimeZone;
 
 public final class Util {
+
+  /** The minimum separation between one event ending and the next starting */
+  public static final int EVENT_MINIMUM_SEPARATION_MILLISECONDS = 60 * 1000;
+
   private Util() {
   }
 

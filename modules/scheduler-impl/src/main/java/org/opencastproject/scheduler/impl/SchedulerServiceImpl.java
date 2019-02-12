@@ -640,7 +640,7 @@ public class SchedulerServiceImpl extends AbstractIndexProducer implements Sched
             logger.warn("Failed to delete media package element", e);
           }
         }
-      }});
+      }}));
       return scheduledEvents;
     } catch (SchedulerException e) {
       throw e;
@@ -1742,6 +1742,7 @@ public class SchedulerServiceImpl extends AbstractIndexProducer implements Sched
     final String destinationId = SchedulerItem.SCHEDULER_QUEUE_PREFIX + WordUtils.capitalize(indexName);
     final Organization organization = new DefaultOrganization();
     final User user = SecurityUtil.createSystemUser(systemUserName, organization);
+
     SecurityUtil.runAs(securityService, organization, user, new Effect0() {
       @Override
       protected void run() {
@@ -1814,12 +1815,14 @@ public class SchedulerServiceImpl extends AbstractIndexProducer implements Sched
             messageSender.sendObjectMessage(IndexProducer.RESPONSE_QUEUE, MessageSender.DestinationType.Queue,
                     IndexRecreateObject.update(indexName, IndexRecreateObject.Service.Scheduler, total, current));
           }
+         } // for
         } catch (Exception e) {
           logger.warn("Unable to index scheduled instances:", e);
           throw new ServiceException(e.getMessage());
         }
-      }
-      }});
+    } // void run
+    } // Effect0
+    ); // runAs
 
     SecurityUtil.runAs(securityService, organization, user, new Effect0() {
       @Override
