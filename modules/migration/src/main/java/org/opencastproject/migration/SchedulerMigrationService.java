@@ -34,6 +34,7 @@ import org.opencastproject.security.api.SecurityService;
 import org.opencastproject.security.util.SecurityUtil;
 import org.opencastproject.util.DateTimeSupport;
 import org.opencastproject.util.OsgiUtil;
+import org.opencastproject.util.data.Effect0;
 
 import com.entwinemedia.fn.Fn;
 import com.entwinemedia.fn.Stream;
@@ -130,13 +131,16 @@ public class SchedulerMigrationService {
     logger.info("Start migrating scheduled events");
     final String systemUserName = SecurityUtil.getSystemUserName(cc);
     for (final Organization org : orgDirectoryService.getOrganizations()) {
-      SecurityUtil.runAs(securityService, org, SecurityUtil.createSystemUser(systemUserName, org), () -> {
+      SecurityUtil.runAs(securityService, org, SecurityUtil.createSystemUser(systemUserName, org), new Effect0() {
+        @Override
+        protected void run() {
         try {
           migrateScheduledEvents();
         } catch (Exception e) {
           throw new RuntimeException(e);
         }
-      });
+      }
+     });
     }
     logger.info("Finished migrating scheduled events. You can now disable maintenance mode of scheduler and restart opencast.");
   }

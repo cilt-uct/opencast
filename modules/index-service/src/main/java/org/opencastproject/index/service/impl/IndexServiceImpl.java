@@ -1360,7 +1360,7 @@ public class IndexServiceImpl implements IndexService {
           mediaPackage = authorizationService.setAcl(mediaPackage, AclScope.Episode, acl).getA();
           schedulerService.updateEvent(id, Opt.none(), Opt.none(), Opt.none(), Opt.none(), Opt.some(mediaPackage),
                   Opt.none(), Opt.none(), Opt.none());
-        } catch (SchedulerException | MediaPackageException e) {
+        } catch (SchedulerException e) {
           throw new IndexServiceException("Unable to update the acl for the scheduled event", e);
         }
         return acl;
@@ -1968,9 +1968,6 @@ public class IndexServiceImpl implements IndexService {
   public void updateCommentCatalog(final Event event, final List<EventComment> comments) throws Exception {
     final SecurityContext securityContext = new SecurityContext(securityService, securityService.getOrganization(),
             securityService.getUser());
-    executorService.execute(new Runnable() {
-      @Override
-      public void run() {
         securityContext.runInContext(new Effect0() {
           @Override
           protected void run() {
@@ -1997,8 +1994,7 @@ public class IndexServiceImpl implements IndexService {
                   logger.info("Update scheduled mediapacakge {} with updated comments catalog.", event.getIdentifier());
                   schedulerService.updateEvent(event.getIdentifier(), Opt.<Date> none(), Opt.<Date> none(),
                           Opt.<String> none(), Opt.<Set<String>> none(), Opt.some(mediaPackage),
-                          Opt.<Map<String, String>> none(), Opt.<Map<String, String>> none(), Opt.<Opt<Boolean>> none(),
-                          SchedulerService.ORIGIN);
+                          Opt.<Map<String, String>> none(), Opt.<Map<String, String>> none(), Opt.<Opt<Boolean>> none());
                   break;
                 default:
                   logger.error("Unkown event source {}!", event.getSource().toString());
@@ -2006,30 +2002,7 @@ public class IndexServiceImpl implements IndexService {
             } catch (Exception e) {
               logger.error("Unable to update event {} comment catalog: {}", event.getIdentifier(), getStackTrace(e));
             }
-<<<<<<< HEAD
-          }
-        });
-=======
-            WorkflowInstance instance = workflowInstance.get();
-            instance.setMediaPackage(mediaPackage);
-            updateWorkflowInstance(instance);
-            break;
-          case ARCHIVE:
-            logger.info("Update archive mediapacakge {} with updated comments catalog.", event.getIdentifier());
-            assetManager.takeSnapshot(mediaPackage);
-            break;
-          case SCHEDULE:
-            logger.info("Update scheduled mediapacakge {} with updated comments catalog.", event.getIdentifier());
-            schedulerService.updateEvent(event.getIdentifier(), Opt.none(), Opt.none(), Opt.none(), Opt.none(),
-                    Opt.some(mediaPackage), Opt.none(), Opt.none(), Opt.none());
-            break;
-          default:
-            logger.error("Unkown event source {}!", event.getSource());
-        }
-      } catch (Exception e) {
-        logger.error("Unable to update event {} comment catalog", event.getIdentifier(), e);
->>>>>>> 8b609a5... Remove unused 'last_modified_origin'
-      }
+         }
     });
   }
 

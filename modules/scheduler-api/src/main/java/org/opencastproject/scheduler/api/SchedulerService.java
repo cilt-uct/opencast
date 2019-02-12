@@ -186,12 +186,6 @@ public interface SchedulerService {
           Opt<Map<String, String>> caMetadata, Opt<Opt<Boolean>> optOut)
                   throws NotFoundException, UnauthorizedException, SchedulerConflictException, SchedulerException;
 
-  void updateEvent(String mediaPackageId, Opt<Date> startDateTime, Opt<Date> endDateTime, Opt<String> captureAgentId,
-          Opt<Set<String>> userIds, Opt<MediaPackage> mediaPackage, Opt<Map<String, String>> wfProperties,
-          Opt<Map<String, String>> caMetadata, Opt<Opt<Boolean>> optOut, String modificationOrigin, boolean skipConflictCheck)
-                  throws NotFoundException, UnauthorizedException, SchedulerConflictException,
-                  SchedulerTransactionLockException, SchedulerException;
-
   /**
    * Removes event with specified ID.
    *
