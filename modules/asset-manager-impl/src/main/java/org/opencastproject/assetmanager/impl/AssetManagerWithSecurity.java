@@ -233,7 +233,7 @@ public class AssetManagerWithSecurity extends AssetManagerDecorator<TieredStorag
 
     final long endTime = System.nanoTime();
     final double timeElapsed = (endTime - startTime) / 1000000.0;
-    logger.debug("Execution time in milliseconds {}", timeElapsed);
+    logger.error("Execution time in milliseconds {}", timeElapsed);
   }
 
   private PropertyField<Boolean> mkSecurityProperty(AQueryBuilder q, String role, String action) {
