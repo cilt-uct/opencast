@@ -192,7 +192,7 @@ HAVING v = (SELECT count(*)
       am.getDb().logDelete(formatQueryName(c.name, "main"), qMain);
       final long deletedItems = qMain.execute();
       // delete orphaned properties
-      // deleteOrphanedProperties();
+      deleteOrphanedProperties();
       // <BLOCK>
       // TODO Bad solution. Yields all media package IDs which can easily be thousands
       // TODO The above SQL solution does not work with H2 so I suspect the query is not 100% clean
