@@ -2510,7 +2510,7 @@ public class SchedulerServiceImplTest {
 
   AssetManager mkAssetManager() throws Exception {
     final PersistenceEnv penv = PersistenceEnvs.mk(mkEntityManagerFactory("org.opencastproject.assetmanager.impl"));
-    final Database db = new Database(null, penv);
+    final Database db = new Database(penv);
     return new AbstractAssetManager() {
 
       @Override

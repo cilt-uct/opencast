@@ -78,7 +78,6 @@ public class AssetManagerWithSecurity extends AssetManagerDecorator<TieredStorag
   }
 
   @Override public Snapshot takeSnapshot(String owner, MediaPackage mp) {
-
     final String mediaPackageId = mp.getIdentifier().toString();
     final AQueryBuilder q = q();
     final AResult r = q.select(q.snapshot())
@@ -208,19 +207,13 @@ public class AssetManagerWithSecurity extends AssetManagerDecorator<TieredStorag
     GLOBAL, ORGANIZATION, NONE
   }
 
-  /**
-   * Update the ACL properties. Note that this method assumes proper proper authorization.
-   *
-   * @param snapshot
-   *          Snapshot to reference the media package identifier
-   * @param acl
-   *          ACL to set
-   */
   private void storeAclAsProperties(Snapshot snapshot, AccessControlList acl) {
-    final long startTime = System.nanoTime();
     final String mediaPackageId =  snapshot.getMediaPackage().getIdentifier().toString();
     // Drop old ACL rules
-    super.deleteProperties(mediaPackageId, SECURITY_NAMESPACE);
+    final AQueryBuilder queryBuilder = createQuery();
+    queryBuilder.delete(snapshot.getOwner(), queryBuilder.propertiesOf(SECURITY_NAMESPACE))
+            .where(queryBuilder.mediaPackageId(mediaPackageId))
+            .run();
     // Set new ACL rules
     for (final AccessControlEntry ace : acl.getEntries()) {
       super.setProperty(Property.mk(
@@ -230,10 +223,6 @@ public class AssetManagerWithSecurity extends AssetManagerDecorator<TieredStorag
               mkPropertyName(ace)),
           Value.mk(ace.isAllow())));
     }
-
-    final long endTime = System.nanoTime();
-    final double timeElapsed = (endTime - startTime) / 1000000.0;
-    logger.error("Execution time in milliseconds {}", timeElapsed);
   }
 
   private PropertyField<Boolean> mkSecurityProperty(AQueryBuilder q, String role, String action) {
