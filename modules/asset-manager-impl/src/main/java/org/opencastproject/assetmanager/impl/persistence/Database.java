@@ -69,16 +69,16 @@ public class Database implements EntityPaths {
   public static final JPQLTemplates TEMPLATES = EclipseLinkTemplates.DEFAULT;
 
   private final PersistenceEnv penv;
-  private final EntityManager entityManager;
+  private final EntityManagerFactory entityManagerFactory;
 
   public Database(EntityManagerFactory emf, PersistenceEnv persistenceEnv) {
     penv = persistenceEnv;
-    entityManager = emf == null ? null : emf.createEntityManager();
+    entityManagerFactory = emf;
   }
 
   public Database(EntityManagerFactory emf) {
     penv = PersistenceEnvs.mk(emf);
-    entityManager = emf.createEntityManager();
+    entityManagerFactory = emf;
   }
 
   /**
@@ -332,7 +332,7 @@ public class Database implements EntityPaths {
    *          Media package identifier
    */
   public void deleteProperties(final String mediaPackageId) {
-    PropertyDto.delete(entityManager, mediaPackageId);
+    PropertyDto.delete(entityManagerFactory.createEntityManager(), mediaPackageId);
   }
 
   /**
@@ -345,9 +345,9 @@ public class Database implements EntityPaths {
    */
   public void deleteProperties(final String mediaPackageId, final String namespace) {
     if (StringUtils.isBlank(namespace)) {
-      PropertyDto.delete(entityManager, mediaPackageId);
+      PropertyDto.delete(entityManagerFactory.createEntityManager(), mediaPackageId);
     } else {
-      PropertyDto.delete(entityManager, mediaPackageId, namespace);
+      PropertyDto.delete(entityManagerFactory.createEntityManager(), mediaPackageId, namespace);
     }
   }
 
@@ -359,7 +359,7 @@ public class Database implements EntityPaths {
    * @return If a snapshot exists for the given media package
    */
   public boolean snapshotExists(final String mediaPackageId) {
-    return SnapshotDto.exists(entityManager, mediaPackageId);
+    return SnapshotDto.exists(entityManagerFactory.createEntityManager(), mediaPackageId);
   }
 
   public Opt<AssetDtos.Full> findAssetByChecksumAndStore(final String checksum, final String storeId) {
