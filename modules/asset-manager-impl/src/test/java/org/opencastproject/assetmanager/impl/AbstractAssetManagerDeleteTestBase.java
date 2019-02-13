@@ -40,11 +40,9 @@ public class AbstractAssetManagerDeleteTestBase extends AbstractAssetManagerTest
 //    assertEquals("[AssetManager] There should be " + count + " properties total",
 //                 count,
 //                 enrich(q.select(q.properties()).run()).countProperties());
-/*
     assertEquals(format("[SQL] There should be %d properties total", count),
                  count,
                  runCount(new JPAQuery().from(Q_PROPERTY)));
-*/
   }
 
   void assertAssetsTotal(long count) {
@@ -66,11 +64,9 @@ public class AbstractAssetManagerDeleteTestBase extends AbstractAssetManagerTest
     assertEquals(format("[AssetManager] There should be %d properties for episode %s", count, mpId),
                  count,
                  enrich(q.select(q.properties()).where(q.mediaPackageId(mpId)).run()).countProperties());
-    /*
     assertEquals(format("[SQL] There should be %d properties for episode %s", count, mpId),
                  count,
                  runCount(new JPAQuery().from(Q_PROPERTY).where(Q_PROPERTY.mediaPackageId.eq(mpId))));
-     */
   }
 
   void assertTotals(long snapshots, long assets, long properties) {
