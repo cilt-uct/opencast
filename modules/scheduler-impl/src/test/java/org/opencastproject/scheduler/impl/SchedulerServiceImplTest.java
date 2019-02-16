@@ -170,7 +170,6 @@ import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.osgi.framework.BundleContext;
 import org.osgi.service.component.ComponentContext;
@@ -446,7 +445,6 @@ public class SchedulerServiceImplTest {
   }
 
   @Test
-  @Ignore
   public void testPersistence() throws Exception {
     Date start = new Date();
     Date end = new Date(System.currentTimeMillis() + 60000);
@@ -591,7 +589,6 @@ public class SchedulerServiceImplTest {
   }
 
   @Test
-  @Ignore
   public void testTransactionCommit() throws Exception {
     Date start = new Date();
     Date end = new Date(System.currentTimeMillis() + 60000);
@@ -653,7 +650,6 @@ public class SchedulerServiceImplTest {
   }
 
   @Test
-  @Ignore
   public void testTransactionCommitCleanup() throws Exception {
     Date start = new Date();
     Date end = new Date(System.currentTimeMillis() + 60000);
@@ -874,7 +870,6 @@ public class SchedulerServiceImplTest {
   }
 
   @Test
-  @Ignore
   public void testTransactionCommitConflict() throws Exception {
     Date start = new Date();
     Date end = new Date(System.currentTimeMillis() + 60000);
@@ -1121,7 +1116,6 @@ public class SchedulerServiceImplTest {
   }
 
   @Test
-  @Ignore
   public void testTransactionRollback() throws Exception {
     Date start = new Date();
     Date end = new Date(System.currentTimeMillis() + 60000);
@@ -1198,7 +1192,6 @@ public class SchedulerServiceImplTest {
   }
 
   @Test
-  @Ignore
   public void testTransactionCleanup() throws Exception {
     Date start = new Date();
     Date end = new Date(System.currentTimeMillis() + 60000);
@@ -1254,7 +1247,6 @@ public class SchedulerServiceImplTest {
   }
 
   @Test
-  @Ignore
   public void testTransactionConflicts() throws Exception {
     Date start = new Date();
     Date end = new Date(System.currentTimeMillis() + 60000);
@@ -1581,7 +1573,6 @@ public class SchedulerServiceImplTest {
   }
 
   @Test
-  @Ignore
   public void testCalendarCutoff() throws Exception {
     long currentTime = System.currentTimeMillis();
     MediaPackage mediaPackageA = generateEvent(Opt.<String> none());
@@ -1659,7 +1650,6 @@ public class SchedulerServiceImplTest {
    * Test for failure updating past events
    */
   @Test(expected = SchedulerException.class)
-  @Ignore
   public void testUpdateExpiredEvent() throws Exception {
     long currentTime = System.currentTimeMillis();
 
@@ -1865,7 +1855,6 @@ public class SchedulerServiceImplTest {
   }
 
   @Test
-  @Ignore
   public void testFindConflictingEvents() throws Exception {
     final long currentTime = System.currentTimeMillis();
     final MediaPackage mediaPackageA = generateEvent(Opt.<String> none());
@@ -2053,7 +2042,6 @@ public class SchedulerServiceImplTest {
   }
 
   @Test
-  @Ignore
   public void testEventManagement() throws Exception {
     MediaPackage mediaPackage = generateEvent(Opt.<String> none());
     DublinCoreCatalog event = generateEvent("testdevice", new Date(System.currentTimeMillis() - 2000),
@@ -2145,7 +2133,6 @@ public class SchedulerServiceImplTest {
    * @throws Exception
    */
   @Test
-  @Ignore
   public void testGetCalendarInputRegularOptedOutBlacklistedExpectsOnlyRegularEvents() throws Exception {
     int optedOutCount = 3;
     int blacklistedCount = 5;
@@ -2184,7 +2171,6 @@ public class SchedulerServiceImplTest {
   }
 
   @Test
-  @Ignore
   public void removeScheduledRecordingsBeforeBufferInputOneEvent() throws Exception {
     Date start = new Date(System.currentTimeMillis() - 160000);
     Date end = new Date(System.currentTimeMillis() - 60000);
