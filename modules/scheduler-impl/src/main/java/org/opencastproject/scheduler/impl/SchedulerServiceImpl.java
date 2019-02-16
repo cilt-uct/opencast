@@ -1162,6 +1162,11 @@ public class SchedulerServiceImpl extends AbstractIndexProducer implements Sched
     notNull(tz, "timeZone");
 
     final List<Period> periods = calculatePeriods(rrule, start, end, duration, tz);
+    if (periods.size() == 0) {
+      logger.info("No periods for this date range and RRule: {} {} {} {} {}", rrule, start, end, duration, tz);
+      return Collections.emptyList();
+    }
+
     return findConflictingEvents(periods, captureAgentId, tz);
   }
 

@@ -971,6 +971,10 @@ public class IndexServiceImpl implements IndexService {
         return mediaPackage.getIdentifier().compact();
       case SCHEDULE_MULTIPLE:
         List<Period> periods = schedulerService.calculatePeriods(rRule, start.toDate(), end.toDate(), duration, tz);
+        if (periods.size() == 0) {
+            logger.warn("No events created: empty range {} {} {} {} {}", rRule, start, end, duration, tz);
+            return "";
+        }
         Map<String, Period> scheduled = new LinkedHashMap<>();
          scheduled = schedulerService.addMultipleEvents(rRule, start.toDate(), end.toDate(), duration, tz, captureAgentId,
                 presenterUsernames, eventHttpServletRequest.getMediaPackage().get(), configuration, (Map) caProperties, Opt.none(), Opt.none());

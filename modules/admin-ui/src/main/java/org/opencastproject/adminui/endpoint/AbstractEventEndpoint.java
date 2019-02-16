@@ -2270,10 +2270,14 @@ public abstract class AbstractEventEndpoint {
   @RestQuery(name = "createNewEvent", description = "Creates a new event by the given metadata as JSON and the files in the body", returnDescription = "The workflow identifier", restParameters = {
           @RestParameter(name = "metadata", isRequired = true, description = "The metadata as JSON", type = RestParameter.Type.TEXT) }, reponses = {
                   @RestResponse(responseCode = HttpServletResponse.SC_CREATED, description = "Event sucessfully added"),
+                  @RestResponse(description = "No events were added: the date range did not include any events", responseCode = HttpServletResponse.SC_NO_CONTENT),
                   @RestResponse(responseCode = SC_BAD_REQUEST, description = "If the metadata is not set or couldn't be parsed") })
   public Response createNewEvent(@Context HttpServletRequest request) {
     try {
       String result = getIndexService().createEvent(request);
+      if ("".equals(result)) {
+        return Response.status(Status.NO_CONTENT).entity(result).build();
+      }
       return Response.status(Status.CREATED).entity(result).build();
     } catch (IllegalArgumentException e) {
       return RestUtil.R.badRequest(e.getMessage());
