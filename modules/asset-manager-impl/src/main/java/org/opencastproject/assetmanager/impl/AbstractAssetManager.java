@@ -76,6 +76,7 @@ import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Date;
+import java.util.List;
 
 /**
  * Core implementation of the asset manager interface.
@@ -172,6 +173,16 @@ public abstract class AbstractAssetManager implements AssetManager {
   @Override
   public boolean snapshotExists(final String mediaPackageId) {
     return getDb().snapshotExists(mediaPackageId);
+  }
+
+  @Override
+  public boolean snapshotExists(final String mediaPackageId, final String organization) {
+    return getDb().snapshotExists(mediaPackageId, organization);
+  }
+
+  @Override
+  public List<Property> selectProperties(final String mediaPackageId, final String namespace) {
+    return getDb().selectProperties(mediaPackageId, namespace);
   }
 
   @Override public AQueryBuilder createQuery() {
