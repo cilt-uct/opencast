@@ -119,7 +119,8 @@ import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
 import net.fortuna.ical4j.model.Period;
-import net.fortuna.ical4j.model.ValidationException;
+import net.fortuna.ical4j.model.TimeZoneRegistry;
+import net.fortuna.ical4j.model.TimeZoneRegistryFactory;
 import net.fortuna.ical4j.model.property.RRule;
 
 import org.apache.commons.io.IOUtils;
@@ -1191,17 +1192,18 @@ public class SchedulerServiceImpl extends AbstractIndexProducer implements Sched
     }
 
     try {
+      TimeZoneRegistry registry = TimeZoneRegistryFactory.getInstance().createRegistry();
+
       Set<MediaPackage> events = new HashSet<>();
 
       for (Period event : periods) {
-        TimeZone.setDefault(tz);
+        event.setTimeZone(registry.getTimeZone(tz.getID()));
         final Date startDate = event.getStart();
         final Date endDate = event.getEnd();
 
         events.addAll(findConflictingEvents(captureAgentId, startDate, endDate));
       }
 
-      TimeZone.setDefault(null);
       return new ArrayList<>(events);
     } catch (Exception e) {
       throw new SchedulerException(e);
@@ -1275,11 +1277,7 @@ public class SchedulerServiceImpl extends AbstractIndexProducer implements Sched
 
       // Only validate calendars with events. Without any events, the iCalendar won't validate
       if (cal.getCalendar().getComponents().size() > 0) {
-        try {
-          cal.getCalendar().validate();
-        } catch (ValidationException e) {
-          logger.warn("Recording calendar could not be validated (returning it anyways): {}", getStackTrace(e));
-        }
+        cal.getCalendar().validate();
       }
 
       return cal.getCalendar().toString();
