@@ -42,7 +42,6 @@ import org.opencastproject.scheduler.api.SchedulerException;
 import org.opencastproject.scheduler.api.SchedulerService;
 import org.opencastproject.scheduler.api.TechnicalMetadata;
 import org.opencastproject.scheduler.api.TechnicalMetadataImpl;
-import org.opencastproject.scheduler.api.Util;
 import org.opencastproject.security.api.AccessControlList;
 import org.opencastproject.security.api.AccessControlParser;
 import org.opencastproject.security.api.UnauthorizedException;
@@ -662,11 +661,6 @@ public class SchedulerServiceRemoteImpl extends RemoteBase implements SchedulerS
       closeConnection(response);
     }
     throw new SchedulerException("Unable to get event review status from remote scheduler service");
-  }
-
-  @Override
-  public List<Period> calculatePeriods(RRule rrule, Date start, Date end, long duration, TimeZone tz) {
-    return Util.calculatePeriods(start, end, duration, rrule, tz);
   }
 
   @Override
