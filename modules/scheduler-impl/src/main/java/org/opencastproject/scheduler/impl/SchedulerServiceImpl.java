@@ -515,7 +515,6 @@ public class SchedulerServiceImpl extends AbstractIndexProducer implements Sched
           Map<String, String> caMetadata, Opt<Boolean> optOutStatus,
           Opt<String> schedulingSource) throws SchedulerException {
     notNull(periods, "periods");
-    requireTrue(periods.size() > 0, "periods");
     notEmpty(captureAgentId, "captureAgentId");
     notNull(userIds, "userIds");
     notNull(templateMp, "mediaPackages");
@@ -525,6 +524,12 @@ public class SchedulerServiceImpl extends AbstractIndexProducer implements Sched
     notNull(schedulingSource, "schedulingSource");
 
     Map<String, Period> scheduledEvents = new LinkedHashMap<>();
+
+    if (periods.size() == 0) {
+      // No events within the given period
+      logger.warn("Not creating any events for {}: empty periods list provided", captureAgentId);
+      return scheduledEvents;
+    }
 
     try {
       LinkedList<Id> ids = new LinkedList<>();
