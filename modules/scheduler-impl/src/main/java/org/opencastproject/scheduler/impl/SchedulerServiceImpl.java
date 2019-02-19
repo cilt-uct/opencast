@@ -149,7 +149,6 @@ import java.util.Date;
 import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -157,6 +156,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TimeZone;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -523,7 +523,7 @@ public class SchedulerServiceImpl extends AbstractIndexProducer implements Sched
     notNull(optOutStatus, "optOutStatus");
     notNull(schedulingSource, "schedulingSource");
 
-    Map<String, Period> scheduledEvents = new LinkedHashMap<>();
+    Map<String, Period> scheduledEvents = new ConcurrentHashMap<>();
 
     if (periods.size() == 0) {
       // No events within the given period
