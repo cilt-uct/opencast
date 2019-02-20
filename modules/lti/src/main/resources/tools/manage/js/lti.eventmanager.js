@@ -1249,7 +1249,7 @@ EventManager.prototype = {
       opts.id = id;
       var republishStatus = "event.republish.complete";
 
-      this.startTask(id, 'uct-republish-metadata', {
+      this.startTask(id, 'republish-metadata', {
         publishToEngage: "true",
         publishToOaiPmh: "false"
       })
