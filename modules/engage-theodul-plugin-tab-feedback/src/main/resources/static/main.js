@@ -141,14 +141,38 @@ define(["jquery", "underscore", "backbone", "engage/core"], function($, _, Backb
             if (!mediapackageError) {
                 var tempVars = {
                     categories: categories,
-                    str_feedback: translate("feedback", "Feedback")
+                    str_feedback: translate("feedback", "Feedback"),
+                    user: Engage.model.get("meInfo").get("user"),
+                    mediaPackage_title: Engage.model.get('mediaPackage').get('title'),
+                    mediaPackage_eventid: Engage.model.get('mediaPackage').get('eventid'),
+                    mediaPackage_series: Engage.model.get('mediaPackage').get('series'),
+                    mediaPackage_date: Engage.model.get('mediaPackage').get('date')
                 };
+
+                var feedback_url = "https://docs.google.com/forms/d/e/1FAIpQLSeXmOzYY3rwuB3Plj27kMcI-8B7PpBHkZOo_zi8dd15Zv3u4Q/viewform",
+                    parts = [];
+
+                if (tempVars.user['email']) {
+                    parts.push('entry.508626498=' + tempVars.user.email);
+                }
+                if (tempVars.mediaPackage_series) {
+                    parts.push('entry.1631189828=' + tempVars.mediaPackage_series);
+                }
+                if (tempVars.mediaPackage_date) {
+                    var dt = new Date(tempVars.mediaPackage_date)
+                    parts.push('entry.1375271116_year=' + dt.getFullYear());
+                    parts.push('entry.1375271116_month=' + (dt.getMonth()+1));
+                    parts.push('entry.1375271116_day=' + dt.getDate());
+                }
+
+                console.log(tempVars);
 
                 // compile template and load into the html
                 var template = _.template(this.template);
                 this.$el.html(template(tempVars));
 
                 $("#engage_tab_" + plugin.name.replace(/\s/g,"_")).text(tempVars.str_feedback);
+                $("#engage_feedback_tab_content a.button").attr('href', encodeURI(feedback_url + (parts.length > 0 ? '?' + parts.join('&') : '')));
             }
         }
     });
@@ -179,9 +203,9 @@ define(["jquery", "underscore", "backbone", "engage/core"], function($, _, Backb
 
     function prepareCategories() {
         if (!categoriesParsed) {
-            var categorySequenceString = Engage.model.get("meInfo").get("feedback-sequence");            
+            var categorySequenceString = Engage.model.get("meInfo").get("feedback-sequence");
             var categorySequence = [];
-            if (typeof categorySequenceString !== "undefined") 
+            if (typeof categorySequenceString !== "undefined")
                 categorySequence = categorySequenceString.split(',');
             if (categorySequence) {
                 $.each(categorySequence, function(i, v) {
@@ -194,7 +218,7 @@ define(["jquery", "underscore", "backbone", "engage/core"], function($, _, Backb
                 categoriesParsed = true;
             }
         }
-    }    
+    }
 
     function initPlugin() {
         // only init if plugin template was inserted into the DOM

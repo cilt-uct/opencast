@@ -201,7 +201,24 @@
             <span class="glyphicon glyphicon-fullscreen"></span>
             </button>
         </div>
-        <a class="button button-icon" href="https://docs.google.com/forms/d/e/1FAIpQLSeXmOzYY3rwuB3Plj27kMcI-8B7PpBHkZOo_zi8dd15Zv3u4Q/viewform"
+        <%
+            var feedback_url = "https://docs.google.com/forms/d/e/1FAIpQLSeXmOzYY3rwuB3Plj27kMcI-8B7PpBHkZOo_zi8dd15Zv3u4Q/viewform",
+                parts = [];
+
+            if (user['email']) {
+                parts.push('entry.508626498=' + user.email);
+            }
+            if (mediaPackage_series) {
+                parts.push('entry.1631189828=' + mediaPackage_series);
+            }
+            if (mediaPackage_date) {
+                var dt = new Date(mediaPackage_date)
+                parts.push('entry.1375271116_year=' + dt.getFullYear());
+                parts.push('entry.1375271116_month=' + (dt.getMonth()+1));
+                parts.push('entry.1375271116_day=' + dt.getDate());
+            }
+        %>
+        <a class="button button-icon" href="<%= encodeURI(feedback_url + (parts.length > 0 ? '?' + parts.join('&') : '')) %>"
            target="_blank" data-icon="feedback" style="float: right; margin: 13px 1rem" title="Report quality issues with this video"><span>Feedback</span></a>
     <% } %>
 </div>
