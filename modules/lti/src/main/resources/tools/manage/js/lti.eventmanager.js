@@ -1218,7 +1218,7 @@ EventManager.prototype = {
       opts.id = id;
       var retractStatus = "event.retract.complete";
 
-      this.startTask(id, 'ng-retract', {
+      this.startTask(id, 'retract', {
         retractFromEngage: "true",
         retractFromOaiPmh: "true",
         retractFromAws: "false",
@@ -1321,9 +1321,9 @@ EventManager.prototype = {
     return $.Deferred(function(d) {
       var taskPayload = {
         workflow: workflow,
-        configuration: config,
-        eventIds: [id]
+        configuration: {}
       };
+      taskPayload.configuration[id] = config;
       $.ajax({
         url: this.endpoints.startTask,
         type: 'post',
