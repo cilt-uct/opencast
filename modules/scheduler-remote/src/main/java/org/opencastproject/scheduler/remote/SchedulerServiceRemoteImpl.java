@@ -222,7 +222,7 @@ public class SchedulerServiceRemoteImpl extends RemoteBase implements SchedulerS
                   throws NotFoundException, UnauthorizedException, SchedulerConflictException, SchedulerException {
 
     updateEvent(eventId, startDateTime, endDateTime, captureAgentId, userIds,
-                mediaPackage, wfProperties, caMetadata, optOut, origin, false);
+                mediaPackage, wfProperties, caMetadata, optOut, false);
   }
 
   @Override
