@@ -145,7 +145,7 @@ public interface SchedulerService {
           throws UnauthorizedException, SchedulerConflictException, SchedulerException;
 
   /**
-   * Updates event with specified ID.
+   * Updates event with specified ID and checking for conflicts.
    *
    * Default capture agent properties are created from DublinCore. Following values are generated:
    * <ul>
@@ -155,7 +155,7 @@ public interface SchedulerService {
    * </ul>
    *
    * @param mediaPackageId
-   *          the optional event identifier
+   *          the event identifier
    * @param startDateTime
    *          the optional event start time
    * @param endDateTime
@@ -184,6 +184,50 @@ public interface SchedulerService {
   void updateEvent(String mediaPackageId, Opt<Date> startDateTime, Opt<Date> endDateTime, Opt<String> captureAgentId,
           Opt<Set<String>> userIds, Opt<MediaPackage> mediaPackage, Opt<Map<String, String>> wfProperties,
           Opt<Map<String, String>> caMetadata, Opt<Opt<Boolean>> optOut)
+                  throws NotFoundException, UnauthorizedException, SchedulerConflictException, SchedulerException;
+
+  /**
+   * Updates event with specified ID and possiblyDictionary checking for conflicts.
+   *
+   * Default capture agent properties are created from DublinCore. Following values are generated:
+   * <ul>
+   * <li>event.title (mapped from dc:title)</li>
+   * <li>event.series (mapped from mediaPackage#getSeries())</li>
+   * <li>event.location (mapped from captureAgentId)</li>
+   * </ul>
+   *
+   * @param mediaPackageId
+   *          the event identifier
+   * @param startDateTime
+   *          the optional event start time
+   * @param endDateTime
+   *          the optional event end time
+   * @param captureAgentId
+   *          the optional capture agent id
+   * @param userIds
+   *          the optional list of user identifiers of speakers/lecturers
+   * @param mediaPackage
+   *          the optional mediapackage to update
+   * @param wfProperties
+   *          the optional workflow configuration to update
+   * @param caMetadata
+   *          the optional capture configuration to update
+   * @param optOut
+   *          the optional opt out status to update
+   * @param skipConflictCheck
+   *          the flag to check for conflicts
+   * @throws NotFoundException
+   *           if event with specified ID cannot be found
+   * @throws UnauthorizedException
+   *           if the current user is not authorized to perform this action
+   * @throws SchedulerConflictException
+   *           if there are conflicting events
+   * @throws SchedulerException
+   *           if exception occurred
+   */
+  void updateEvent(String mediaPackageId, Opt<Date> startDateTime, Opt<Date> endDateTime, Opt<String> captureAgentId,
+          Opt<Set<String>> userIds, Opt<MediaPackage> mediaPackage, Opt<Map<String, String>> wfProperties,
+          Opt<Map<String, String>> caMetadata, Opt<Opt<Boolean>> optOut, boolean skipConflictCheck)
                   throws NotFoundException, UnauthorizedException, SchedulerConflictException, SchedulerException;
 
   /**
