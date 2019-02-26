@@ -62,7 +62,6 @@ import org.opencastproject.workspace.api.Workspace;
 
 import org.apache.commons.io.FilenameUtils;
 import org.apache.http.HttpEntity;
-import org.apache.http.HttpHeaders;
 import org.apache.http.HttpStatus;
 import org.apache.http.NameValuePair;
 import org.apache.http.auth.AuthScope;
@@ -113,7 +112,6 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
   static final String TRANSCRIPT_COLLECTION = "transcripts";
   private static final int CONNECTION_TIMEOUT = 60000; // ms, 1 minute
   private static final int SOCKET_TIMEOUT = 60000; // ms, 1 minute
-  private static final int ACCESS_TOKEN_MINIMUM_TIME = 60000; // ms , 1 minute
   // Default wf to attach transcription results to mp
   public static final String DEFAULT_WF_DEF = "attach-nibity-transcripts";
   private static final long DEFAULT_COMPLETION_BUFFER = 300; // in seconds, default is 5 minutes
@@ -125,11 +123,7 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
   private static final String DEFAULT_LANGUAGE = "en-US";
 
   // Nibity API
-  private static final String GOOGLE_SPEECH_URL = "https://speech.googleapis.com/v1";
-  private static final String GOOGLE_AUTH2_URL = "https://www.googleapis.com/oauth2/v4/token";
-  private static final String REQUEST_PATH = "/speech:longrunningrecognize";
-  private static final String RESULT_PATH = "/operations/";
-  private static final String INVALID_TOKEN = "-1";
+  private static final String NIBITY_BASE_URL = "https://api.nibity.com/v1";
   private static final String PROVIDER = "Nibity";
 
   // Global configuration (custom.properties)
@@ -173,11 +167,6 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
   public static final String MAX_PROCESSING_TIME_CONFIG = "max.processing.time";
   public static final String NOTIFICATION_EMAIL_CONFIG = "notification.email";
   public static final String CLEANUP_RESULTS_DAYS_CONFIG = "cleanup.results.days";
-  public static final String GOOGLE_CLOUD_CLIENT_ID = "google.cloud.client.id";
-  public static final String GOOGLE_CLOUD_CLIENT_SECRET = "google.cloud.client.secret";
-  public static final String GOOGLE_CLOUD_REFRESH_TOKEN = "google.cloud.refresh.token";
-  public static final String GOOGLE_CLOUD_BUCKET = "google.cloud.storage.bucket";
-  public static final String GOOGLE_CLOUD_TOKEN_ENDPOINT_URL = "google.cloud.token.endpoint.url";
   public static final String NIBITY_CLIENT_ID = "nibity.client.id";
   public static final String NIBITY_CLIENT_KEY = "nibity.client.key";
 
@@ -192,15 +181,8 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
   private long maxProcessingSeconds = DEFAULT_MAX_PROCESSING_TIME;
   private String toEmailAddress;
   private int cleanupResultDays = DEFAULT_CLEANUP_RESULTS_DAYS;
-  private String clientId;
-  private String clientSecret;
-  private String clientToken;
   private String nibityClientId;
   private String nibityClientKey;
-  private String accessToken = INVALID_TOKEN;
-  private String tokenEndpoint = GOOGLE_AUTH2_URL;
-  private String storageBucket;
-  private long tokenExpiryTime = 0;
   private String systemAccount;
   private String serverUrl;
   private ScheduledExecutorService scheduledExecutor = Executors.newScheduledThreadPool(2);
@@ -215,21 +197,6 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
       enabled = OsgiUtil.getOptCfgAsBoolean(cc.getProperties(), ENABLED_CONFIG).get();
 
       if (enabled) {
-        // Mandatory API access properties
-        clientId = OsgiUtil.getComponentContextProperty(cc, GOOGLE_CLOUD_CLIENT_ID);
-        clientSecret = OsgiUtil.getComponentContextProperty(cc, GOOGLE_CLOUD_CLIENT_SECRET);
-        clientToken = OsgiUtil.getComponentContextProperty(cc, GOOGLE_CLOUD_REFRESH_TOKEN);
-        storageBucket = OsgiUtil.getComponentContextProperty(cc, GOOGLE_CLOUD_BUCKET);
-
-        // access token endpoint
-        Option<String> tokenOpt = OsgiUtil.getOptCfg(cc.getProperties(), GOOGLE_CLOUD_TOKEN_ENDPOINT_URL);
-        if (tokenOpt.isSome()) {
-          tokenEndpoint = tokenOpt.get();
-          logger.info("Access token endpoint is set to {}", tokenEndpoint);
-        } else {
-          logger.info("Default access token endpoint will be used");
-        }
-
         // Nibity API client ID and key
         nibityClientId = OsgiUtil.getComponentContextProperty(cc, NIBITY_CLIENT_ID);
         nibityClientKey = OsgiUtil.getComponentContextProperty(cc, NIBITY_CLIENT_KEY);
@@ -245,11 +212,13 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
         } else {
           logger.info("Default language will be used");
         }
+
         // Workflow to execute when getting callback (optional, with default)
         Option<String> wfOpt = OsgiUtil.getOptCfg(cc.getProperties(), WORKFLOW_CONFIG);
         if (wfOpt.isSome()) {
           workflowDefinitionId = wfOpt.get();
         }
+
         logger.info("Workflow definition is {}", workflowDefinitionId);
         // Interval to check for completed transcription jobs and start workflows to attach transcripts
         Option<String> intervalOpt = OsgiUtil.getOptCfg(cc.getProperties(), DISPATCH_WORKFLOW_INTERVAL_CONFIG);
@@ -337,6 +306,7 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
     }
   }
 
+  // Called by WOH
   @Override
   public Job startTranscription(String mpId, Track track) throws TranscriptionServiceException {
     if (!enabled) {
@@ -354,23 +324,18 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
     }
   }
 
+  // Could be called by the REST callback endpoint, or from getAndSaveJobResults()
   @Override
-  public void transcriptionDone(String mpId, Object obj) throws TranscriptionServiceException {
+  public void transcriptionDone(String mpId, Object results) throws TranscriptionServiceException {
     JSONObject jsonObj = null;
     String jobId = null;
-    String token = INVALID_TOKEN;
     try {
-      token = getRefreshAccessToken();
-    } catch (IOException ex) {
-      logger.error("Unable to create access token, error: {}", ex.toString());
-    }
-    if (token.equals(INVALID_TOKEN)) {
-      throw new TranscriptionServiceException("Invalid access token");
-    }
-    try {
-      jsonObj = (JSONObject) obj;
-      jobId = (String) jsonObj.get("name");
-      logger.info("Transcription done for mpId {}, jobId {}", mpId, jobId);
+      // Expected: {"auth":504,"transcript_id":2227,"types":["transcript","srt","vtt"]}
+
+      jsonObj = (JSONObject) results;
+      long transcriptId = (Long) jsonObj.get("transcript_id");
+      logger.info("Transcription done for mpId {}, transcript_id {}", mpId, transcriptId);
+
       JSONArray resultsArray = getTranscriptionResult(jsonObj);
 
       // Update state in database
@@ -378,24 +343,25 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
       // may be doing the same thing
       database.updateJobControl(jobId, NibityTranscriptionJobControl.Status.TranscriptionComplete.name());
 
-      // Delete media file from Google storage
-      deleteStorageFile(mpId, token);
+      // Delete media file from local storage
+      deleteStorageFile(mpId);
 
       // Save results in file system if there exist
-      if (resultsArray != null) {
-        saveResults(jobId, jsonObj);
+      String vttCaptions = getCaptions(transcriptId);
+
+      if (vttCaptions != null) {
+        saveCaptions(jobId, vttCaptions);
       }
     } catch (IOException e) {
-      logger.warn("Could not save transcription results file for mpId {}, jobId {}: {}",
-              new Object[]{mpId, jobId, jsonObj == null ? "null" : jsonObj.toJSONString()});
+      logger.warn("Could not save transcription results file for mpId {}", mpId);
       throw new TranscriptionServiceException("Could not save transcription results file", e);
     } catch (NibityTranscriptionDatabaseException e) {
-      logger.warn("Transcription results file were saved but state in db not updated for mpId {}, jobId {}", mpId,
-              jobId);
+      logger.warn("Transcription results file were saved but state in db not updated for mpId {}", mpId);
       throw new TranscriptionServiceException("Could not update transcription job control db", e);
     }
   }
 
+  // Could be called by REST endpoint
   @Override
   public void transcriptionError(String mpId, Object obj) throws TranscriptionServiceException {
     JSONObject jsonObj = null;
@@ -423,6 +389,7 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
     return language;
   }
 
+  // Called by workflow
   @Override
   protected String process(Job job) throws Exception {
     Operation op = null;
@@ -447,13 +414,15 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
    * Asynchronous Requests and Responses call to Nibity API
    * https://documenter.getpostman.com/view/5815470/RznFpyb6
    * https://api.nibity.com/v1/{id}/submit
+   *
+   * Called by process(Job job)
    */
   void createRecognitionsJob(String mpId, Track track, String languageCode) throws TranscriptionServiceException, IOException {
 
-    String mediaUrl = uploadMediaFileToGoogleStorage(mpId, track);
+    String mediaUrl = addMediaFileToLocalStorage(mpId, track);
 
     if (mediaUrl == null) {
-      throw new TranscriptionServiceException("Could not create recognition job: unable to upload media to storage");
+      throw new TranscriptionServiceException("Could not create caption job: unable to upload media to storage");
     }
 
     logger.info("Media URL in intermediate storage: {}", mediaUrl);
@@ -465,7 +434,7 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
     CloseableHttpClient httpClient = HttpClientBuilder.create().setDefaultCredentialsProvider(credentialsProvider).build();
     CloseableHttpResponse response = null;
 
-    String submitUrl = "https://api.nibity.com/v1/" + nibityClientId + "/submit";
+    String submitUrl = NIBITY_BASE_URL + "/" + nibityClientId + "/submit";
 
     List <NameValuePair> nvps = new ArrayList<NameValuePair>();
     nvps.add(new BasicNameValuePair("media[0][name]", mpId));
@@ -488,18 +457,18 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
 
       switch (code) {
         case HttpStatus.SC_OK: // 200
-          logger.info("Recognitions job has been successfully created");
+          logger.info("Captions job has been successfully created");
 
           /**
-           * Response returned is a json object: { "Earnings Call 2018": { "id": "2477", "length": 3218.797, "status": 500 } }
+           * Response returned is a json object: {"test-submission":{"file_id":"3074","file_type":"mp4","seconds":2633.677,"status":500,"deadline":"2019-02-25 11:28:42"}}
            */
           JSONObject result = (JSONObject) jsonObject.get(mpId);
 
-          String jobId = (String) result.get("id");
+          String jobId = (String) result.get("file_id");
+          String fileType = (String) result.get("file_type");
           long jobStatus = (Long) result.get("status");
 
-          logger.info(String.format(
-                  "Transcription for mp %s has been submitted. Job id: %s status %s", mpId, jobId, jobStatus));
+          logger.info("mp {} has been submitted. File id: {} status {} type {}", mpId, jobId, jobStatus, fileType);
 
           if (jobStatus == 500) {
               database.storeJobControl(mpId, track.getIdentifier(), jobId, NibityTranscriptionJobControl.Status.Progress.name(),
@@ -514,10 +483,10 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
           logger.warn("Invalid argument returned, status: {} with message: {}", code, jsonString);
           break;
       }
-      throw new TranscriptionServiceException("Could not create recognition job. Status returned: " + code);
+      throw new TranscriptionServiceException("Could not create caption job. Status returned: " + code);
     } catch (Exception e) {
-      logger.warn("Exception when calling the recognitions endpoint", e);
-      throw new TranscriptionServiceException("Exception when calling the recognitions endpoint", e);
+      logger.warn("Exception when calling the captions endpoint", e);
+      throw new TranscriptionServiceException("Exception when calling the captions endpoint", e);
     } finally {
       try {
         httpClient.close();
@@ -536,15 +505,13 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
    *
    * POST https://api.nibity.com/v1/{id}/transcript/ with transcripts[0]=transcript_id
    *   response: the transcript itself
+   *
+   * Called by WorkflowDispatcher.run() every WorkflowDispatchInterval
    */
   boolean getAndSaveJobResults(String jobId) throws TranscriptionServiceException, IOException {
 
     String mpId = "unknown";
-    JSONArray resultsArray = null;
-    String token = getRefreshAccessToken();
-    if (token.equals(INVALID_TOKEN)) {
-      return false;
-    }
+    String captionsVtt = null;
 
     CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
     credentialsProvider.setCredentials(AuthScope.ANY,
@@ -553,8 +520,7 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
     CloseableHttpClient httpClient = HttpClientBuilder.create().setDefaultCredentialsProvider(credentialsProvider).build();
     CloseableHttpResponse response = null;
 
-    String checkUrl = "https://api.nibity.com/v1/" + nibityClientId + "/check";
-    String collectUrl = "https://api.nibity.com/v1/" + nibityClientId + "/transcript";
+    String checkUrl = NIBITY_BASE_URL + "/" + nibityClientId + "/check";
 
     List <NameValuePair> nvps = new ArrayList<NameValuePair>();
     nvps.add(new BasicNameValuePair("files[0]", jobId));
@@ -566,11 +532,20 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
       response = httpClient.execute(httpPost);
       int code = response.getStatusLine().getStatusCode();
 
+      // Expected for not-ready: {"3074":{"auth":504,"transcript_id":null}}
+      // Expected for ready: {"3074":{"auth":504,"transcript_id":2227,"types":["transcript","srt","vtt"]}}
+
       switch (code) {
         case HttpStatus.SC_OK: // 200
           HttpEntity entity = response.getEntity();
           // Response returned is a json object described above
           String jsonString = EntityUtils.toString(entity);
+          EntityUtils.consume(entity);
+
+          boolean jobDone = false;
+
+          logger.info("JSON from checkjob: {}", jsonString);
+
           JSONParser jsonParser = new JSONParser();
           JSONObject jsonObject = (JSONObject) jsonParser.parse(jsonString);
 
@@ -580,20 +555,20 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
           long transcriptId = (Long) result.get("transcript_id");
 
           if (auth == 504) {
-            resultsArray = getTranscriptionResult(transcriptId);
-          }
+            logger.info("Captions job {} has finished, auth {}, transcript id {}", jobId, auth, transcriptId);
 
-          NibityTranscriptionJobControl jc = database.findByJob(jobId);
-          if (jc != null) {
-            mpId = jc.getMediaPackageId();
-          }
-          logger.info("Recognitions job {} has been found, completed status {}", jobId, jobDone.toString());
-          EntityUtils.consume(entity);
+            NibityTranscriptionJobControl jc = database.findByJob(jobId);
+            if (jc != null) {
+              mpId = jc.getMediaPackageId();
+            }
 
-          if (jobDone && resultsArray != null) {
-            transcriptionDone(mpId, jsonObject);
+            // Notify that captions are ready
+            transcriptionDone(mpId, result);
+
             return true;
           }
+
+          // Job is not ready yet
           return false;
 
         case HttpStatus.SC_NOT_FOUND: // 404
@@ -607,16 +582,16 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
           break;
       }
       throw new TranscriptionServiceException(
-              String.format("Could not check recognition job for media package %s, job id %s. Status returned: %d",
+              String.format("Could not check caption job for media package %s, job id %s. Status returned: %d",
                       mpId, jobId, code), code);
     } catch (TranscriptionServiceException e) {
       throw e;
     } catch (Exception e) {
-      String msg = String.format("Exception when calling the recognitions endpoint for media package %s, job id %s",
+      String msg = String.format("Exception when calling the captions endpoint for media package %s, job id %s",
               mpId, jobId);
       logger.warn(String.format(msg, mpId, jobId), e);
       throw new TranscriptionServiceException(String.format(
-              "Exception when calling the recognitions endpoint for media package %s, job id %s", mpId, jobId), e);
+              "Exception when calling the captions endpoint for media package %s, job id %s", mpId, jobId), e);
     } finally {
       try {
         httpClient.close();
@@ -629,7 +604,7 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
   }
 
   /**
-   * Get transcription result: GET /v1/operations/{name} Method mainly used by
+   * Get transcription result: https://api.nibity.com/v1/{id}/transcript/
    * the REST endpoint
    *
    * @param jobId
@@ -637,37 +612,34 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
    * @throws org.opencastproject.transcription.api.TranscriptionServiceException
    * @throws java.io.IOException
    */
-  public String getTranscriptionResults(long transcriptId)
+  private String getCaptions(long transcriptId)
           throws TranscriptionServiceException, IOException {
+
+    String transcriptUrl = NIBITY_BASE_URL + "/" + nibityClientId + "/transcript";
+
     CloseableHttpClient httpClient = makeHttpClient();
     CloseableHttpResponse response = null;
-    String token = getRefreshAccessToken();
-    if (token.equals(INVALID_TOKEN)) {
-      logger.warn("Invalid access token");
-      return "No results found";
-    }
     try {
-      HttpGet httpGet = new HttpGet(GOOGLE_SPEECH_URL + RESULT_PATH + jobId);
-      logger.debug("Url to invoke Google speech service: {}", httpGet.getURI().toString());
+      HttpGet httpGet = new HttpGet(NIBITY_BASE_URL);
+      logger.debug("Url to invoke Nibity transcription service: {}", httpGet.getURI().toString());
       // add the authorization header to the request;
-      httpGet.addHeader("Authorization", "Bearer " + token);
+      // TODO
+      httpGet.addHeader("Authorization", "Bearer ");
       response = httpClient.execute(httpGet);
       int code = response.getStatusLine().getStatusCode();
 
       switch (code) {
         case HttpStatus.SC_OK: // 200
           HttpEntity entity = response.getEntity();
-          logger.info("Retrieved details for transcription with job id: '{}'", jobId);
+          logger.info("Retrieved details for transcription with transcript id: '{}'", transcriptId);
           return EntityUtils.toString(entity);
         default:
-          logger.warn("Error retrieving details for transcription with job id: '{}', return status: {}.", jobId, code);
+          logger.warn("Error retrieving details for transcription with transcript id: '{}', return status: {}.", transcriptId, code);
           break;
       }
     } catch (Exception e) {
-      String msg = String.format("Exception when calling the transcription service for job id: %s", jobId);
-      logger.warn(String.format(msg, jobId), e);
       throw new TranscriptionServiceException(String.format(
-              "Exception when calling the transcription service for job id: %s", jobId), e);
+              "Exception when calling the transcription service for transcript id: %s", transcriptId), e);
     } finally {
       try {
         httpClient.close();
@@ -677,15 +649,14 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
       } catch (IOException e) {
       }
     }
-    return "No results found";
+    return null;
   }
 
-  private void saveResults(String jobId, JSONObject jsonObj) throws IOException {
-    JSONArray resultsArray = getTranscriptionResult(jsonObj);
-    if (resultsArray != null) {
+  private void saveCaptions(String jobId, String captions) throws IOException {
+    if (captions != null) {
       // Save the results into a collection
       workspace.putInCollection(TRANSCRIPT_COLLECTION, buildResultsFileName(jobId),
-              new ByteArrayInputStream(jsonObj.toJSONString().getBytes()));
+              new ByteArrayInputStream(captions.getBytes()));
     }
   }
 
@@ -754,89 +725,22 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
             .build();
   }
 
-  protected String refreshAccessToken(String clientId, String clientSecret, String refreshToken)
+  protected String addMediaFileToLocalStorage(String mpId, Track track)
           throws TranscriptionServiceException, IOException {
-    CloseableHttpClient httpClient = makeHttpClient();
-    CloseableHttpResponse response = null;
 
-    try {
-      HttpPost httpPost = new HttpPost(tokenEndpoint + String.format(
-              "?client_id=%s&client_secret=%s&refresh_token=%s&grant_type=refresh_token",
-              clientId, clientSecret, refreshToken));
-      httpPost.addHeader(HttpHeaders.CONTENT_TYPE, "application/x-www-form-urlencoded");
-      response = httpClient.execute(httpPost);
-      int code = response.getStatusLine().getStatusCode();
-      String jsonString = EntityUtils.toString(response.getEntity());
-      JSONParser jsonParser = new JSONParser();
-      JSONObject jsonObject = (JSONObject) jsonParser.parse(jsonString);
-      switch (code) {
-        case HttpStatus.SC_OK: // 200
-          accessToken = (String) jsonObject.get("access_token");
-          long duration = (long) jsonObject.get("expires_in"); // Duration in second
-          tokenExpiryTime = (System.currentTimeMillis() + (duration * 1000)); // time in millisecond
-          if (!INVALID_TOKEN.equals(accessToken)) {
-            logger.info("Google Cloud Service access token created");
-            return accessToken;
-          }
-          return INVALID_TOKEN;
-        case HttpStatus.SC_BAD_REQUEST: // 400
-        case HttpStatus.SC_UNAUTHORIZED: // 401
-          String error = (String) jsonObject.get("error");
-          String errorDetails = (String) jsonObject.get("error_description");
-          logger.warn("Invalid argument returned, status: {}", code);
-          logger.warn("Unable to refresh Google Cloud Serice token, error: {}, error details: {}", error, errorDetails);
-          break;
-        default:
-          logger.warn("Invalid argument returned, status: {}", code);
-      }
-      throw new TranscriptionServiceException(
-              String.format("Could not create Google access token. Status returned: %d", code), code);
-    } catch (TranscriptionServiceException e) {
-      throw e;
-    } catch (Exception e) {
-      logger.warn("Unable to generate access token for Google Cloud Services");
-      return INVALID_TOKEN;
-    } finally {
-      try {
-        httpClient.close();
-        if (response != null) {
-          response.close();
-        }
-      } catch (IOException e) {
-      }
-    }
-  }
-
-  protected String getRefreshAccessToken() throws TranscriptionServiceException, IOException {
-    // Check that token hasn't expired
-    if ((!INVALID_TOKEN.equals(accessToken)) && (System.currentTimeMillis() < (tokenExpiryTime - ACCESS_TOKEN_MINIMUM_TIME))) {
-      return accessToken;
-    }
-    return refreshAccessToken(clientId, clientSecret, clientToken);
-  }
-
-  protected String uploadMediaFileToGoogleStorage(String mpId, Track track)
-          throws TranscriptionServiceException, IOException {
     File mediaFile;
     String mediaUrl = null;
     String fileExtension;
     int mediaResponse;
-    CloseableHttpClient httpClientStorage = makeHttpClient();
-    NibityTranscriptionServiceStorage storage = new NibityTranscriptionServiceStorage();
+
     try {
       mediaFile = workspace.get(track.getURI());
       fileExtension = FilenameUtils.getExtension(mediaFile.getName());
       long fileSize = mediaFile.length();
       String contentType = track.getMimeType().toString();
-      String token = getRefreshAccessToken();
-      // Upload file to google cloud storage
-      mediaResponse = storage.startUpload(httpClientStorage, storageBucket, mpId, fileExtension,
-              mediaFile, String.valueOf(fileSize), contentType, token);
-      if (mediaResponse == HttpStatus.SC_OK) {
-        mediaUrl = String.format("gs://%s/%s.%s", storageBucket, mpId, fileExtension);
-        return mediaUrl;
-      }
-      logger.error("Errow when uploading audio to Google Storage, error code: {}", mediaResponse);
+
+      // TODO - put this into WFR accessible by the REST endpoint
+
       return mediaUrl;
     } catch (Exception e) {
       throw new TranscriptionServiceException("Error reading audio track", e);
@@ -849,10 +753,8 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
     return resultsArray;
   }
 
-  protected void deleteStorageFile(String mpId, String token) throws IOException {
-    CloseableHttpClient httpClientDel = makeHttpClient();
-    NibityTranscriptionServiceStorage storage = new NibityTranscriptionServiceStorage();
-    storage.deleteGoogleStorageFile(httpClientDel, storageBucket, mpId + ".flac", token);
+  protected void deleteStorageFile(String mpId) throws IOException {
+    // TODO - remove from local WFR
   }
 
   private void sendEmail(String subject, String body) {
@@ -951,8 +853,11 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
 
       try {
         // Find jobs that are in progress and jobs that had transcription complete
+        // The Nibity API lacks callbacks at present, so we only expect to find jobs in progress
+
         List<NibityTranscriptionJobControl> jobs = database.findByStatus(NibityTranscriptionJobControl.Status.Progress.name(),
                 NibityTranscriptionJobControl.Status.TranscriptionComplete.name());
+
         for (NibityTranscriptionJobControl j : jobs) {
           String mpId = j.getMediaPackageId();
           String jobId = j.getTranscriptionJobId();
@@ -961,6 +866,9 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
           if (NibityTranscriptionJobControl.Status.Progress.name().equals(j.getStatus())) {
             // If job should already have been completed, try to get the results. Consider a buffer factor so that we
             // don't try it too early.
+
+            // TODO use the deadline/expected date from the API rather than track duration here
+
             if (j.getDateCreated().getTime() + j.getTrackDuration() + completionCheckBuffer * 1000 < System
                     .currentTimeMillis()) {
               try {
@@ -970,9 +878,10 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
                           + (completionCheckBuffer + maxProcessingSeconds) * 1000 < System.currentTimeMillis()) {
                     // Processing for too long, mark job as canceled and don't check anymore
                     database.updateJobControl(jobId, NibityTranscriptionJobControl.Status.Canceled.name());
-                    // Delete file stored on Google storage
-                    String token = getRefreshAccessToken();
-                    deleteStorageFile(mpId, token);
+
+                    // Delete file stored on local storage
+                    deleteStorageFile(mpId);
+
                     // Send notification email
                     sendEmail("Transcription ERROR", String.format(
                             "Transcription job was in processing state for too long and was marked as canceled (media package %s, job id %s).",
