@@ -220,6 +220,16 @@ public class SchedulerServiceRemoteImpl extends RemoteBase implements SchedulerS
           Opt<Set<String>> userIds, Opt<MediaPackage> mediaPackage, Opt<Map<String, String>> wfProperties,
           Opt<Map<String, String>> caMetadata, Opt<Opt<Boolean>> optOut)
                   throws NotFoundException, UnauthorizedException, SchedulerConflictException, SchedulerException {
+
+    updateEvent(eventId, startDateTime, endDateTime, captureAgentId, userIds,
+                mediaPackage, wfProperties, caMetadata, optOut, false);
+  }
+
+  @Override
+  public void updateEvent(String eventId, Opt<Date> startDateTime, Opt<Date> endDateTime, Opt<String> captureAgentId,
+          Opt<Set<String>> userIds, Opt<MediaPackage> mediaPackage, Opt<Map<String, String>> wfProperties,
+          Opt<Map<String, String>> caMetadata, Opt<Opt<Boolean>> optOut, boolean allowConflict)
+                  throws NotFoundException, UnauthorizedException, SchedulerConflictException, SchedulerException {
     logger.debug("Start updating event {}.", eventId);
     HttpPut put = new HttpPut("/" + eventId);
 
@@ -245,6 +255,7 @@ public class SchedulerServiceRemoteImpl extends RemoteBase implements SchedulerS
     } else {
       params.add(new BasicNameValuePair("updateOptOut", Boolean.toString(false)));
     }
+    params.add(new BasicNameValuePair("allowConflict", BooleanUtils.toString(allowConflict, "true", "false", "false")));
     put.setEntity(new UrlEncodedFormEntity(params, UTF_8));
 
     HttpResponse response = getResponse(put, SC_OK, SC_NOT_FOUND, SC_UNAUTHORIZED, SC_FORBIDDEN, SC_CONFLICT);

@@ -669,13 +669,23 @@ public class SchedulerServiceImpl extends AbstractIndexProducer implements Sched
           Opt<Map<String, String>> caMetadata, Opt<Opt<Boolean>> optOutOption)
                   throws NotFoundException, UnauthorizedException, SchedulerException {
     updateEventInternal(mpId, startDateTime, endDateTime, captureAgentId, userIds, mediaPackage,
-            wfProperties, caMetadata, optOutOption);
+            wfProperties, caMetadata, optOutOption, false);
+  }
+
+  @Override
+  public void updateEvent(final String mpId, Opt<Date> startDateTime, Opt<Date> endDateTime, Opt<String> captureAgentId,
+          Opt<Set<String>> userIds, Opt<MediaPackage> mediaPackage, Opt<Map<String, String>> wfProperties,
+          Opt<Map<String, String>> caMetadata, Opt<Opt<Boolean>> optOutOption, boolean allowConflict)
+                  throws NotFoundException, UnauthorizedException, SchedulerException {
+    updateEventInternal(mpId, startDateTime, endDateTime, captureAgentId, userIds, mediaPackage,
+            wfProperties, caMetadata, optOutOption, allowConflict);
   }
 
   private void updateEventInternal(final String mpId, Opt<Date> startDateTime,
           Opt<Date> endDateTime, Opt<String> captureAgentId, Opt<Set<String>> userIds, Opt<MediaPackage> mediaPackage,
-          Opt<Map<String, String>> wfProperties, Opt<Map<String, String>> caMetadata, Opt<Opt<Boolean>> optOutOption
-  ) throws NotFoundException, SchedulerException {
+          Opt<Map<String, String>> wfProperties, Opt<Map<String, String>> caMetadata, Opt<Opt<Boolean>> optOutOption,
+          boolean allowConflict
+    ) throws NotFoundException, SchedulerException {
     notEmpty(mpId, "mpId");
     notNull(startDateTime, "startDateTime");
     notNull(endDateTime, "endDateTime");
@@ -735,7 +745,8 @@ public class SchedulerServiceImpl extends AbstractIndexProducer implements Sched
       boolean propertyChanged = captureAgentId.isSome() || startDateTime.isSome() || endDateTime.isSome();
 
       // Check for conflicting events
-      if (!isNewOptOut && readyForRecording || !isNewOptOut && propertyChanged && !oldOptOut) {
+      if ((!isNewOptOut && readyForRecording || !isNewOptOut && propertyChanged && !oldOptOut)
+            && (!isAdmin() || (isAdmin() && !allowConflict))) {
         List<MediaPackage> conflictingEvents = $(findConflictingEvents(captureAgentId.getOr(agentId),
                 startDateTime.getOr(start), endDateTime.getOr(end))).filter(new Fn<MediaPackage, Boolean>() {
                     @Override
