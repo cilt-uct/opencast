@@ -1726,14 +1726,14 @@ public class EventsEndpoint implements ManagedService {
   @RestQuery(name = "updateeventscheduling", description = "Update an event's scheduling information.", returnDescription = "", pathParameters = {
       @RestParameter(name = "eventId", description = "The event id", isRequired = true, type = Type.STRING) }, restParameters = {
       @RestParameter(name = "scheduling", isRequired = true, description = "Scheduling Information", type = Type.STRING),
-      @RestParameter(name = "skipConflictCheck", description = "Whether to skip conflict check during scheduling update.", defaultValue = "false", isRequired = false, type = Type.BOOLEAN) }, reponses = {
+      @RestParameter(name = "allowConflict", description = "Allow the conflict when updating scheduling.", defaultValue = "false", isRequired = false, type = Type.BOOLEAN) }, reponses = {
       @RestResponse(description = "The  scheduling information for the specified event is updated.", responseCode = HttpServletResponse.SC_NO_CONTENT),
       @RestResponse(description = "The specified event has no scheduling information to update.", responseCode = HttpServletResponse.SC_NOT_ACCEPTABLE),
       @RestResponse(description = "The scheduling information could not be updated due to a conflict.", responseCode = HttpServletResponse.SC_CONFLICT),
       @RestResponse(description = "The specified event does not exist.", responseCode = HttpServletResponse.SC_NOT_FOUND) })
   public Response updateEventScheduling(@HeaderParam("Accept") String acceptHeader, @PathParam("eventId") String id,
                                  @FormParam("scheduling") String scheduling,
-                                 @FormParam("skipConflictCheck") boolean skipConflictCheck) throws Exception {
+                                 @FormParam("allowConflict") boolean allowConflict) throws Exception {
     final ApiVersion requestedVersion = ApiMediaType.parse(acceptHeader).getVersion();
     final Opt<Event> event = indexService.getEvent(id, externalIndex);
 
@@ -1748,7 +1748,7 @@ public class EventsEndpoint implements ManagedService {
       logger.debug("Client sent unparsable scheduling information for event {}: {}", id, scheduling);
       return RestUtil.R.badRequest("Unparsable scheduling information");
     }
-    Optional<Response> clientError = updateSchedulingInformation(parsedJson, id, requestedVersion, skipConflictCheck);
+    Optional<Response> clientError = updateSchedulingInformation(parsedJson, id, requestedVersion, allowConflict);
     return clientError.orElse(Response.noContent().build());
   }
 
@@ -1764,7 +1764,7 @@ public class EventsEndpoint implements ManagedService {
       JSONObject parsedScheduling,
       String id,
       ApiVersion requestedVersion,
-      boolean skipConflictCheck) throws Exception {
+      boolean allowConflict) throws Exception {
     SchedulingInfo schedulingInfo;
     try {
       schedulingInfo = SchedulingInfo.of(parsedScheduling);
@@ -1793,7 +1793,7 @@ public class EventsEndpoint implements ManagedService {
           Opt.none(),
           caConfig,
           Opt.none(),
-          skipConflictCheck);
+          allowConflict);
     } catch (SchedulerConflictException e) {
       final List<MediaPackage> conflictingEvents = getConflictingEvents(
           schedulingInfo.merge(technicalMetadata), agentStateService, schedulerService);

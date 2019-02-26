@@ -560,19 +560,19 @@ public abstract class AbstractEventEndpoint {
   @RestQuery(name = "updateEventScheduling", description = "Updates the scheduling information of an event", returnDescription = "The method doesn't return any content", pathParameters = {
           @RestParameter(name = "eventId", isRequired = true, description = "The event identifier", type = RestParameter.Type.STRING) }, restParameters = {
                   @RestParameter(name = "scheduling", isRequired = true, description = "The updated scheduling (JSON object)", type = RestParameter.Type.TEXT),
-                  @RestParameter(name = "skipConflictCheck", description = "Whether to skip conflict check during scheduling update.", defaultValue = "false", isRequired = false, type = RestParameter.Type.BOOLEAN) }, reponses = {
+                  @RestParameter(name = "allowConflict", description = "Allow the conflict when updating scheduling.", defaultValue = "false", isRequired = false, type = RestParameter.Type.BOOLEAN) }, reponses = {
                           @RestResponse(responseCode = SC_BAD_REQUEST, description = "The required params were missing in the request."),
                           @RestResponse(responseCode = SC_NOT_FOUND, description = "If the event has not been found."),
                           @RestResponse(responseCode = SC_NO_CONTENT, description = "The method doesn't return any content") })
   public Response updateEventScheduling(@PathParam("eventId") String eventId,
-          @FormParam("scheduling") String scheduling, @FormParam("skipConflictCheck") boolean skipConflictCheck)
+          @FormParam("scheduling") String scheduling, @FormParam("allowConflict") boolean allowConflict)
           throws NotFoundException, UnauthorizedException, SearchIndexException, IndexServiceException {
     if (StringUtils.isBlank(scheduling))
       return RestUtil.R.badRequest("Missing parameters");
 
     try {
       final Event event = getEventOrThrowNotFoundException(eventId);
-      updateEventScheduling(scheduling, event, skipConflictCheck);
+      updateEventScheduling(scheduling, event, allowConflict);
       return Response.noContent().build();
     } catch (JSONException e) {
       return RestUtil.R.badRequest("The scheduling object is not valid");
@@ -591,7 +591,7 @@ public abstract class AbstractEventEndpoint {
     updateEventScheduling(scheduling, event, false);
   }
 
-  private void updateEventScheduling(String scheduling, Event event, boolean skipConflictCheck) throws NotFoundException, UnauthorizedException,
+  private void updateEventScheduling(String scheduling, Event event, boolean allowConflict) throws NotFoundException, UnauthorizedException,
     SchedulerException, JSONException, ParseException, SearchIndexException, IndexServiceException {
     final TechnicalMetadata technicalMetadata = getSchedulerService().getTechnicalMetadata(event.getIdentifier());
     final org.codehaus.jettison.json.JSONObject schedulingJson = new org.codehaus.jettison.json.JSONObject(
@@ -646,7 +646,7 @@ public abstract class AbstractEventEndpoint {
 
     if (!start.isNone() || !end.isNone() || !agentId.isNone() || !agentConfiguration.isNone() || !optOut.isNone()) {
       getSchedulerService()
-        .updateEvent(event.getIdentifier(), start, end, agentId, Opt.none(), Opt.none(), Opt.none(), agentConfiguration, optOut, skipConflictCheck);
+        .updateEvent(event.getIdentifier(), start, end, agentId, Opt.none(), Opt.none(), Opt.none(), agentConfiguration, optOut, allowConflict);
       // We want to keep the bibliographic meta data in sync
       updateBibliographicMetadata(event, agentId, start, end);
     }
