@@ -85,7 +85,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayInputStream;
-import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.util.ArrayList;
@@ -110,6 +109,7 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
 
   static final String TRANSCRIPT_COLLECTION = "nibity-transcripts";
   static final String SUBMISSION_COLLECTION = "nibity-submission";
+  static final String SUBMISSION_PATH = "/transcripts/nibity/submission/";
 
   private static final int CONNECTION_TIMEOUT = 60000; // ms, 1 minute
   private static final int SOCKET_TIMEOUT = 60000; // ms, 1 minute
@@ -738,18 +738,16 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
   protected String addMediaFileToLocalStorage(String mpId, Track track)
           throws TranscriptionServiceException, IOException {
 
-    File mediaFile;
-    String mediaUrl = null;
-    String fileExtension;
-    int mediaResponse;
-
     try {
-      mediaFile = workspace.get(track.getURI());
-      fileExtension = FilenameUtils.getExtension(mediaFile.getName());
-      long fileSize = mediaFile.length();
-      String contentType = track.getMimeType().toString();
 
-      // TODO - put this into WFR accessible by the REST endpoint
+      String fileExtension = FilenameUtils.getExtension(track.getURI().toString());
+      String filename = mpId + "-media." + fileExtension;
+
+      // TODO - seems unnecessary to have to read & write this rather than hardlink
+      wfr.putInCollection(SUBMISSION_COLLECTION, filename, workspace.read(track.getURI()));
+
+      String mediaUrl = serverUrl + "/" + SUBMISSION_PATH + "/" + filename;
+      logger.info("Media submission URL: {}", mediaUrl);
 
       return mediaUrl;
     } catch (Exception e) {
