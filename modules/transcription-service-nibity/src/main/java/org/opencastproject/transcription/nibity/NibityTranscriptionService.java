@@ -70,7 +70,6 @@ import org.apache.http.client.CredentialsProvider;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -109,7 +108,9 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
 
   private static final String JOB_TYPE = "org.opencastproject.transcription.nibity";
 
-  static final String TRANSCRIPT_COLLECTION = "transcripts";
+  static final String TRANSCRIPT_COLLECTION = "nibity-transcripts";
+  static final String SUBMISSION_COLLECTION = "nibity-submission";
+
   private static final int CONNECTION_TIMEOUT = 60000; // ms, 1 minute
   private static final int SOCKET_TIMEOUT = 60000; // ms, 1 minute
   // Default wf to attach transcription results to mp
@@ -439,8 +440,10 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
     List <NameValuePair> nvps = new ArrayList<NameValuePair>();
     nvps.add(new BasicNameValuePair("media[0][name]", mpId));
     nvps.add(new BasicNameValuePair("media[0][url]", mediaUrl));
-    nvps.add(new BasicNameValuePair("ref", "Test submission reference"));
-    nvps.add(new BasicNameValuePair("notes", "Test submission notes"));
+    // nvps.add(new BasicNameValuePair("ref", "Test submission reference"));
+
+    // TODO possibly add a series and lecture title here
+    nvps.add(new BasicNameValuePair("notes", "Opencast captions job"));
     nvps.add(new BasicNameValuePair("retain", "168"));
 
     try {
@@ -615,17 +618,24 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
   private String getCaptions(long transcriptId)
           throws TranscriptionServiceException, IOException {
 
+    CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
+    credentialsProvider.setCredentials(AuthScope.ANY,
+      new UsernamePasswordCredentials(nibityClientKey, ""));
+
+    CloseableHttpClient httpClient = HttpClientBuilder.create().setDefaultCredentialsProvider(credentialsProvider).build();
+    CloseableHttpResponse response = null;
+
     String transcriptUrl = NIBITY_BASE_URL + "/" + nibityClientId + "/transcript";
 
-    CloseableHttpClient httpClient = makeHttpClient();
-    CloseableHttpResponse response = null;
+    List <NameValuePair> nvps = new ArrayList<NameValuePair>();
+    nvps.add(new BasicNameValuePair("transcripts[0][transcript_id]", Long.toString(transcriptId)));
+    nvps.add(new BasicNameValuePair("transcripts[0][type]", "vtt"));
+
     try {
-      HttpGet httpGet = new HttpGet(NIBITY_BASE_URL);
-      logger.debug("Url to invoke Nibity transcription service: {}", httpGet.getURI().toString());
-      // add the authorization header to the request;
-      // TODO
-      httpGet.addHeader("Authorization", "Bearer ");
-      response = httpClient.execute(httpGet);
+      HttpPost httpPost = new HttpPost(transcriptUrl);
+      httpPost.setEntity(new UrlEncodedFormEntity(nvps, "UTF-8"));
+
+      response = httpClient.execute(httpPost);
       int code = response.getStatusLine().getStatusCode();
 
       switch (code) {
@@ -967,8 +977,9 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
       try {
         // Cleans up results files older than CLEANUP_RESULT_FILES_DAYS days
         wfr.cleanupOldFilesFromCollection(TRANSCRIPT_COLLECTION, cleanupResultDays);
+        wfr.cleanupOldFilesFromCollection(SUBMISSION_COLLECTION, cleanupResultDays);
       } catch (IOException e) {
-        logger.warn("Could not cleanup old transcript results files", e);
+        logger.warn("Could not cleanup old submission and transcript results files", e);
       }
     }
   }

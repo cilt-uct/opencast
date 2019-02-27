@@ -19,4 +19,6 @@
 	<reference name="serviceRegistry"
 		interface="org.opencastproject.serviceregistry.api.ServiceRegistry"
 		cardinality="1..1" policy="static" bind="setServiceRegistry" />
+        <reference name="workingFileRepository" interface="org.opencastproject.workingfilerepository.api.WorkingFileRepository"
+                cardinality="1..1" policy="static" bind="setWorkingFileRepository" />
 </scr:component>

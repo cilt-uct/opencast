@@ -20,32 +20,33 @@
  */
 package org.opencastproject.transcription.nibity.endpoint;
 
+import static javax.servlet.http.HttpServletResponse.SC_NOT_FOUND;
+import static javax.servlet.http.HttpServletResponse.SC_OK;
+import static org.opencastproject.util.MimeTypes.getMimeType;
+import static org.opencastproject.util.RestUtil.fileResponse;
+import static org.opencastproject.util.data.Option.some;
+import static org.opencastproject.util.doc.rest.RestParameter.Type.STRING;
+
 import org.opencastproject.job.api.JobProducer;
 import org.opencastproject.rest.AbstractJobProducerEndpoint;
 import org.opencastproject.serviceregistry.api.ServiceRegistry;
-import org.opencastproject.transcription.api.TranscriptionServiceException;
 import org.opencastproject.transcription.nibity.NibityTranscriptionService;
+import org.opencastproject.util.NotFoundException;
 import org.opencastproject.util.doc.rest.RestParameter;
-import org.opencastproject.util.doc.rest.RestParameter.Type;
 import org.opencastproject.util.doc.rest.RestQuery;
 import org.opencastproject.util.doc.rest.RestResponse;
 import org.opencastproject.util.doc.rest.RestService;
+import org.opencastproject.workingfilerepository.api.WorkingFileRepository;
 
 import org.osgi.service.component.ComponentContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.core.Response;
+
 
 @Path("/")
 @RestService(name = "NibityTranscriptionRestService", title = "Transcription Service REST Endpoint (uses Nibity services)", abstractText = "Uses external service to generate transcriptions of recordings.", notes = {
@@ -68,6 +69,11 @@ public class NibityTranscriptionRestService extends AbstractJobProducerEndpoint 
    */
   protected ServiceRegistry serviceRegistry = null;
 
+  /**
+   * The WFR
+   */
+  protected WorkingFileRepository wfr;
+
   public void activate(ComponentContext cc) {
   }
 
@@ -78,6 +84,11 @@ public class NibityTranscriptionRestService extends AbstractJobProducerEndpoint 
   public void setServiceRegistry(ServiceRegistry service) {
     this.serviceRegistry = service;
   }
+
+  public void setWorkingFileRepository(WorkingFileRepository wfr) {
+    this.wfr = wfr;
+  }
+
 
   @Override
   public JobProducer getService() {
@@ -90,44 +101,15 @@ public class NibityTranscriptionRestService extends AbstractJobProducerEndpoint 
   }
 
   @GET
-  @Path("results")
-  @Produces(MediaType.APPLICATION_JSON)
-  @RestQuery(name = "results", description = "Get JSON result of a submitted transcription job", returnDescription = "Returns a JSON representation of the transcription result", restParameters = {
-    @RestParameter(name = "jobId", description = "job id of the submitted transcription (can be found in Nibity database table)", isRequired = true, type = Type.STRING)}, reponses = {
-    @RestResponse(responseCode = HttpServletResponse.SC_OK, description = "If no errors"),
-    @RestResponse(responseCode = HttpServletResponse.SC_INTERNAL_SERVER_ERROR, description = "An error occurred")})
-  // GET v1/operations/7022084740052439959
-  public Response getTranscriptionResult(@QueryParam("jobId") String jobId,
-          @Context HttpServletRequest request) throws TranscriptionServiceException, IOException {
-    logger.debug("REST endpoint getTranscriptionResult called with job id: '{}'", jobId);
-    String jobResult = null;
-    /*
-    try {
-      jobResult = service.getTranscriptionResults(jobId);
-    } catch (TranscriptionServiceException e) {
-      throw new TranscriptionServiceException("Could not get transcription result", e);
-    }
-    */
-    return Response.ok(jobResult).build();
-  }
-
-  @GET
-  @Path("status")
-  @Produces(MediaType.TEXT_PLAIN)
-  @RestQuery(name = "status", description = "Get mediapackage transcription status", returnDescription = "Returns transcription status", restParameters = {
-    @RestParameter(name = "mediaPackageID", description = "the mediapackage identifier", isRequired = true, type = Type.STRING)}, reponses = {
-    @RestResponse(responseCode = HttpServletResponse.SC_OK, description = "If no errors"),
-    @RestResponse(responseCode = HttpServletResponse.SC_INTERNAL_SERVER_ERROR, description = "An error occurred")})
-  public Response getTranscriptionStatus(@QueryParam("mediaPackageID") String mpId,
-          @Context HttpServletRequest request) throws TranscriptionServiceException {
-    logger.debug("REST endpoint getTranscriptionStatus called with mediapackage id '{}'", mpId);
-    String status = null;
-    try {
-      status = service.getTranscriptionStatus(mpId);
-    } catch (TranscriptionServiceException e) {
-      throw new TranscriptionServiceException("Could not get mediapackage transcription status", e);
-    }
-    return Response.ok(status).build();
+  @Path("/submission/{fileName}")
+  @RestQuery(name = "getSubmission", description = "Gets the file from the working repository under /collectionId/filename", returnDescription = "The file", pathParameters = {
+          @RestParameter(name = "fileName", description = "the file name", isRequired = true, type = STRING) }, reponses = {
+          @RestResponse(responseCode = SC_OK, description = "File returned"),
+          @RestResponse(responseCode = SC_NOT_FOUND, description = "Not found") })
+  public Response restGetSubmission(@PathParam("fileName") String fileName) throws NotFoundException {
+    String collectionId = "nibity-submission";
+    return fileResponse(wfr.getFileFromCollection(collectionId, fileName), getMimeType(fileName), some(fileName))
+            .build();
   }
 
 }
