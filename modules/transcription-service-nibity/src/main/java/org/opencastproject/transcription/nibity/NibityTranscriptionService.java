@@ -741,13 +741,12 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
     try {
 
       String fileExtension = FilenameUtils.getExtension(track.getURI().toString());
-      String filename = mpId + "-media." + fileExtension;
+      String filename = mpId + "_media." + fileExtension;
 
       // TODO - seems unnecessary to have to read & write this rather than hardlink
       wfr.putInCollection(SUBMISSION_COLLECTION, filename, workspace.read(track.getURI()));
 
-      String mediaUrl = serverUrl + "/" + SUBMISSION_PATH + "/" + filename;
-      logger.info("Media submission URL: {}", mediaUrl);
+      String mediaUrl = serverUrl + SUBMISSION_PATH + filename;
 
       return mediaUrl;
     } catch (Exception e) {
