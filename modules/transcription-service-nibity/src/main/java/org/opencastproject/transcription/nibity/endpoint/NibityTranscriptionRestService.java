@@ -75,6 +75,7 @@ public class NibityTranscriptionRestService extends AbstractJobProducerEndpoint 
   protected WorkingFileRepository wfr;
 
   public void activate(ComponentContext cc) {
+    logger.info("activate()");
   }
 
   public void setTranscriptionService(NibityTranscriptionService service) {

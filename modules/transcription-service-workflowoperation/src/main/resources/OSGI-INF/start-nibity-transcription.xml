@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0"
-               name="org.opencastproject.transcription.workflowoperation.StartTranscriptionOperationHandler"
+               name="org.opencastproject.transcription.workflowoperation.StartNibityTranscriptionOperationHandler"
                immediate="true" activate="activate">
-  <implementation class="org.opencastproject.transcription.workflowoperation.StartTranscriptionOperationHandler"/>
+  <implementation class="org.opencastproject.transcription.workflowoperation.StartNibityTranscriptionOperationHandler"/>
   <property name="service.description" value="Start Transcription Workflow Operation Handler (Nibity)"/>
   <property name="workflow.operation" value="start-nibity-transcription"/>
   <service>
