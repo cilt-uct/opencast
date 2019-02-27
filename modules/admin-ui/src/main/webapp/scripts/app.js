@@ -56,6 +56,10 @@ angular.module('adminNg', [
     controller: function ($scope, $routeParams, $controller) {
       var capitalizedName = firstCharToUpper($routeParams.subresource);
       $controller(capitalizedName + 'Ctrl', {$scope: $scope});
+      if ($routeParams.ltimode === 'true') {
+        $scope.isLti = true;
+        $scope.$emit('isLtiMode');
+      }
     }
   });
   $routeProvider.when('/:category/:resource', {

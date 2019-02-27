@@ -39,11 +39,11 @@ import org.opencastproject.security.api.OrganizationDirectoryService;
 import org.opencastproject.security.api.SecurityService;
 import org.opencastproject.security.util.SecurityUtil;
 import org.opencastproject.util.NotFoundException;
-import org.opencastproject.util.persistencefn.PersistenceEnvs;
 import org.opencastproject.workspace.api.Workspace;
 
 import com.entwinemedia.fn.data.Opt;
 
+import org.apache.commons.lang3.BooleanUtils;
 import org.osgi.service.component.ComponentContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -53,6 +53,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
 import javax.persistence.EntityManagerFactory;
@@ -86,7 +87,7 @@ public class OsgiAssetManager implements AssetManager, TieredStorageAssetManager
   /** OSGi callback. */
   public synchronized void activate(ComponentContext cc) {
     logger.info("Activating AssetManager");
-    final Database db = new Database(PersistenceEnvs.mk(emf));
+    final Database db = new Database(emf);
     final String systemUserName = SecurityUtil.getSystemUserName(cc);
     // create the core asset manager
     final AbstractAssetManagerWithTieredStorage core = new AbstractAssetManagerWithTieredStorage() {
@@ -152,7 +153,8 @@ public class OsgiAssetManager implements AssetManager, TieredStorageAssetManager
             workspace,
             systemUserName);
     // compose with security
-    delegate = new AssetManagerWithSecurity(withMessaging, authSvc, secSvc);
+    boolean includeUIRoles = BooleanUtils.toBoolean(Objects.toString(cc.getProperties().get("includeUIRoles"), null));
+    delegate = new AssetManagerWithSecurity(withMessaging, authSvc, secSvc, includeUIRoles);
     for (RemoteAssetStore ras : remotes) {
       delegate.addRemoteAssetStore(ras);
     }
@@ -198,6 +200,21 @@ public class OsgiAssetManager implements AssetManager, TieredStorageAssetManager
   @Override
   public boolean setProperty(Property property) {
     return delegate.setProperty(property);
+  }
+
+  @Override
+  public void deleteProperties(final String mediaPackageId) {
+    delegate.deleteProperties(mediaPackageId);
+  }
+
+  @Override
+  public void deleteProperties(final String mediaPackageId, final String namespace) {
+    delegate.deleteProperties(mediaPackageId, namespace);
+  }
+
+  @Override
+  public boolean snapshotExists(final String mediaPackageId) {
+    return delegate.snapshotExists(mediaPackageId);
   }
 
   @Override

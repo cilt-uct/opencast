@@ -146,6 +146,21 @@ public abstract class AbstractAssetManager implements AssetManager {
     return getDb().saveProperty(property);
   }
 
+  @Override
+  public void deleteProperties(final String mediaPackageId) {
+    getDb().deleteProperties(mediaPackageId);
+  }
+
+  @Override
+  public void deleteProperties(final String mediaPackageId, final String namespace) {
+    getDb().deleteProperties(mediaPackageId, namespace);
+  }
+
+  @Override
+  public boolean snapshotExists(final String mediaPackageId) {
+    return getDb().snapshotExists(mediaPackageId);
+  }
+
   @Override public AQueryBuilder createQuery() {
     return new AQueryBuilderImpl(this);
   }
@@ -269,9 +284,10 @@ public abstract class AbstractAssetManager implements AssetManager {
     final String orgId = getCurrentOrgId();
     // store the manifest.xml
     // TODO make use of checksums
-    logger.debug(format("Archiving manifest of media package %s", mpId));
+    logger.debug("Archiving manifest of media package {} version {}", mpId, version);
     // temporarily save the manifest XML into the workspace to
-    final String manifestFileName = format("manifest_%s.xml", pmp.getMediaPackage().getIdentifier().toString());
+    // Fix file not found exception when several snapshots are taken at the same time
+    final String manifestFileName = format("manifest_%s_%s.xml", pmp.getMediaPackage().getIdentifier(), version);
     final URI manifestTmpUri = getWorkspace().putInCollection(
             "archive",
             manifestFileName,

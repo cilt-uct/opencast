@@ -249,8 +249,7 @@ public class TestEventsEndpoint extends EventsEndpoint {
         eq(Opt.none()),
         eq(Opt.none()),
         capture(capturedAgentConfig),
-        eq(Opt.none()),
-        eq(SchedulerService.ORIGIN)
+        eq(Opt.none())
     );
     EasyMock.expectLastCall();
 

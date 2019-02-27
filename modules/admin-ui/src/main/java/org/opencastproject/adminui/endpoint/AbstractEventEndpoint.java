@@ -645,8 +645,7 @@ public abstract class AbstractEventEndpoint {
 
     if (!start.isNone() || !end.isNone() || !agentId.isNone() || !agentConfiguration.isNone() || !optOut.isNone()) {
       getSchedulerService()
-        .updateEvent(event.getIdentifier(), start, end, agentId, Opt.none(), Opt.none(), Opt.none(), agentConfiguration,
-                     optOut, SchedulerService.ORIGIN, skipConflictCheck);
+        .updateEvent(event.getIdentifier(), start, end, agentId, Opt.none(), Opt.none(), Opt.none(), agentConfiguration, optOut);
       // We want to keep the bibliographic meta data in sync
       updateBibliographicMetadata(event, agentId, start, end);
     }
@@ -865,7 +864,7 @@ public abstract class AbstractEventEndpoint {
         // We could check agent access here if we want to forbid updating ACLs for users without access.
         getSchedulerService().updateEvent(eventId, Opt.<Date> none(), Opt.<Date> none(), Opt.<String> none(),
                 Opt.<Set<String>> none(), some(mediaPackage), Opt.<Map<String, String>> none(),
-                Opt.<Map<String, String>> none(), Opt.<Opt<Boolean>> none(), SchedulerService.ORIGIN);
+                Opt.<Map<String, String>> none(), Opt.<Opt<Boolean>> none());
         return ok();
       }
     } catch (AclServiceException e) {
@@ -1604,7 +1603,7 @@ public abstract class AbstractEventEndpoint {
 
         getSchedulerService().updateEvent(id, Opt.<Date> none(), Opt.<Date> none(), Opt.<String> none(),
                 Opt.<Set<String>> none(), Opt.<MediaPackage> none(), workflowConfigOpt, caMetadataOpt,
-                Opt.<Opt<Boolean>> none(), SchedulerService.ORIGIN);
+                Opt.<Opt<Boolean>> none());
         return Response.noContent().build();
       } catch (NotFoundException e) {
         return notFound("Cannot find event %s in scheduler service", id);
@@ -2271,10 +2270,14 @@ public abstract class AbstractEventEndpoint {
   @RestQuery(name = "createNewEvent", description = "Creates a new event by the given metadata as JSON and the files in the body", returnDescription = "The workflow identifier", restParameters = {
           @RestParameter(name = "metadata", isRequired = true, description = "The metadata as JSON", type = RestParameter.Type.TEXT) }, reponses = {
                   @RestResponse(responseCode = HttpServletResponse.SC_CREATED, description = "Event sucessfully added"),
+                  @RestResponse(description = "No events were added: the date range did not include any events", responseCode = HttpServletResponse.SC_NO_CONTENT),
                   @RestResponse(responseCode = SC_BAD_REQUEST, description = "If the metadata is not set or couldn't be parsed") })
   public Response createNewEvent(@Context HttpServletRequest request) {
     try {
       String result = getIndexService().createEvent(request);
+      if ("".equals(result)) {
+        return Response.status(Status.NO_CONTENT).entity(result).build();
+      }
       return Response.status(Status.CREATED).entity(result).build();
     } catch (IllegalArgumentException e) {
       return RestUtil.R.badRequest(e.getMessage());

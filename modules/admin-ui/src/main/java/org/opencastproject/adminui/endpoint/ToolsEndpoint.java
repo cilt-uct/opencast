@@ -649,7 +649,9 @@ public class ToolsEndpoint implements ManagedService {
       }
 
       // Update default thumbnail (if used) since position may change due to cutting
+      // Disabled due to performance reasons, OPENCAST-2401
       MediaPackageElement distributedThumbnail = null;
+      /*
       if (editingInfo.getDefaultThumbnailPosition().isPresent()) {
         try {
           final ThumbnailImpl thumbnailImpl = newThumbnailImpl();
@@ -667,6 +669,7 @@ public class ToolsEndpoint implements ManagedService {
           return R.serverError();
         }
       }
+      */
 
       if (editingInfo.getPostProcessingWorkflow().isPresent()) {
         final String workflowId = editingInfo.getPostProcessingWorkflow().get();

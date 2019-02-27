@@ -68,6 +68,8 @@ A non-comprehensive list of improvements:
 - Add ability to hide read-only series and events for unprivileged users
 - Lossless Concat Operation
 - Update Paella Player to 6.0.x
+- Improvement of performance when scheduling new events or checking for conflicts. Please read the [upgrade guide] to
+  make sure you migrate your data properly.
 
 Configuration changes
 ---------------------

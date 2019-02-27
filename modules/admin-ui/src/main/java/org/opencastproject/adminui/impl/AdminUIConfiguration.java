@@ -85,6 +85,13 @@ public class AdminUIConfiguration implements ManagedService {
   private static final String DEFAULT_SOURCE_TRACK_LEFT_FLAVOR = "presenter/source";
   private static final String DEFAULT_SOURCE_TRACK_RIGHT_FLAVOR = "presentation/source";
 
+  // codediff CAST-588
+  private static final String DEFAULT_ARCHIVE_BASE_PATH = "/srv/opencast/archive";
+  private String archiveBasePath = DEFAULT_ARCHIVE_BASE_PATH;
+
+  private boolean thumbnailHackEnabled = false;
+  // codediff END
+
   private String previewSubtype = DEFAULT_PREVIEW_SUBTYPE;
   private String waveformSubtype = DEFAULT_WAVEFORM_SUBTYPE;
   private Set<String> smilCatalogTagSet = new HashSet<>();
@@ -197,6 +204,16 @@ public class AdminUIConfiguration implements ManagedService {
   public MediaPackageElementFlavor getSourceTrackRightFlavor() {
     return sourceTrackRightFlavor;
   }
+
+  // codediff CAST-588
+  public String getArchiveBasePath() {
+    return archiveBasePath;
+  }
+
+  public boolean getThumbnailHackEnabled() {
+    return thumbnailHackEnabled;
+  }
+  // codediff END
 
   @Override
   public void updated(Dictionary<String, ?> properties) throws ConfigurationException {
@@ -314,6 +331,18 @@ public class AdminUIConfiguration implements ManagedService {
     sourceTrackRightFlavor = MediaPackageElementFlavor.parseFlavor(StringUtils.defaultString(
       (String) properties.get(OPT_SOURCE_TRACK_RIGHT_FLAVOR), DEFAULT_SOURCE_TRACK_RIGHT_FLAVOR));
     logger.debug("Source track right flavor set to '{}'", sourceTrackRightFlavor);
+
+    // codediff CAST-588
+    archiveBasePath = StringUtils.defaultString((String) properties.get("switch.thumbnail.hack.archive.path"), DEFAULT_ARCHIVE_BASE_PATH);
+    logger.info("CAST-588: Loaded archive base path: {}", archiveBasePath);
+
+    thumbnailHackEnabled = BooleanUtils.toBoolean((String) properties.get("switch.thumbnail.hack.enabled"));
+    if (thumbnailHackEnabled) {
+      logger.warn("CAST-588: Thumbnail hack enabled.");
+    } else {
+      logger.info("CAST-588: Thumbnail hack disabled.");
+    }
+    // codediff END
 
   }
 }
