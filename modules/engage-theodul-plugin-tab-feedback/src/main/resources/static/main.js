@@ -163,7 +163,7 @@ define(["jquery", "underscore", "backbone", "engage/core"], function($, _, Backb
                     parts.push('entry.1631189828=' + tempVars.mediaPackage_series);
                 }
                 if (tempVars.mediaPackage_eventid && tempVars.mediaPackage_seriesid) {
-                    parts.push('entry.1638000924=' + tempVars.mediaPackage_eventid + tempVars.mediaPackage_seriesid);
+                    parts.push('entry.1638000924=' + tempVars.mediaPackage_seriesid + tempVars.mediaPackage_eventid);
                 }
                 if (tempVars.mediaPackage_date) {
                     var dt = new Date(tempVars.mediaPackage_date)
@@ -171,8 +171,6 @@ define(["jquery", "underscore", "backbone", "engage/core"], function($, _, Backb
                     parts.push('entry.1375271116_month=' + (dt.getMonth()+1));
                     parts.push('entry.1375271116_day=' + dt.getDate());
                 }
-
-                console.log(tempVars);
 
                 // compile template and load into the html
                 var template = _.template(this.template);

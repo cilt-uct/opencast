@@ -221,7 +221,7 @@
                 parts.push('entry.1375271116_day=' + dt.getDate());
             }
             if (mediaPackage_eventid && mediaPackage_seriesid) {
-                parts.push('entry.1638000924=' + mediaPackage_eventid + mediaPackage_seriesid);
+                parts.push('entry.1638000924=' + mediaPackage_seriesid + mediaPackage_eventid);
             }
         %>
         <a class="button button-icon" href="<%= encodeURI(feedback_url + (parts.length > 0 ? '?' + parts.join('&') : '')) %>"
