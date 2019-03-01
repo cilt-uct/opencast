@@ -62,7 +62,7 @@ public class NibityTranscriptionJobControlDto implements Serializable {
   @Column(name = "track_id", nullable = false, length = 128)
   private String trackId;
 
-  // This is the google speech-to-text token id generated after a request
+  // This is the service job id generated after a request
   @Column(name = "job_id", nullable = false, length = 128)
   private String transcriptionJobId;
 

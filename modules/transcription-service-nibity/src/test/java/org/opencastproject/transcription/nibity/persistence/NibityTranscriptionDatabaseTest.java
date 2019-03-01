@@ -50,7 +50,7 @@ public class NibityTranscriptionDatabaseTest {
   private static final String MP_ID3 = "mp3";
   private static final String TRACK_ID3 = "track3";
   private static final String JOB_ID3 = "job3";
-  private static final String PROVIDER = "Google Speech";
+  private static final String PROVIDER = "Nibity";
   private static final long PROVIDER_ID = 1;
 
   @Before

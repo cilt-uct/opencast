@@ -704,14 +704,15 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
         workspace.get(uri);
       } catch (Exception e) {
         try {
-          // Not saved yet so call the google speech service to get the results
+          // Not saved yet so call the transcription service to get the results
           getAndSaveJobResults(jobId);
         } catch (IOException ex) {
           logger.error("Unable to retrieve transcription job, error: {}", ex.toString());
         }
       }
       MediaPackageElementBuilder builder = MediaPackageElementBuilderFactory.newInstance().newElementBuilder();
-      return builder.elementFromURI(uri, Attachment.TYPE, new MediaPackageElementFlavor("captions", "google-speech-json"));
+      // TODO fix element type
+      return builder.elementFromURI(uri, Attachment.TYPE, new MediaPackageElementFlavor("captions", "vtt"));
     } catch (NibityTranscriptionDatabaseException e) {
       throw new TranscriptionServiceException("Job id not informed and could not find transcription", e);
     }
@@ -962,7 +963,7 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
 
             // Update state in the database
             database.updateJobControl(jobId, NibityTranscriptionJobControl.Status.Closed.name());
-            logger.info("Attach transcription workflow {} scheduled for mp {}, google speech job {}", new String[]{wfId,
+            logger.info("Attach transcription workflow {} scheduled for mp {}, transcription service job {}", new String[]{wfId,
               mpId, jobId});
           } catch (Exception e) {
             logger.warn("Attach transcription workflow could NOT be scheduled for mp {}, nibity job {}, {}: {}",

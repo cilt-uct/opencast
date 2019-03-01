@@ -32,13 +32,13 @@ public class NibityTranscriptionJobControl {
   private String mediaPackageId;
   // Id of audio track element sent to service
   private String trackId;
-  // This is the name of the submitted google speech operation(job)
+  // This is the id of the submitted transcription job
   private String transcriptionJobId;
   // Transcription status, only completed after workflow to attach transcripts is dispatched
   private String status;
-  // Date/time of google speech job creation
+  // Date/time of transcription job creation
   private Date dateCreated;
-  // Date/time of google speech job completion
+  // Date/time of transcription job completion
   private Date dateCompleted;
   // Duration of track
   private long trackDuration;
