@@ -77,7 +77,6 @@ import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
-import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.osgi.service.component.ComponentContext;
@@ -87,6 +86,7 @@ import org.slf4j.LoggerFactory;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.net.URI;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -269,8 +269,8 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
         serverUrl = OsgiUtil.getContextProperty(cc, OpencastConstants.SERVER_URL_PROPERTY);
         systemAccount = OsgiUtil.getContextProperty(cc, DIGEST_USER_PROPERTY);
 
-        // Schedule the workflow dispatching, starting in 2 minutes
-        scheduledExecutor.scheduleWithFixedDelay(new WorkflowDispatcher(), 120, workflowDispatchInterval,
+        // Schedule the workflow dispatching, starting in 2 minutes TODO 5s > 120s
+        scheduledExecutor.scheduleWithFixedDelay(new WorkflowDispatcher(), 5, workflowDispatchInterval,
                 TimeUnit.SECONDS);
 
         // Schedule the cleanup of old results jobs from the collection in the wfr once a day
@@ -336,30 +336,34 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
       // Expected: {"auth":504,"transcript_id":2227,"types":["transcript","srt","vtt"]}
 
       jsonObj = (JSONObject) results;
-      long transcriptId = (Long) jsonObj.get("transcript_id");
-      logger.info("Transcription done for mpId {}, transcript_id {}", mpId, transcriptId);
+      Long transcriptId = (Long) jsonObj.get("transcript_id");
 
-      JSONArray resultsArray = getTranscriptionResult(jsonObj);
+      if (transcriptId != null) {
+        logger.info("Transcription done for mpId {}, transcript_id {}", mpId, transcriptId);
 
-      // Update state in database
-      // If there's an optimistic lock exception here, it's ok because the workflow dispatcher
-      // may be doing the same thing
-      database.updateJobControl(jobId, NibityTranscriptionJobControl.Status.TranscriptionComplete.name());
+        // Delete media file from local storage
+        deleteStorageFile(mpId);
 
-      // Delete media file from local storage
-      deleteStorageFile(mpId);
+        // Save results in file system
+        String vttCaptions = getCaptions(transcriptId);
 
-      // Save results in file system if there exist
-      String vttCaptions = getCaptions(transcriptId);
+        if (vttCaptions != null) {
+          saveCaptions(jobId, vttCaptions);
+        }
 
-      if (vttCaptions != null) {
-        saveCaptions(jobId, vttCaptions);
+        // Update state in database
+        // If there's an optimistic lock exception here, it's ok because the workflow dispatcher
+        // may be doing the same thing
+        database.updateJobControl(jobId, NibityTranscriptionJobControl.Status.TranscriptionComplete.name());
+
+      } else {
+        logger.debug("No transcription available yet for mpId {}", mpId);
       }
     } catch (IOException e) {
       logger.warn("Could not save transcription results file for mpId {}", mpId);
       throw new TranscriptionServiceException("Could not save transcription results file", e);
     } catch (NibityTranscriptionDatabaseException e) {
-      logger.warn("Transcription results file were saved but state in db not updated for mpId {}", mpId);
+      logger.warn("Transcription results file were saved but state in db not updated for mpId {}", mpId, e);
       throw new TranscriptionServiceException("Could not update transcription job control db", e);
     }
   }
@@ -554,8 +558,8 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
 
       HttpEntity entity = response.getEntity();
       // Response returned is a json object described above
-      EntityUtils.consume(entity);
       String jsonString = EntityUtils.toString(entity);
+      EntityUtils.consume(entity);
 
       logger.debug("Nibity API {} http response {}, JSON response: {}", checkUrl, code, jsonString);
 
@@ -574,9 +578,9 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
           JSONObject result = (JSONObject) jsonObject.get(jobId);
 
           long auth = (Long) result.get("auth");
-          long transcriptId = (Long) result.get("transcript_id");
+          Long transcriptId = (Long) result.get("transcript_id");
 
-          if (auth == 504) {
+          if ((auth == 504) && (transcriptId != null)) {
             logger.info("Captions job {} has finished, auth {}, transcript id {}", jobId, auth, transcriptId);
 
             NibityTranscriptionJobControl jc = database.findByJob(jobId);
@@ -634,7 +638,7 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
    * @throws org.opencastproject.transcription.api.TranscriptionServiceException
    * @throws java.io.IOException
    */
-  private String getCaptions(long transcriptId)
+  private String getCaptions(Long transcriptId)
           throws TranscriptionServiceException, IOException {
 
     CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
@@ -774,12 +778,6 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
     } catch (Exception e) {
       throw new TranscriptionServiceException("Error reading audio track", e);
     }
-  }
-
-  private JSONArray getTranscriptionResult(JSONObject jsonObj) {
-    JSONObject responseObj = (JSONObject) jsonObj.get("response");
-    JSONArray resultsArray = (JSONArray) responseObj.get("results");
-    return resultsArray;
   }
 
   protected void deleteStorageFile(String mpId) throws IOException {
