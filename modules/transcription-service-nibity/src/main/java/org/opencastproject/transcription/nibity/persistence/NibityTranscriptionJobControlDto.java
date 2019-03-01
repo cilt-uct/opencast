@@ -70,6 +70,10 @@ public class NibityTranscriptionJobControlDto implements Serializable {
   @Temporal(TemporalType.TIMESTAMP)
   private Date dateCreated;
 
+  @Column(name = "date_expected", nullable = false)
+  @Temporal(TemporalType.TIMESTAMP)
+  private Date dateExpected;
+
   @Column(name = "date_completed", nullable = true)
   @Temporal(TemporalType.TIMESTAMP)
   private Date dateCompleted;
@@ -88,12 +92,13 @@ public class NibityTranscriptionJobControlDto implements Serializable {
 
   /** Constructor with all fields. */
   public NibityTranscriptionJobControlDto(String mediaPackageId, String trackId, String transcriptionJobId, Date dateCreated,
-          Date dateCompleted, String status, long trackDuration, long providerId) {
+          Date dateExpected, Date dateCompleted, String status, long trackDuration, long providerId) {
     super();
     this.mediaPackageId = mediaPackageId;
     this.trackId = trackId;
     this.transcriptionJobId = transcriptionJobId;
     this.dateCreated = dateCreated;
+    this.dateExpected = dateExpected;
     this.dateCompleted = dateCompleted;
     this.status = status;
     this.trackDuration = trackDuration;
@@ -102,15 +107,15 @@ public class NibityTranscriptionJobControlDto implements Serializable {
 
   /** Convert into business object. */
   public NibityTranscriptionJobControl toTranscriptionJobControl() {
-    return new NibityTranscriptionJobControl(mediaPackageId, trackId, transcriptionJobId, dateCreated, dateCompleted, status,
+    return new NibityTranscriptionJobControl(mediaPackageId, trackId, transcriptionJobId, dateCreated, dateExpected, dateCompleted, status,
             trackDuration, providerId);
   }
 
   /** Store new job control */
   public static NibityTranscriptionJobControlDto store(EntityManager em, String mediaPackageId, String trackId,
-          String transcriptionJobId, String jobStatus, long trackDuration, long providerId) throws NibityTranscriptionDatabaseException {
+          String transcriptionJobId, String jobStatus, long trackDuration, Date dateExpected, long providerId) throws NibityTranscriptionDatabaseException {
     NibityTranscriptionJobControlDto dto = new NibityTranscriptionJobControlDto(mediaPackageId, trackId, transcriptionJobId,
-            new Date(), null, jobStatus, trackDuration, providerId);
+            new Date(), dateExpected, null, jobStatus, trackDuration, providerId);
 
     EntityTransaction tx = em.getTransaction();
     try {

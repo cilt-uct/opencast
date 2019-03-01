@@ -87,8 +87,10 @@ import org.slf4j.LoggerFactory;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.net.URI;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -470,15 +472,27 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
 
           String jobId = (String) result.get("file_id");
           String fileType = (String) result.get("file_type");
+          String deadline = (String) result.get("deadline");
           long jobStatus = (Long) result.get("status");
 
-          // TODO get the deadline and only start polling for job once that date/time is reached
+          SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+
+          Date expectedDate;
+
+          try {
+            expectedDate = format.parse(deadline);
+          } catch (ParseException e) {
+            logger.warn("Unable to parse deadline date string: {}", deadline);
+            expectedDate = new Date();
+          }
+
+          // TODO how does this handle timezones?
 
           logger.info("mp {} has been submitted to nibity: file id: {} status {} type {}", mpId, jobId, jobStatus, fileType);
 
           if (jobStatus == 500) {
               database.storeJobControl(mpId, track.getIdentifier(), jobId, NibityTranscriptionJobControl.Status.Progress.name(),
-                  track.getDuration() == null ? 0 : track.getDuration().longValue(), PROVIDER);
+                  track.getDuration() == null ? 0 : track.getDuration().longValue(), expectedDate, PROVIDER);
               EntityUtils.consume(entity);
           } else {
               logger.warn("Unknown job status {} in JSON response: {}", jsonString);
