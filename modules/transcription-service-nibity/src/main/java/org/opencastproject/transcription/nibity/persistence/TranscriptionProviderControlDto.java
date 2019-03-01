@@ -39,7 +39,7 @@ import javax.persistence.Table;
  * Entity object for the providers.
  */
 @Entity(name = "TranscriptionProvider")
-@Table(name = "mh_transcription_service_provider")
+@Table(name = "oc_transcription_service_provider")
 @NamedQueries({
   @NamedQuery(name = "TranscriptionProvider.findProviderById", query = "SELECT c FROM TranscriptionProvider c WHERE c.id= :id"),
   @NamedQuery(name = "TranscriptionProvider.findIdByProvider", query = "SELECT c FROM TranscriptionProvider c WHERE c.provider= :provider")})
