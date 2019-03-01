@@ -125,7 +125,7 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
 
   // Nibity API
   private static final String NIBITY_BASE_URL = "https://api.nibity.com/v1";
-  private static final String PROVIDER = "Nibity";
+  private static final String PROVIDER = "nibity";
 
   // Global configuration (custom.properties)
   public static final String ADMIN_URL_PROPERTY = "org.opencastproject.admin.ui.url";
@@ -458,9 +458,10 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
       JSONParser jsonParser = new JSONParser();
       JSONObject jsonObject = (JSONObject) jsonParser.parse(jsonString);
 
+      logger.debug("Nibity API {} http response {}, JSON response: {}", submitUrl, code, jsonString);
+
       switch (code) {
         case HttpStatus.SC_OK: // 200
-          logger.info("Captions job has been successfully created");
 
           /**
            * Response returned is a json object: {"test-submission":{"file_id":"3074","file_type":"mp4","seconds":2633.677,"status":500,"deadline":"2019-02-25 11:28:42"}}
@@ -471,7 +472,9 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
           String fileType = (String) result.get("file_type");
           long jobStatus = (Long) result.get("status");
 
-          logger.info("mp {} has been submitted. File id: {} status {} type {}", mpId, jobId, jobStatus, fileType);
+          // TODO get the deadline and only start polling for job once that date/time is reached
+
+          logger.info("mp {} has been submitted to nibity: file id: {} status {} type {}", mpId, jobId, jobStatus, fileType);
 
           if (jobStatus == 500) {
               database.storeJobControl(mpId, track.getIdentifier(), jobId, NibityTranscriptionJobControl.Status.Progress.name(),
@@ -535,16 +538,18 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
       response = httpClient.execute(httpPost);
       int code = response.getStatusLine().getStatusCode();
 
+      HttpEntity entity = response.getEntity();
+      // Response returned is a json object described above
+      EntityUtils.consume(entity);
+      String jsonString = EntityUtils.toString(entity);
+
+      logger.debug("Nibity API {} http response {}, JSON response: {}", checkUrl, code, jsonString);
+
       // Expected for not-ready: {"3074":{"auth":504,"transcript_id":null}}
       // Expected for ready: {"3074":{"auth":504,"transcript_id":2227,"types":["transcript","srt","vtt"]}}
 
       switch (code) {
         case HttpStatus.SC_OK: // 200
-          HttpEntity entity = response.getEntity();
-          // Response returned is a json object described above
-          String jsonString = EntityUtils.toString(entity);
-          EntityUtils.consume(entity);
-
           boolean jobDone = false;
 
           logger.info("JSON from checkjob: {}", jsonString);
@@ -637,6 +642,8 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
 
       response = httpClient.execute(httpPost);
       int code = response.getStatusLine().getStatusCode();
+
+      logger.debug("Nibity API {} http response {}", transcriptUrl, code);
 
       switch (code) {
         case HttpStatus.SC_OK: // 200
@@ -861,6 +868,8 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
       try {
         // Find jobs that are in progress and jobs that had transcription complete
         // The Nibity API lacks callbacks at present, so we only expect to find jobs in progress
+
+        // TODO Should filter by provider
 
         List<NibityTranscriptionJobControl> jobs = database.findByStatus(NibityTranscriptionJobControl.Status.Progress.name(),
                 NibityTranscriptionJobControl.Status.TranscriptionComplete.name());
