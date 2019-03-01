@@ -495,7 +495,9 @@ define(['require', 'jquery', 'underscore', 'backbone', 'basil', 'bootbox', 'enga
         console.error("No valid timelinepreviews image was found.", e);
     }
 
+        var user = {};
         if (Engage.model.get('meInfo')) {
+          user = Engage.model.get('meInfo').get('user');
           if (Engage.model.get('meInfo').get('logo_player')) {
             logo = Engage.model.get('meInfo').get('logo_player');
           }
@@ -564,7 +566,13 @@ define(['require', 'jquery', 'underscore', 'backbone', 'basil', 'bootbox', 'enga
           str_video: translate('video', 'Video'),
           str_of: translate('of', 'of'),
           str_showVolumeBar: translate('showVolumeBar', 'Show volume bar'),
-          str_swipeHint: translate('swipeHint', 'Swipe for additional view')
+          str_swipeHint: translate('swipeHint', 'Swipe for additional view'),
+          user: user,
+          mediaPackage_title: Engage.model.get('mediaPackage').get('title'),
+          mediaPackage_eventid: 'E['+Engage.model.get('mediaPackage').get('eventid')+']',
+          mediaPackage_series: Engage.model.get('mediaPackage').get('series'),
+          mediaPackage_seriesid: 'S['+Engage.model.get('mediaPackage').get('seriesid')+']',
+          mediaPackage_date: Engage.model.get('mediaPackage').get('date')
         };
 
         // compile template and load it
