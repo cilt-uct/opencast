@@ -569,8 +569,9 @@ define(['require', 'jquery', 'underscore', 'backbone', 'basil', 'bootbox', 'enga
           str_swipeHint: translate('swipeHint', 'Swipe for additional view'),
           user: user,
           mediaPackage_title: Engage.model.get('mediaPackage').get('title'),
-          mediaPackage_eventid: Engage.model.get('mediaPackage').get('eventid'),
+          mediaPackage_eventid: 'E['+Engage.model.get('mediaPackage').get('eventid')+']',
           mediaPackage_series: Engage.model.get('mediaPackage').get('series'),
+          mediaPackage_seriesid: 'S['+Engage.model.get('mediaPackage').get('seriesid')+']',
           mediaPackage_date: Engage.model.get('mediaPackage').get('date')
         };
 

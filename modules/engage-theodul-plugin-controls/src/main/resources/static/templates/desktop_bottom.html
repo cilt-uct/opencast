@@ -208,6 +208,9 @@
             if (user['email']) {
                 parts.push('entry.508626498=' + user.email);
             }
+            if (user['username']) {
+                parts.push('entry.277413167=' + user.username);
+            }
             if (mediaPackage_series) {
                 parts.push('entry.1631189828=' + mediaPackage_series);
             }
@@ -216,6 +219,9 @@
                 parts.push('entry.1375271116_year=' + dt.getFullYear());
                 parts.push('entry.1375271116_month=' + (dt.getMonth()+1));
                 parts.push('entry.1375271116_day=' + dt.getDate());
+            }
+            if (mediaPackage_eventid && mediaPackage_seriesid) {
+                parts.push('entry.1638000924=' + mediaPackage_eventid + mediaPackage_seriesid);
             }
         %>
         <a class="button button-icon" href="<%= encodeURI(feedback_url + (parts.length > 0 ? '?' + parts.join('&') : '')) %>"

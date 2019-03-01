@@ -144,8 +144,9 @@ define(["jquery", "underscore", "backbone", "engage/core"], function($, _, Backb
                     str_feedback: translate("feedback", "Feedback"),
                     user: Engage.model.get("meInfo").get("user"),
                     mediaPackage_title: Engage.model.get('mediaPackage').get('title'),
-                    mediaPackage_eventid: Engage.model.get('mediaPackage').get('eventid'),
+                    mediaPackage_eventid: 'E['+Engage.model.get('mediaPackage').get('eventid')+']',
                     mediaPackage_series: Engage.model.get('mediaPackage').get('series'),
+                    mediaPackage_seriesid: 'S['+Engage.model.get('mediaPackage').get('seriesid')+']',
                     mediaPackage_date: Engage.model.get('mediaPackage').get('date')
                 };
 
@@ -155,8 +156,14 @@ define(["jquery", "underscore", "backbone", "engage/core"], function($, _, Backb
                 if (tempVars.user['email']) {
                     parts.push('entry.508626498=' + tempVars.user.email);
                 }
+                if (tempVars.user['username']) {
+                    parts.push('entry.277413167=' + tempVars.user.username);
+                }
                 if (tempVars.mediaPackage_series) {
                     parts.push('entry.1631189828=' + tempVars.mediaPackage_series);
+                }
+                if (tempVars.mediaPackage_eventid && tempVars.mediaPackage_seriesid) {
+                    parts.push('entry.1638000924=' + tempVars.mediaPackage_eventid + tempVars.mediaPackage_seriesid);
                 }
                 if (tempVars.mediaPackage_date) {
                     var dt = new Date(tempVars.mediaPackage_date)
