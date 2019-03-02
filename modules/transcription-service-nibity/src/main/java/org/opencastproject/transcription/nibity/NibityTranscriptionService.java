@@ -330,13 +330,16 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
   // Could be called by the REST callback endpoint, or from getAndSaveJobResults()
   @Override
   public void transcriptionDone(String mpId, Object results) throws TranscriptionServiceException {
+    // Nibity API does not support callbacks, so this is never called
+    throw new TranscriptionServiceException("Not supported");
+  }
+
+  // Could be called by the REST callback endpoint, or from getAndSaveJobResults()
+  private void transcriptionDone(String mpId, String jobId, Long transcriptId) throws TranscriptionServiceException {
     JSONObject jsonObj = null;
-    String jobId = null;
+
     try {
       // Expected: {"auth":504,"transcript_id":2227,"types":["transcript","srt","vtt"]}
-
-      jsonObj = (JSONObject) results;
-      Long transcriptId = (Long) jsonObj.get("transcript_id");
 
       if (transcriptId != null) {
         logger.info("Transcription done for mpId {}, transcript_id {}", mpId, transcriptId);
@@ -589,7 +592,7 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
             }
 
             // Notify that captions are ready
-            transcriptionDone(mpId, result);
+            transcriptionDone(mpId, jobId, transcriptId);
 
             return true;
           }
@@ -690,7 +693,7 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
   private void saveCaptions(String jobId, String captions) throws IOException {
     if (captions != null) {
       // Save the results into a collection
-      workspace.putInCollection(TRANSCRIPT_COLLECTION, buildResultsFileName(jobId),
+      workspace.putInCollection(TRANSCRIPT_COLLECTION, buildResultsFileName(jobId, "vtt"),
               new ByteArrayInputStream(captions.getBytes()));
     }
   }
@@ -717,7 +720,7 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
       }
 
       // Results already saved?
-      URI uri = workspace.getCollectionURI(TRANSCRIPT_COLLECTION, buildResultsFileName(jobId));
+      URI uri = workspace.getCollectionURI(TRANSCRIPT_COLLECTION, buildResultsFileName(jobId, "vtt"));
       try {
         workspace.get(uri);
       } catch (Exception e) {
@@ -798,8 +801,8 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
     }
   }
 
-  private String buildResultsFileName(String jobId) {
-    return PathSupport.toSafeName(jobId + ".json");
+  private String buildResultsFileName(String jobId, String extension) {
+    return PathSupport.toSafeName(jobId + "." + extension);
   }
 
   public void setServiceRegistry(ServiceRegistry serviceRegistry) {
