@@ -721,10 +721,15 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
 
       // Results already saved?
       URI uri = workspace.getCollectionURI(TRANSCRIPT_COLLECTION, buildResultsFileName(jobId, "vtt"));
+
+      logger.info("Looking for transcript at URI: {}", uri);
+
       try {
         workspace.get(uri);
+        logger.info("Found captions at URI: {}", uri);
       } catch (Exception e) {
         try {
+          logger.info("Results not saved: getting from service for jobId {}", jobId);
           // Not saved yet so call the transcription service to get the results
           getAndSaveJobResults(jobId);
         } catch (IOException ex) {
@@ -733,6 +738,7 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
       }
       MediaPackageElementBuilder builder = MediaPackageElementBuilderFactory.newInstance().newElementBuilder();
       // TODO fix element type
+      logger.info("Returning MPE with captions URI: {}", uri);
       return builder.elementFromURI(uri, Attachment.TYPE, new MediaPackageElementFlavor("captions", "vtt"));
     } catch (NibityTranscriptionDatabaseException e) {
       throw new TranscriptionServiceException("Job id not informed and could not find transcription", e);

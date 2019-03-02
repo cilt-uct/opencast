@@ -21,12 +21,10 @@
 package org.opencastproject.transcription.workflowoperation;
 
 import org.opencastproject.caption.api.CaptionService;
-import org.opencastproject.job.api.Job;
 import org.opencastproject.job.api.JobContext;
 import org.opencastproject.mediapackage.MediaPackage;
 import org.opencastproject.mediapackage.MediaPackageElement;
 import org.opencastproject.mediapackage.MediaPackageElementFlavor;
-import org.opencastproject.mediapackage.MediaPackageElementParser;
 import org.opencastproject.transcription.api.TranscriptionService;
 import org.opencastproject.workflow.api.AbstractWorkflowOperationHandler;
 import org.opencastproject.workflow.api.WorkflowInstance;
@@ -120,17 +118,7 @@ public class AttachNibityTranscriptionOperationHandler extends AbstractWorkflowO
 
     try {
       // Get transcription file from the service
-      MediaPackageElement original = service.getGeneratedTranscription(mediaPackage.getIdentifier().compact(), jobId);
-      MediaPackageElement transcription = original;
-
-      // If caption format passed, convert to desired format
-      if (captionFormatOption != null) {
-        Job job = captionService.convert(transcription, "nibity", captionFormatOption, service.getLanguage());
-        if (!waitForStatus(job).isSuccess()) {
-          throw new WorkflowOperationException("Transcription format conversion job did not complete successfully");
-        }
-        transcription = MediaPackageElementParser.getFromXml(job.getPayload());
-      }
+      MediaPackageElement transcription = service.getGeneratedTranscription(mediaPackage.getIdentifier().compact(), jobId);
 
       // Set the target flavor if informed
       if (flavor != null)
@@ -149,8 +137,12 @@ public class AttachNibityTranscriptionOperationHandler extends AbstractWorkflowO
 
       String uri = transcription.getURI().toString();
       String ext = uri.substring(uri.lastIndexOf("."));
+
       transcription.setURI(workspace.moveTo(transcription.getURI(), mediaPackage.getIdentifier().toString(),
               transcription.getIdentifier(), "captions." + ext));
+
+      logger.info("Added this URI to mediapackage {}: {}", mediaPackage.getIdentifier(), transcription.getURI());
+
     } catch (Exception e) {
       throw new WorkflowOperationException(e);
     }
