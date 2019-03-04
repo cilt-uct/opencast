@@ -641,8 +641,7 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
    * @throws org.opencastproject.transcription.api.TranscriptionServiceException
    * @throws java.io.IOException
    */
-  private String getCaptions(Long transcriptId)
-          throws TranscriptionServiceException, IOException {
+  private String getCaptions(Long transcriptId) throws TranscriptionServiceException, IOException {
 
     CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
     credentialsProvider.setCredentials(AuthScope.ANY,
@@ -670,7 +669,7 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
         case HttpStatus.SC_OK: // 200
           HttpEntity entity = response.getEntity();
           logger.info("Retrieved details for transcription with transcript id: '{}'", transcriptId);
-          return EntityUtils.toString(entity);
+          return EntityUtils.toString(entity, "UTF-8");
         default:
           logger.warn("Error retrieving details for transcription with transcript id: '{}', return status: {}.", transcriptId, code);
           break;
