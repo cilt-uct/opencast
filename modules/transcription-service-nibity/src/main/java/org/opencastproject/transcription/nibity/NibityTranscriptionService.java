@@ -115,10 +115,12 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
 
   private static final int CONNECTION_TIMEOUT = 60000; // ms, 1 minute
   private static final int SOCKET_TIMEOUT = 60000; // ms, 1 minute
+
   // Default wf to attach transcription results to mp
   public static final String DEFAULT_WF_DEF = "attach-nibity-transcripts";
   private static final long DEFAULT_DISPATCH_INTERVAL = 60; // in seconds, default is 1 minute
   private static final long DEFAULT_MAX_PROCESSING_TIME = 48 * 60 * 60; // in seconds, default is 2 days.
+
   // Cleans up results files that are older than 7 days
   private static final int DEFAULT_CLEANUP_RESULTS_DAYS = 7;
   private static final String DEFAULT_LANGUAGE = "en-US";
@@ -167,6 +169,7 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
   public static final String MAX_PROCESSING_TIME_CONFIG = "max.overdue.time";
   public static final String NOTIFICATION_EMAIL_CONFIG = "notification.email";
   public static final String CLEANUP_RESULTS_DAYS_CONFIG = "cleanup.results.days";
+  public static final String CLEANUP_SUBMISSION = "cleanup.submission";
   public static final String NIBITY_CLIENT_ID = "nibity.client.id";
   public static final String NIBITY_CLIENT_KEY = "nibity.client.key";
 
@@ -180,6 +183,7 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
   private long maxProcessingSeconds = DEFAULT_MAX_PROCESSING_TIME;
   private String toEmailAddress;
   private int cleanupResultDays = DEFAULT_CLEANUP_RESULTS_DAYS;
+  private boolean cleanupSubmission = true; // Remove submissions immediately
   private String nibityClientId;
   private String nibityClientKey;
   private String systemAccount;
@@ -200,8 +204,16 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
         nibityClientId = OsgiUtil.getComponentContextProperty(cc, NIBITY_CLIENT_ID);
         nibityClientKey = OsgiUtil.getComponentContextProperty(cc, NIBITY_CLIENT_KEY);
 
-        // TODO remove for production
-        logger.info("Nibity API auth details: client id {} key {}", nibityClientId, nibityClientKey);
+        logger.info("Nibity API enabled with client id {}", nibityClientId);
+
+        // Cleanup submissions
+        Option<Boolean> cleanupOpt = OsgiUtil.getOptCfgAsBoolean(cc.getProperties(), CLEANUP_SUBMISSION);
+        if (cleanupOpt.isSome()) {
+          cleanupSubmission = cleanupOpt.get();
+          logger.info("Temporary media files will be removed immediately after submission");
+        } else {
+          logger.info("Temporary submission media files will NOT be removed immediately");
+        }
 
         // Language model to be used
         Option<String> languageOpt = OsgiUtil.getOptCfg(cc.getProperties(), NIBITY_LANGUAGE);
@@ -329,9 +341,6 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
       if (transcriptId != null) {
         logger.info("Transcription done for mpId {}, transcript_id {}", mpId, transcriptId);
 
-        // Delete media file from local storage
-        deleteStorageFile(mpId);
-
         // Save results in file system
         String vttCaptions = getCaptions(transcriptId);
 
@@ -414,11 +423,8 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
    */
   void createRecognitionsJob(String mpId, Track track, String languageCode) throws TranscriptionServiceException, IOException {
 
-    String mediaUrl = addMediaFileToLocalStorage(mpId, track);
-
-    if (mediaUrl == null) {
-      throw new TranscriptionServiceException("Could not create caption job: unable to upload media to storage");
-    }
+    String filename = addMediaFileToLocalStorage(mpId, track);
+    String mediaUrl = serverUrl + SUBMISSION_PATH + filename;
 
     logger.info("Media URL in intermediate storage: {}", mediaUrl);
 
@@ -504,6 +510,10 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
         httpClient.close();
         if (response != null) {
           response.close();
+        }
+        // Clean up the submission file (if immediate cleanup)
+        if (cleanupSubmission) {
+          deleteStorageFile(filename);
         }
       } catch (IOException e) {
       }
@@ -754,28 +764,31 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
             .build();
   }
 
+  /**
+   * Add the media file to local storage.
+   * @return the filename in the collection
+   */
   protected String addMediaFileToLocalStorage(String mpId, Track track)
           throws TranscriptionServiceException, IOException {
-
     try {
-
-      String fileExtension = FilenameUtils.getExtension(track.getURI().toString());
-      String filename = mpId + "_media." + fileExtension;
+      String filename = mpId + "_media." + FilenameUtils.getExtension(track.getURI().toString());
 
       // TODO - seems unnecessary to have to read & write this rather than hardlink
       wfr.putInCollection(SUBMISSION_COLLECTION, filename, workspace.read(track.getURI()));
 
-      String mediaUrl = serverUrl + SUBMISSION_PATH + filename;
-
-      return mediaUrl;
+      return filename;
     } catch (Exception e) {
-      throw new TranscriptionServiceException("Error reading audio track", e);
+      throw new TranscriptionServiceException("Error adding file to collection", e);
     }
   }
 
-  // Called when transcriptions are successfully received, or when the job is overdue and cancelled.
-  protected void deleteStorageFile(String mpId) throws IOException {
-    // TODO - remove from local WFR.
+  // Called when a transcription job has been submitted
+  protected void deleteStorageFile(String filename) throws IOException {
+    try {
+      wfr.deleteFromCollection(SUBMISSION_COLLECTION, filename, false);
+    } catch (IOException e) {
+      logger.warn("Unable to remove submission file {} from collection {}", filename, SUBMISSION_COLLECTION);
+    }
   }
 
   private void sendEmail(String subject, String body) {
@@ -899,9 +912,6 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
                   if (j.getDateExpected().getTime() + maxProcessingSeconds * 1000 < System.currentTimeMillis()) {
                     // Processing for too long, mark job as canceled and don't check anymore
                     database.updateJobControl(jobId, NibityTranscriptionJobControl.Status.Canceled.name());
-
-                    // Delete file stored on local storage
-                    deleteStorageFile(mpId);
 
                     // Send notification email
                     sendEmail("Transcription ERROR", String.format(
