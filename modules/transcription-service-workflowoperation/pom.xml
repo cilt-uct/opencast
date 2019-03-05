@@ -81,7 +81,9 @@
             <Build-Number>${buildNumber}</Build-Number>
             <Service-Component>
               OSGI-INF/start-watson-transcription.xml,
-              OSGI-INF/attach-watson-transcription.xml
+              OSGI-INF/attach-watson-transcription.xml,
+              OSGI-INF/start-nibity-transcription.xml,
+              OSGI-INF/attach-nibity-transcription.xml
             </Service-Component>
           </instructions>
         </configuration>
