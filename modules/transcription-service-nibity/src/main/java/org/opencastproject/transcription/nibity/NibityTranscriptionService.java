@@ -266,8 +266,8 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
         serverUrl = OsgiUtil.getContextProperty(cc, OpencastConstants.SERVER_URL_PROPERTY);
         systemAccount = OsgiUtil.getContextProperty(cc, DIGEST_USER_PROPERTY);
 
-        // Schedule the workflow dispatching, starting in 2 minutes TODO 5s > 120s
-        scheduledExecutor.scheduleWithFixedDelay(new WorkflowDispatcher(), 5, workflowDispatchInterval,
+        // Schedule the workflow dispatching, starting in 2 minutes
+        scheduledExecutor.scheduleWithFixedDelay(new WorkflowDispatcher(), 120, workflowDispatchInterval,
                 TimeUnit.SECONDS);
 
         // Schedule the cleanup of old results jobs from the collection in the wfr once a day
@@ -731,8 +731,7 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
         }
       }
       MediaPackageElementBuilder builder = MediaPackageElementBuilderFactory.newInstance().newElementBuilder();
-      // TODO fix element type
-      logger.info("Returning MPE with captions URI: {}", uri);
+      logger.debug("Returning MPE with captions URI: {}", uri);
       return builder.elementFromURI(uri, Attachment.TYPE, new MediaPackageElementFlavor("captions", "vtt"));
     } catch (NibityTranscriptionDatabaseException e) {
       throw new TranscriptionServiceException("Job id not informed and could not find transcription", e);
@@ -900,11 +899,7 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
 
           // If the job in progress, check if it should already have finished.
           if (NibityTranscriptionJobControl.Status.Progress.name().equals(j.getStatus())) {
-            // If job should already have been completed, try to get the results. Consider a buffer factor so that we
-            // don't try it too early.
-
-            // TODO use the deadline/expected date from the API rather than track duration here
-
+            // If job should already have been completed, try to get the results.
             if (j.getDateExpected().getTime() < System.currentTimeMillis()) {
               try {
                 if (!getAndSaveJobResults(jobId)) {
