@@ -117,12 +117,10 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
   private static final int SOCKET_TIMEOUT = 60000; // ms, 1 minute
   // Default wf to attach transcription results to mp
   public static final String DEFAULT_WF_DEF = "attach-nibity-transcripts";
-  private static final long DEFAULT_COMPLETION_BUFFER = 300; // in seconds, default is 5 minutes
   private static final long DEFAULT_DISPATCH_INTERVAL = 60; // in seconds, default is 1 minute
-  private static final long DEFAULT_MAX_PROCESSING_TIME = 5 * 60 * 60; // in seconds, default is 5 hours
+  private static final long DEFAULT_MAX_PROCESSING_TIME = 48 * 60 * 60; // in seconds, default is 2 days.
   // Cleans up results files that are older than 7 days
   private static final int DEFAULT_CLEANUP_RESULTS_DAYS = 7;
-  private static final boolean DEFAULT_PROFANITY_FILTER = false;
   private static final String DEFAULT_LANGUAGE = "en-US";
 
   // Nibity API
@@ -166,8 +164,7 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
   public static final String NIBITY_LANGUAGE = "nibity.language";
   public static final String WORKFLOW_CONFIG = "workflow";
   public static final String DISPATCH_WORKFLOW_INTERVAL_CONFIG = "workflow.dispatch.interval";
-  public static final String COMPLETION_CHECK_BUFFER_CONFIG = "completion.check.buffer";
-  public static final String MAX_PROCESSING_TIME_CONFIG = "max.processing.time";
+  public static final String MAX_PROCESSING_TIME_CONFIG = "max.overdue.time";
   public static final String NOTIFICATION_EMAIL_CONFIG = "notification.email";
   public static final String CLEANUP_RESULTS_DAYS_CONFIG = "cleanup.results.days";
   public static final String NIBITY_CLIENT_ID = "nibity.client.id";
@@ -180,7 +177,6 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
   private String language = DEFAULT_LANGUAGE;
   private String workflowDefinitionId = DEFAULT_WF_DEF;
   private long workflowDispatchInterval = DEFAULT_DISPATCH_INTERVAL;
-  private long completionCheckBuffer = DEFAULT_COMPLETION_BUFFER;
   private long maxProcessingSeconds = DEFAULT_MAX_PROCESSING_TIME;
   private String toEmailAddress;
   private int cleanupResultDays = DEFAULT_CLEANUP_RESULTS_DAYS;
@@ -233,18 +229,7 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
           }
         }
         logger.info("Workflow dispatch interval is {} seconds", workflowDispatchInterval);
-        // How long to wait after a transcription is supposed to finish before starting checking
-        Option<String> bufferOpt = OsgiUtil.getOptCfg(cc.getProperties(), COMPLETION_CHECK_BUFFER_CONFIG);
-        if (bufferOpt.isSome()) {
-          try {
-            completionCheckBuffer = Long.parseLong(bufferOpt.get());
-          } catch (NumberFormatException e) {
-            // Use default
-            logger.warn("Invalid configuration for {} : {}. Default used instead: {}",
-                    new Object[]{COMPLETION_CHECK_BUFFER_CONFIG, bufferOpt.get(), completionCheckBuffer});
-          }
-        }
-        logger.info("Completion check buffer is {} seconds", completionCheckBuffer);
+
         // How long to wait after a transcription is supposed to finish before marking the job as canceled in the db
         Option<String> maxProcessingOpt = OsgiUtil.getOptCfg(cc.getProperties(), MAX_PROCESSING_TIME_CONFIG);
         if (maxProcessingOpt.isSome()) {
@@ -788,8 +773,9 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
     }
   }
 
+  // Called when transcriptions are successfully received, or when the job is overdue and cancelled.
   protected void deleteStorageFile(String mpId) throws IOException {
-    // TODO - remove from local WFR
+    // TODO - remove from local WFR.
   }
 
   private void sendEmail(String subject, String body) {
@@ -906,13 +892,11 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
 
             // TODO use the deadline/expected date from the API rather than track duration here
 
-            if (j.getDateCreated().getTime() + j.getTrackDuration() + completionCheckBuffer * 1000 < System
-                    .currentTimeMillis()) {
+            if (j.getDateExpected().getTime() < System.currentTimeMillis()) {
               try {
                 if (!getAndSaveJobResults(jobId)) {
                   // Job still running, not finished, so check if it should have finished more than N seconds ago
-                  if (j.getDateCreated().getTime() + j.getTrackDuration()
-                          + (completionCheckBuffer + maxProcessingSeconds) * 1000 < System.currentTimeMillis()) {
+                  if (j.getDateExpected().getTime() + maxProcessingSeconds * 1000 < System.currentTimeMillis()) {
                     // Processing for too long, mark job as canceled and don't check anymore
                     database.updateJobControl(jobId, NibityTranscriptionJobControl.Status.Canceled.name());
 
