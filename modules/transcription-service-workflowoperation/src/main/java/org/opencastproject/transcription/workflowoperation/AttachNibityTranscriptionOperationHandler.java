@@ -22,10 +22,14 @@ package org.opencastproject.transcription.workflowoperation;
 
 import org.opencastproject.caption.api.CaptionService;
 import org.opencastproject.job.api.JobContext;
+import org.opencastproject.mediapackage.Attachment;
 import org.opencastproject.mediapackage.MediaPackage;
 import org.opencastproject.mediapackage.MediaPackageElement;
+import org.opencastproject.mediapackage.MediaPackageElementBuilder;
+import org.opencastproject.mediapackage.MediaPackageElementBuilderFactory;
 import org.opencastproject.mediapackage.MediaPackageElementFlavor;
 import org.opencastproject.transcription.api.TranscriptionService;
+import org.opencastproject.util.PathSupport;
 import org.opencastproject.workflow.api.AbstractWorkflowOperationHandler;
 import org.opencastproject.workflow.api.WorkflowInstance;
 import org.opencastproject.workflow.api.WorkflowOperationException;
@@ -39,8 +43,12 @@ import org.osgi.service.component.ComponentContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.InputStream;
+import java.net.URI;
 import java.util.SortedMap;
 import java.util.TreeMap;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 
 public class AttachNibityTranscriptionOperationHandler extends AbstractWorkflowOperationHandler {
 
@@ -117,29 +125,43 @@ public class AttachNibityTranscriptionOperationHandler extends AbstractWorkflowO
       flavor = MediaPackageElementFlavor.parseFlavor(targetFlavorOption);
 
     try {
-      // Get transcription file from the service
+      // Get transcription result zip file from the service
       MediaPackageElement transcription = service.getGeneratedTranscription(mediaPackage.getIdentifier().compact(), jobId);
 
-      // Set the target flavor if informed
-      if (flavor != null)
-        transcription.setFlavor(flavor);
+      // Extract the transcript vtt
+      String captionsVtt = null;
+      ZipFile zipFile = new ZipFile(workspace.get(transcription.getURI()));
+      String captionsZipName = mediaPackage + ".vtt";
+      ZipEntry zippedVtt = zipFile.getEntry(captionsZipName);
 
-      // Add tags
-      if (targetTagOption != null) {
-        for (String tag : asList(targetTagOption)) {
-          if (StringUtils.trimToNull(tag) != null)
-            transcription.addTag(tag);
+      if (zippedVtt != null) {
+        InputStream zis = zipFile.getInputStream(zippedVtt);
+        MediaPackageElementBuilder builder = MediaPackageElementBuilderFactory.newInstance().newElementBuilder();
+        MediaPackageElement vttElement = builder.newElement(Attachment.TYPE, new MediaPackageElementFlavor("captions", "vtt"));
+        URI vttURI = workspace.put(mediaPackage.getIdentifier().toString(), vttElement.getIdentifier(), "captions.vtt", zis);
+        vttElement.setURI(vttURI);
+        mediaPackage.add(vttElement);
+
+        // Set the target flavor if informed
+        if (flavor != null)
+          vttElement.setFlavor(flavor);
+
+        // Add tags
+        if (targetTagOption != null) {
+          for (String tag : asList(targetTagOption)) {
+            if (StringUtils.trimToNull(tag) != null)
+              vttElement.addTag(tag);
+          }
         }
+      } else {
+        logger.debug("No entry named {} found in results zip file {}", captionsZipName, transcription.getURI());
       }
 
-      // Add to media package
-      mediaPackage.add(transcription);
-
-      String uri = transcription.getURI().toString();
-      String ext = uri.substring(uri.lastIndexOf("."));
-
+      // Add the zip file to the  media package
+      transcription.setIdentifier("nibity-transcript-" + jobId);
       transcription.setURI(workspace.moveTo(transcription.getURI(), mediaPackage.getIdentifier().toString(),
-              transcription.getIdentifier(), "captions." + ext));
+              transcription.getIdentifier(), "nibity-" + jobId + ".zip"));
+      mediaPackage.add(transcription);
 
       logger.info("Added this URI to mediapackage {}: {}", mediaPackage.getIdentifier(), transcription.getURI());
 
@@ -160,6 +182,10 @@ public class AttachNibityTranscriptionOperationHandler extends AbstractWorkflowO
 
   public void setCaptionService(CaptionService service) {
     this.captionService = service;
+  }
+
+  private String buildResultsFileName(String jobId, String extension) {
+    return PathSupport.toSafeName(jobId + "." + extension);
   }
 
 }

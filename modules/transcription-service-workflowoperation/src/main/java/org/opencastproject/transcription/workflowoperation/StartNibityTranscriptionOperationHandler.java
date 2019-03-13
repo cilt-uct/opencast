@@ -134,10 +134,6 @@ public class StartNibityTranscriptionOperationHandler extends AbstractWorkflowOp
     Collection<Track> elements = elementSelector.select(mediaPackage, false);
     Job job = null;
     for (Track track : elements) {
-      if (track.hasVideo()) {
-        logger.info("Skipping track {} since it contains a video stream", track);
-        continue;
-      }
       try {
         job = service.startTranscription(mediaPackage.getIdentifier().compact(), track);
         // Only one job per media package

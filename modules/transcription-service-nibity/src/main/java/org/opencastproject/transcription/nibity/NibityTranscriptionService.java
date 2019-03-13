@@ -83,7 +83,6 @@ import org.osgi.service.component.ComponentContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.net.URI;
 import java.text.ParseException;
@@ -324,14 +323,14 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
     }
   }
 
-  // Could be called by the REST callback endpoint, or from getAndSaveJobResults()
+  // Could be called by the REST callback endpoint (which the Nibity API doesn't support)
   @Override
   public void transcriptionDone(String mpId, Object results) throws TranscriptionServiceException {
     // Nibity API does not support callbacks, so this is never called
     throw new TranscriptionServiceException("Not supported");
   }
 
-  // Could be called by the REST callback endpoint, or from getAndSaveJobResults()
+  // Called from checkJobResults()
   private void transcriptionDone(String mpId, String jobId, Long transcriptId) throws TranscriptionServiceException {
     JSONObject jsonObj = null;
 
@@ -342,16 +341,14 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
         logger.info("Transcription done for mpId {}, transcript_id {}", mpId, transcriptId);
 
         // Save results in file system
-        String vttCaptions = getCaptions(transcriptId);
-
-        if (vttCaptions != null) {
-          saveCaptions(jobId, vttCaptions);
+        if (getAndSaveJobResult(jobId, transcriptId)) {
+          // Update state in database
+          // If there's an optimistic lock exception here, it's ok because the workflow dispatcher
+          // may be doing the same thing
+          database.updateJobControl(jobId, NibityTranscriptionJobControl.Status.TranscriptionComplete.name());
+        } else {
+          logger.debug("Unable to get and save the transcription result for mpId {}", mpId);
         }
-
-        // Update state in database
-        // If there's an optimistic lock exception here, it's ok because the workflow dispatcher
-        // may be doing the same thing
-        database.updateJobControl(jobId, NibityTranscriptionJobControl.Status.TranscriptionComplete.name());
 
       } else {
         logger.debug("No transcription available yet for mpId {}", mpId);
@@ -530,7 +527,7 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
    *
    * Called by WorkflowDispatcher.run() every WorkflowDispatchInterval
    */
-  boolean getAndSaveJobResults(String jobId) throws TranscriptionServiceException, IOException {
+  boolean checkJobResults(String jobId) throws TranscriptionServiceException, IOException {
 
     String mpId = "unknown";
     String captionsVtt = null;
@@ -586,7 +583,9 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
               mpId = jc.getMediaPackageId();
             }
 
-            // Notify that captions are ready
+            // Notify that captions are ready (types array includes "transcript" and "vtt")
+            // TODO only if we have at least a transcript and captions.
+            // What would happen if caption alignment failed because of suboptimal audio?
             transcriptionDone(mpId, jobId, transcriptId);
 
             return true;
@@ -629,14 +628,13 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
 
   /**
    * Get transcription result: https://api.nibity.com/v1/{id}/transcript/
-   * the REST endpoint
    *
    * @param jobId
    * @return job details
    * @throws org.opencastproject.transcription.api.TranscriptionServiceException
    * @throws java.io.IOException
    */
-  private String getCaptions(Long transcriptId) throws TranscriptionServiceException, IOException {
+  private boolean getAndSaveJobResult(String jobId, Long transcriptId) throws TranscriptionServiceException, IOException {
 
     CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
     credentialsProvider.setCredentials(AuthScope.ANY,
@@ -649,7 +647,13 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
 
     List <NameValuePair> nvps = new ArrayList<NameValuePair>();
     nvps.add(new BasicNameValuePair("transcripts[0][transcript_id]", Long.toString(transcriptId)));
-    nvps.add(new BasicNameValuePair("transcripts[0][type]", "vtt"));
+    nvps.add(new BasicNameValuePair("transcripts[0][type]", "transcript"));
+    nvps.add(new BasicNameValuePair("transcripts[1][transcript_id]", Long.toString(transcriptId)));
+    nvps.add(new BasicNameValuePair("transcripts[1][type]", "txt"));
+    nvps.add(new BasicNameValuePair("transcripts[2][transcript_id]", Long.toString(transcriptId)));
+    nvps.add(new BasicNameValuePair("transcripts[2][type]", "vtt"));
+
+    boolean done = false;
 
     try {
       HttpPost httpPost = new HttpPost(transcriptUrl);
@@ -664,7 +668,12 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
         case HttpStatus.SC_OK: // 200
           HttpEntity entity = response.getEntity();
           logger.info("Retrieved details for transcription with transcript id: '{}'", transcriptId);
-          return EntityUtils.toString(entity, "UTF-8");
+
+          // Save the result zip file into a collection
+          workspace.putInCollection(TRANSCRIPT_COLLECTION, buildResultsFileName(jobId, "zip"), entity.getContent());
+          done = true;
+          break;
+
         default:
           logger.warn("Error retrieving details for transcription with transcript id: '{}', return status: {}.", transcriptId, code);
           break;
@@ -681,15 +690,8 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
       } catch (IOException e) {
       }
     }
-    return null;
-  }
 
-  private void saveCaptions(String jobId, String captions) throws IOException {
-    if (captions != null) {
-      // Save the results into a collection
-      workspace.putInCollection(TRANSCRIPT_COLLECTION, buildResultsFileName(jobId, "vtt"),
-              new ByteArrayInputStream(captions.getBytes()));
-    }
+    return done;
   }
 
   @Override
@@ -714,7 +716,7 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
       }
 
       // Results already saved?
-      URI uri = workspace.getCollectionURI(TRANSCRIPT_COLLECTION, buildResultsFileName(jobId, "vtt"));
+      URI uri = workspace.getCollectionURI(TRANSCRIPT_COLLECTION, buildResultsFileName(jobId, "zip"));
 
       logger.info("Looking for transcript at URI: {}", uri);
 
@@ -725,14 +727,14 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
         try {
           logger.info("Results not saved: getting from service for jobId {}", jobId);
           // Not saved yet so call the transcription service to get the results
-          getAndSaveJobResults(jobId);
+          checkJobResults(jobId);
         } catch (IOException ex) {
           logger.error("Unable to retrieve transcription job, error: {}", ex.toString());
         }
       }
       MediaPackageElementBuilder builder = MediaPackageElementBuilderFactory.newInstance().newElementBuilder();
-      logger.debug("Returning MPE with captions URI: {}", uri);
-      return builder.elementFromURI(uri, Attachment.TYPE, new MediaPackageElementFlavor("captions", "vtt"));
+      logger.debug("Returning MPE with results file URI: {}", uri);
+      return builder.elementFromURI(uri, Attachment.TYPE, new MediaPackageElementFlavor("application", "zip"));
     } catch (NibityTranscriptionDatabaseException e) {
       throw new TranscriptionServiceException("Job id not informed and could not find transcription", e);
     }
@@ -902,7 +904,7 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
             // If job should already have been completed, try to get the results.
             if (j.getDateExpected().getTime() < System.currentTimeMillis()) {
               try {
-                if (!getAndSaveJobResults(jobId)) {
+                if (!checkJobResults(jobId)) {
                   // Job still running, not finished, so check if it should have finished more than N seconds ago
                   if (j.getDateExpected().getTime() + maxProcessingSeconds * 1000 < System.currentTimeMillis()) {
                     // Processing for too long, mark job as canceled and don't check anymore
