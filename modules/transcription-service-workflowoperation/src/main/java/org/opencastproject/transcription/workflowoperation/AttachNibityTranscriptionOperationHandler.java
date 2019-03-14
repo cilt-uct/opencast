@@ -29,6 +29,7 @@ import org.opencastproject.mediapackage.MediaPackageElementBuilder;
 import org.opencastproject.mediapackage.MediaPackageElementBuilderFactory;
 import org.opencastproject.mediapackage.MediaPackageElementFlavor;
 import org.opencastproject.transcription.api.TranscriptionService;
+import org.opencastproject.util.MimeType;
 import org.opencastproject.util.PathSupport;
 import org.opencastproject.workflow.api.AbstractWorkflowOperationHandler;
 import org.opencastproject.workflow.api.WorkflowInstance;
@@ -47,6 +48,7 @@ import java.io.InputStream;
 import java.net.URI;
 import java.util.SortedMap;
 import java.util.TreeMap;
+import java.util.UUID;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
@@ -138,6 +140,8 @@ public class AttachNibityTranscriptionOperationHandler extends AbstractWorkflowO
         InputStream zis = zipFile.getInputStream(zippedVtt);
         MediaPackageElementBuilder builder = MediaPackageElementBuilderFactory.newInstance().newElementBuilder();
         MediaPackageElement vttElement = builder.newElement(Attachment.TYPE, new MediaPackageElementFlavor("captions", "vtt"));
+        vttElement.setIdentifier(UUID.randomUUID().toString());
+        vttElement.setMimeType(MimeType.mimeType("text", "vtt"));
         URI vttURI = workspace.put(mediaPackage.getIdentifier().toString(), vttElement.getIdentifier(), "captions.vtt", zis);
         vttElement.setURI(vttURI);
         mediaPackage.add(vttElement);
