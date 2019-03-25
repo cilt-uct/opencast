@@ -21,6 +21,8 @@
 
 package org.opencastproject.workspace.impl;
 
+import org.opencastproject.security.api.Organization;
+import org.opencastproject.security.api.SecurityService;
 import org.opencastproject.security.api.TrustedHttpClient;
 import org.opencastproject.security.api.TrustedHttpClient.RequestRunner;
 import org.opencastproject.security.util.StandAloneTrustedHttpClientImpl;
@@ -91,6 +93,13 @@ public class WorkspaceImplTest {
     File source = new File(
             "target/test-classes/../test-classes/../test-classes/../test-classes/../test-classes/../test-classes/../test-classes/../test-classes/../test-classes/../test-classes/../test-classes/../test-classes/../test-classes/../test-classes/../test-classes/../test-classes/opencast_header.gif");
     URL urlToSource = source.toURI().toURL();
+
+    Organization organization = EasyMock.createMock(Organization.class);
+    EasyMock.expect(organization.getId()).andReturn("org1").anyTimes();
+    SecurityService securityService = EasyMock.createMock(SecurityService.class);
+    EasyMock.expect(securityService.getOrganization()).andReturn(organization).anyTimes();
+    EasyMock.replay(securityService, organization);
+    workspace.setSecurityService(securityService);
 
     final TrustedHttpClient httpClient = EasyMock.createNiceMock(TrustedHttpClient.class);
     HttpEntity entity = EasyMock.createNiceMock(HttpEntity.class);
@@ -254,12 +263,20 @@ public class WorkspaceImplTest {
     EasyMock.replay(repo);
     workspace.setRepository(repo);
 
+    Organization organization = EasyMock.createMock(Organization.class);
+    EasyMock.expect(organization.getId()).andReturn("org1").anyTimes();
+    SecurityService securityService = EasyMock.createMock(SecurityService.class);
+    EasyMock.expect(securityService.getOrganization()).andReturn(organization).anyTimes();
+    EasyMock.replay(securityService, organization);
+    workspace.setSecurityService(securityService);
+
     RequestRunner<Either<String, Option<File>>> requestRunner = new TrustedHttpClient.RequestRunner<Either<String, Option<File>>>() {
       @Override
       public Either<Exception, Either<String, Option<File>>> run(Function<HttpResponse, Either<String, Option<File>>> f) {
         Either<String, Option<File>> right = Either.right(Option.some(expectedFile));
         return Either.right(right);
       }
+
     };
     TrustedHttpClient trustedHttpClient = EasyMock.createNiceMock(TrustedHttpClient.class);
     EasyMock.expect(trustedHttpClient.<Either<String, Option<File>>> runner(EasyMock.anyObject(HttpUriRequest.class)))
