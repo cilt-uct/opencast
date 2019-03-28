@@ -11,6 +11,4 @@
              cardinality="1..1" policy="static" bind="setRepository"/>
   <reference name="trustedHttpClient" interface="org.opencastproject.security.api.TrustedHttpClient"
              cardinality="1..1" policy="static" bind="setTrustedHttpClient"/>
-  <reference name="securityService" interface="org.opencastproject.security.api.SecurityService"
-             bind="setSecurityService" />
 </scr:component>
