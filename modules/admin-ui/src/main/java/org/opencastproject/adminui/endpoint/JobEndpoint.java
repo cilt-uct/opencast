@@ -39,6 +39,7 @@ import org.opencastproject.job.api.Job;
 import org.opencastproject.matterhorn.search.SearchQuery;
 import org.opencastproject.matterhorn.search.SortCriterion;
 import org.opencastproject.mediapackage.MediaPackage;
+import org.opencastproject.security.api.UserDirectoryService;
 import org.opencastproject.serviceregistry.api.IncidentL10n;
 import org.opencastproject.serviceregistry.api.IncidentService;
 import org.opencastproject.serviceregistry.api.IncidentServiceException;
@@ -123,6 +124,7 @@ public class JobEndpoint {
   private WorkflowService workflowService;
   private ServiceRegistry serviceRegistry;
   private IncidentService incidentService;
+  private UserDirectoryService userDirectoryService;
 
   /** OSGi callback for the workflow service. */
   public void setWorkflowService(WorkflowService workflowService) {
@@ -137,6 +139,10 @@ public class JobEndpoint {
   /** OSGi callback for the incident service. */
   public void setIncidentService(IncidentService incidentService) {
     this.incidentService = incidentService;
+  }
+
+  public void setUserDirectoryService(UserDirectoryService userDirectoryService) {
+    this.userDirectoryService = userDirectoryService;
   }
 
   protected void activate(BundleContext bundleContext) {
@@ -419,9 +425,8 @@ public class JobEndpoint {
               f("submitted", v(created != null ? DateTimeSupport.toUTC(created.getTime()) : ""))));
     }
 
-    JObject json = obj(f("results", arr(jsonList)), f("count", v(workflowInstances.getTotalCount())),
+    return obj(f("results", arr(jsonList)), f("count", v(workflowInstances.getTotalCount())),
             f("offset", v(query.getStartPage())), f("limit", v(jsonList.size())), f("total", v(totalWithoutFilters)));
-    return json;
   }
 
   /**
