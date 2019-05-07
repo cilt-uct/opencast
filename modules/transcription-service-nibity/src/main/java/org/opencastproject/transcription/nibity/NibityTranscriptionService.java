@@ -434,6 +434,8 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
 
     String submitUrl = NIBITY_BASE_URL + "/" + nibityClientId + "/submit";
 
+    logger.debug("Submitting new transcription job to Nibity API at {}", submitUrl);
+
     List <NameValuePair> nvps = new ArrayList<NameValuePair>();
     nvps.add(new BasicNameValuePair("media[0][name]", mpId));
     nvps.add(new BasicNameValuePair("media[0][url]", mediaUrl));

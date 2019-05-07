@@ -108,6 +108,7 @@ public class NibityTranscriptionRestService extends AbstractJobProducerEndpoint 
           @RestResponse(responseCode = SC_OK, description = "File returned"),
           @RestResponse(responseCode = SC_NOT_FOUND, description = "Not found") })
   public Response restGetSubmission(@PathParam("fileName") String fileName) throws NotFoundException {
+    logger.debug("Submission media requested: {}", fileName);
     String collectionId = "nibity-submission";
     return fileResponse(wfr.getFileFromCollection(collectionId, fileName), getMimeType(fileName), some(fileName))
             .build();
