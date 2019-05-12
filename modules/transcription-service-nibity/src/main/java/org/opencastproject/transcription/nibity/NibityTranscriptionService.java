@@ -74,7 +74,6 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
-import org.apache.http.impl.client.HttpClients;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
 import org.json.simple.JSONObject;
@@ -429,7 +428,16 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
     credentialsProvider.setCredentials(AuthScope.ANY,
       new UsernamePasswordCredentials(nibityClientKey, ""));
 
-    CloseableHttpClient httpClient = HttpClientBuilder.create().setDefaultCredentialsProvider(credentialsProvider).build();
+    // Timeout 6 hours (needs to include the time for the remote service to fetch the media URL before sending final response)
+    RequestConfig config = RequestConfig.custom()
+     .setConnectTimeout(CONNECTION_TIMEOUT)
+     .setSocketTimeout(6 * 3600 * 1000).build();
+
+    CloseableHttpClient httpClient = HttpClientBuilder.create()
+     .setDefaultCredentialsProvider(credentialsProvider)
+     .setDefaultRequestConfig(config)
+     .build();
+
     CloseableHttpResponse response = null;
 
     String submitUrl = NIBITY_BASE_URL + "/" + nibityClientId + "/submit";
@@ -534,11 +542,7 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
     String mpId = "unknown";
     String captionsVtt = null;
 
-    CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
-    credentialsProvider.setCredentials(AuthScope.ANY,
-      new UsernamePasswordCredentials(nibityClientKey, ""));
-
-    CloseableHttpClient httpClient = HttpClientBuilder.create().setDefaultCredentialsProvider(credentialsProvider).build();
+    CloseableHttpClient httpClient = makeHttpClient();
     CloseableHttpResponse response = null;
 
     String checkUrl = NIBITY_BASE_URL + "/" + nibityClientId + "/check";
@@ -638,11 +642,7 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
    */
   private boolean getAndSaveJobResult(String jobId, Long transcriptId) throws TranscriptionServiceException, IOException {
 
-    CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
-    credentialsProvider.setCredentials(AuthScope.ANY,
-      new UsernamePasswordCredentials(nibityClientKey, ""));
-
-    CloseableHttpClient httpClient = HttpClientBuilder.create().setDefaultCredentialsProvider(credentialsProvider).build();
+    CloseableHttpClient httpClient = makeHttpClient();
     CloseableHttpResponse response = null;
 
     String transcriptUrl = NIBITY_BASE_URL + "/" + nibityClientId + "/transcript";
@@ -761,10 +761,21 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
   }
 
   protected CloseableHttpClient makeHttpClient() throws IOException {
+
+    CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
+
+    credentialsProvider.setCredentials(AuthScope.ANY,
+      new UsernamePasswordCredentials(nibityClientKey, ""));
+
     RequestConfig reqConfig = RequestConfig.custom().setConnectTimeout(CONNECTION_TIMEOUT)
             .setSocketTimeout(SOCKET_TIMEOUT).setConnectionRequestTimeout(CONNECTION_TIMEOUT).build();
-    return HttpClients.custom().setDefaultRequestConfig(reqConfig)
-            .build();
+
+    CloseableHttpClient httpClient = HttpClientBuilder.create()
+     .setDefaultCredentialsProvider(credentialsProvider)
+     .setDefaultRequestConfig(reqConfig)
+     .build();
+
+    return httpClient;
   }
 
   /**
