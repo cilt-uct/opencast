@@ -175,9 +175,6 @@ angular.module('adminNg.controllers')
 
     $scope.submit = function () {
       console.warn('submitted:' + $scope.isLti + ' ' + $scope.video.workflow + ' ' + $routeParams.callback_url);
-      if ($scope.isLti) {
-        console.log($scope.video.workflows);
-      }
       $scope.activeTransaction = $scope.hasSubmitted = true;
       $scope.video.thumbnail.loading = $scope.video.thumbnail && $scope.video.thumbnail.type &&
               ($scope.video.thumbnail.type === 'DEFAULT');
@@ -216,8 +213,13 @@ angular.module('adminNg.controllers')
     };
 
     $scope.leave = function () {
-      Storage.put('pagination', $scope.resource, 'resume', true);
-      $location.url('/events/' + $scope.resource);
+      if ($scope.isLti && $routeParams.callback_url) {
+        //Editor launched via LTI. Send back to LTI
+        $window.location.assign($routeParams.callback_url);
+      } else {
+        Storage.put('pagination', $scope.resource, 'resume', true);
+        $location.url('/events/' + $scope.resource);
+      }
     };
 
     $scope.$on('$destroy', function () {

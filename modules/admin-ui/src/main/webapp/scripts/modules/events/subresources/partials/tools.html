@@ -42,7 +42,7 @@
               <!-- Save and Continue if not LTI -->
             </a>
 
-            <a ng-click="submit()"
+            <a ng-click="leave()"
                 ng-if="isLti"
                 ng-class="{disabled: submitButton}"
                 class="return-button"
@@ -442,7 +442,7 @@
                       <!-- Save and Continue -->
                   </a>
 
-                  <a ng-click="submit()"
+                  <a ng-click="leave()"
                       ng-if="isLti"
                       ng-class="{disabled: submitButton}"
                       class="return-button"
