@@ -93,9 +93,10 @@ module.exports = {
     'no-alert': [
       'error'
     ],
-    'no-console': [
-      'error'
-    ],
+    'no-console': 'off',
+    // 'no-console': [
+    //   'error'
+    // ],
     'no-useless-concat': [
       'error'
     ],

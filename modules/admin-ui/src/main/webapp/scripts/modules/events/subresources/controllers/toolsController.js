@@ -23,8 +23,9 @@
 // Controller for all event screens.
 angular.module('adminNg.controllers')
 .controller('ToolsCtrl', ['$scope', '$route', '$location', 'Storage', '$window', 'ToolsResource', 'Notifications',
-  'EventHelperService',
-  function ($scope, $route, $location, Storage, $window, ToolsResource, Notifications, EventHelperService) {
+  'EventHelperService','$routeParams',
+  function ($scope, $route, $location, Storage, $window, ToolsResource, Notifications, EventHelperService,
+    $routeParams) {
     var thumbnailErrorMessageId = null;
     var trackErrorMessageId = null;
 
@@ -173,6 +174,10 @@ angular.module('adminNg.controllers')
     $scope.hasSubmitted = false;
 
     $scope.submit = function () {
+      console.warn('submitted:' + $scope.isLti + ' ' + $scope.video.workflow + ' ' + $routeParams.callback_url);
+      if ($scope.isLti) {
+        console.log($scope.video.workflows);
+      }
       $scope.activeTransaction = $scope.hasSubmitted = true;
       $scope.video.thumbnail.loading = $scope.video.thumbnail && $scope.video.thumbnail.type &&
               ($scope.video.thumbnail.type === 'DEFAULT');
@@ -180,7 +185,13 @@ angular.module('adminNg.controllers')
         $scope.activeTransaction = $scope.hasSubmitted = false;
         if ($scope.video.workflow) {
           Notifications.add('success', 'VIDEO_CUT_PROCESSING');
-          $location.url('/events/' + $scope.resource);
+          if ($routeParams.callback_url) {
+            //Editor launched via LTI. Send back to LTI
+            $window.location.assign($routeParams.callback_url);
+          } else {
+            //Editor launched from AdminUI
+            $location.url('/events/' + $scope.resource);
+          }
         } else {
           Notifications.add('success', 'VIDEO_CUT_SAVED');
         }
@@ -214,13 +225,10 @@ angular.module('adminNg.controllers')
     });
 
     $scope.saveAndPublish = function () {
-      $scope.video.workflows.some(function(wf) {
-        if (wf.name.indexOf('UCT') > -1) {
-          $scope.video.workflow = wf.id;
-          return true;
-        }
-      });
-
+      // In 'My Video' we use the stereo publish workflow
+      // might change if we open this up to all LTI
+      $scope.video.workflow = 'uct-publish-after-edit-Stereo';
+      console.log('saveAndPublish: ' + $scope.video.workflow);
       $scope.submit();
     };
   }
