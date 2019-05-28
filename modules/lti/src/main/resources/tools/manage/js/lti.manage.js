@@ -414,7 +414,7 @@ var OCManager = (function($) {
                                 var _listConflicts = $('<ul/>');
                                 var allowTimeAdjust = true;
                                 var timeAdjustDelta = 1000000;
-                                
+
                                 var chosenEndTimeInUTCMins = getDayTimeInMinutes(moment(conflictValues.end).utc());
                                 var chosenStartTimeInUTCMins = getDayTimeInMinutes(moment(conflictValues.start).utc());
                                 conflicts.forEach(function(conflict) {
@@ -473,7 +473,7 @@ var OCManager = (function($) {
         var _item = $('<li/>');
         var _title = $('<span/>', {text: event.title, class: 'thirdWidth'});
         var _venue = $('<span/>', {
-                       text: (ocManager.captureAgents[proposedChanges.location || event.location] || {}).name || 
+                       text: (ocManager.captureAgents[proposedChanges.location || event.location] || {}).name ||
                              proposedChanges.location || event.location,
                        class: 'thirdWidth'
                      });
@@ -566,7 +566,7 @@ var OCManager = (function($) {
                                              }, 0);
 
                           $('#chk-head')[0].className = 'checkbox ' + (numChecked ? 'partial' : 'none');
- 
+
                           if (this.selected.length === 0) {
                             $('#grid-header').removeClass('selections');
                           }
@@ -608,9 +608,9 @@ var OCManager = (function($) {
                                                             moment(todayTime).isBefore(moment().add(10, 'minutes')) ? moment().add(1, 'day').format('YYYY-MM-DD') : todayTime
                                                          ) :
                                                          schedule.start_date;
-                                 schedule.start_date = moment(moment(schedule.start_date).format('YYYY-MM-DD') + ' ' + 
+                                 schedule.start_date = moment(moment(schedule.start_date).format('YYYY-MM-DD') + ' ' +
                                                        (schedule.start_time.length === 4 ? '0' : '') + schedule.start_time).utc().format('YYYY-MM-DDTHH:mm:ssZ');
-                                 schedule.end_date = moment(moment(schedule.end_date).format('YYYY-MM-DD') + ' ' + 
+                                 schedule.end_date = moment(moment(schedule.end_date).format('YYYY-MM-DD') + ' ' +
                                                      (schedule.end_time.length === 4 ? '0' : '') + schedule.end_time).utc().format('YYYY-MM-DDTHH:mm:ssZ');
 
                                  var BYHOUR = 'BYHOUR=' + moment(schedule.start_date).utc().format('HH') + ';';
@@ -629,12 +629,12 @@ var OCManager = (function($) {
                                    processing: this.processing,
                                        access: this.access,
                                        source: {
-                                                 type: 'SCHEDULE_MULTIPLE', 
+                                                 type: 'SCHEDULE_MULTIPLE',
                                                  metadata: {
                                                    start: schedule.start_date,
                                                    device: schedule.ca_name,
                                                    inputs: 'presenter,presentation,presentation2,audio',
-                                                   end: schedule.end_date, 
+                                                   end: schedule.end_date,
                                                    duration: schedule.duration + '',
                                                       rrule: schedule.rrule
                                                  }
@@ -920,6 +920,7 @@ ocManager.eventMgr.on('event.create.partial', function(createdEvents) {
 ocManager.eventMgr.on('event.create.failed', function(deletedEvents) {
   $('#scheduleModal').addClass('error');
 });
+
 ocManager.eventMgr.on('event.delete.fail', function(events) {
   $('#delModal').removeClass('committing').modal('hide');
 });
@@ -933,12 +934,19 @@ ocManager.eventMgr.on('event.update.progress', function(progress) {
 });
 
 ocManager.eventMgr.on('event.update.complete', function(details) {
-  if (details.isPersonal && details.metadataChanges.isPartOf) {
-    //Update ACLs since series was changed
-    this.addAccessRoles(details.id, ['ROLE_CILT_OBS'], ocManager.series.identifier, details.metadataChanges.isPartOf);
-    $('.modal.in').addClass('updateAcl');
-  }
-  else {
+  console.log('event.update.complete: ' + details.id + ' ' + details.isPersonal);
+  console.log(details.metadataChanges);
+  if (details.isPersonal) {
+    if (details.metadataChanges.isPartOf) {
+      //Update ACLs since series was changed
+      this.addAccessRoles(details.id, ['ROLE_CILT_OBS'], ocManager.series.identifier, details.metadataChanges.isPartOf);
+      $('.modal.in').addClass('updateAcl');
+    }
+    else if (details.metadataChanges.title || details.metadataChanges.presenters) {
+      this.republish(details.id);
+      removeModal($('.modal.in')[0], details.title);
+    }
+  } else {
     removeModal($('.modal.in')[0], details.title);
   }
 }.bind(ocManager.eventMgr));
@@ -1093,14 +1101,15 @@ function retractedControls(id) {
 }
 
 function personalEventEditable(id) {
-  var str = '<a type="button" target="_blank" href="/engage/theodul/ui/core.html?id=' + id + '" style="margin-right: 0.75rem;padding: 0.5rem;" title="Watch in player"><i class="fa fa-play-circle-o" style="font-size: 1.25em"></i></a>' +
-            '<a type="button" style="margin-right: 0.75rem;" href="/admin-ng/index.html#/events/events/' + id + '/tools/editor' +
+  var str = '<div style="display:flex; justify-content: space-between;">'+
+            '<a type="button" style="padding: 0.5rem;" href="/engage/theodul/ui/core.html?id=' + id + '" target="_blank" title="Watch in player"><i class="fa fa-play-circle-o" style="font-size: 1.25em"></i></a>' +
+            '<a type="button" style="padding: 0.5rem;" href="/admin-ng/index.html#/events/events/' + id + '/tools/editor' +
             '?ltimode=true&callback_url=' + encodeURIComponent('/ltitools/manage?sid=' + ocManager.series.id + '&type=personal') + '" title="Edit recording">' +
             '  <i class="fa fa-scissors"></i></a>' +
             '<button type="button" data-toggle="modal" data-event="' + id + '" data-target="#editPublishedModal" title="Edit recording details">' +
             '  <i class="fa fa-pencil"></i></button>' +
             '<button type="button" data-event="' + id + '"  data-target="#delModal" title="Remove recording">' +
-            '  <i class="fa fa-times-circle"></i></button>';
+            '  <i class="fa fa-times-circle"></i></button></div>';
   return str;
 }
 
@@ -1309,137 +1318,139 @@ $(document).ready(function() {
     }
   });
 
-  $('.container').on('click', 'button[data-target="#editModal"], button[data-target="#bulkModal"], button[data-target="#editPublishedModal"]', function(e) {
-    var target = $(this).data('target');
-    var event = (target == '#editModal' || target == '#editPublishedModal' ? ocManager.eventMgr.getEventDetails($(this).data('event')) : ocManager.eventMgr.getCommonSelections());
+  $('.container').on('click',
+        'button[data-target="#editModal"], button[data-target="#bulkModal"], button[data-target="#editPublishedModal"]',
+    function(e) {
+      var target = $(this).data('target');
+      var event = (target == '#editModal' || target == '#editPublishedModal' ? ocManager.eventMgr.getEventDetails($(this).data('event')) : ocManager.eventMgr.getCommonSelections());
 
-    if (!event || (Array.isArray(event) && event.length === 0)) return;
+      if (!event || (Array.isArray(event) && event.length === 0)) return;
 
-    event.target = target;
-    event.isAttachmentAllowed = ocManager.isAttachmentAllowed;
-    event.isPersonal = ocManager.isPersonalSeries;
+      event.target = target;
+      event.isAttachmentAllowed = ocManager.isAttachmentAllowed;
+      event.isPersonal = ocManager.isPersonalSeries;
 
-    $(target).data('eventid', event.id);
+      $(target).data('eventid', event.id);
 
-    if (!event.duration) {
-      if (event.startTime) {
-        var startArr = event.startTime.split(':').map(function(unit) { return +unit });
-        var endArr = event.endTime.split(':').map(function(unit) { return +unit });
-        event.duration = (endArr[0] - startArr[0]) * 60 + endArr[1] - startArr[1];
+      if (!event.duration) {
+        if (event.startTime) {
+          var startArr = event.startTime.split(':').map(function(unit) { return +unit });
+          var endArr = event.endTime.split(':').map(function(unit) { return +unit });
+          event.duration = (endArr[0] - startArr[0]) * 60 + endArr[1] - startArr[1];
+        }
+        else {
+          event.duration = moment.duration(moment(event.end_date).diff(moment(event.start_date))).asMinutes()
+        }
       }
-      else {
-        event.duration = moment.duration(moment(event.end_date).diff(moment(event.start_date))).asMinutes()
+
+      $(target + ' h4').html('<span style="color:#555">Edit:</span> ' + ((event.title !== 'Multiple' ? event.title : '') || 'event(s)'));
+
+      var timeOpts = {
       }
-    }
 
-    $(target + ' h4').html('Edit ' + ((event.title !== 'Multiple' ? event.title : '') || 'event(s)'));
+      $(target + ' .modal-body').html(tmpl('tmpl-editormodal', event));
 
-    var timeOpts = {
-    }
+      if (target == '#editPublishedModal') {
+        ocManager.eventMgr.checkActiveTransaction(event.id, {target: target});
+        if (ocManager.isPersonalSeries) {
+          var $seriesList = $(target).find('.seriesList .filterList');
+          $seriesList.empty();
+          ocManager.user.availableSeries
+            .map(function(series) {
+              var $item = $('<li/>', {
+                            'data-ref': series.id,
+                            text: series.title
+                          });
+              return $item;
+          })
+          .forEach(function($seriesItem) {
+            $seriesList.append($seriesItem);
+          });
+        }
+        return ocManager.eventMgr.getEventAssets(event.id, {target: target});
+      }
 
-    $(target + ' .modal-body').html(tmpl('tmpl-editormodal', event));
+      $(target + ' .modal-body')
+        .find('input[name=duration]').timesetter({
+          setTime: event.startTime || moment(event.start_date).format('HH:mm'),
+          setDuration: event.duration,
+          opens: (window.innerHeight < 750 ? 'right side' : 'left')
+        }, function(start, end, self) {
+          var startMinutes = start.split(':').reduce(function(total, current, index) {
+                              return total + current * Math.pow(60, (1 - index));
+                            }, 0);
 
-    if (target == '#editPublishedModal') {
-      ocManager.eventMgr.checkActiveTransaction(event.id, {target: target});
-      if (ocManager.isPersonalSeries) {
-        var $seriesList = $(target).find('.seriesList .filterList');
-        $seriesList.empty();
-        ocManager.user.availableSeries
-          .map(function(series) {
-            var $item = $('<li/>', {
-                          'data-ref': series.id,
-                          text: series.title
-                        });
-            return $item;
-        })
-        .forEach(function($seriesItem) {
-          $seriesList.append($seriesItem);
+          var endMinutes = end.split(':').reduce(function(total, current, index) {
+                              return total + current * Math.pow(60, (1 - index));
+                            }, 0);
+
+          var durationMinutes = endMinutes - startMinutes;
+
+          $(self).find('.selectedValue').html(start + ' - ' + end);
+          $(self).find('input[name=duration]').val(durationMinutes);
+          $(self).find('input[name=startTime]').val(start);
+
+          var changes = ocManager.getInputs(target);
+          var endTime = +changes.hour * 60 + +changes.minute + +changes.duration;
+          changes.startTime = changes.hour + ':' + changes.minute;
+          changes.endTime = [(endTime/60 >> 0) % 24, endTime % 60]
+                              .map(function(unit) {
+                                return (unit < 10 ? '0' : '') + unit;
+                              })
+                              .join(':');
+
+          $(target).addClass('checkConflicts')
+            .find('.modal-footer .btn-success').prop('disabled', true);
+          ocManager.checkConflictsForUpdate(ocManager.eventMgr.getEventsFromSelections(event.id.split(',')), changes)
+            .then(function() {
+              ocManager.clearConflicts(target);
+            })
+            .fail(function(conflicts) {
+              ocManager.displayUpdateConflicts(conflicts, changes);
+            }.bind(this))
+            .always(function() {
+              $(target).removeClass('checkConflicts')
+                .find('.btn-success').prop('disabled', false);
+            });
         });
+
+      var datePickerOpts = {
+        singleDatePicker: true
       }
-      return ocManager.eventMgr.getEventAssets(event.id, {target: target});
-    }
+      if (event.start_date !== 'Multiple') {
+        datePickerOpts.setStartdate = moment(event.start_date).format('YYYY-MM-DD');
+      }
 
-    $(target + ' .modal-body')
-      .find('input[name=duration]').timesetter({
-        setTime: event.startTime || moment(event.start_date).format('HH:mm'),
-        setDuration: event.duration, 
-        opens: (window.innerHeight < 750 ? 'right side' : 'left')
-      }, function(start, end, self) {
-        var startMinutes = start.split(':').reduce(function(total, current, index) {
-                             return total + current * Math.pow(60, (1 - index));
-                           }, 0);
+      $(target + ' .modal-body').find('[data-ref="start_date"]')
+        .daterangepicker(datePickerOpts, function(start) {
+          var parent = this.element[0];
+          $(parent).find('input[type=hidden]').val(moment(start).format('YYYY-MM-DD'));
+          $(parent).find('.selectedValue').html(moment(start).format('DD MMM, YYYY'));
 
-        var endMinutes = end.split(':').reduce(function(total, current, index) {
-                             return total + current * Math.pow(60, (1 - index));
-                           }, 0);
+          $(target).find('button.btn-success').attr('disabled', 'true');
+          var changes = ocManager.getInputs(target);
+          var endTime = +changes.hour * 60 + +changes.minute + +changes.duration;
+          changes.startTime = changes.hour + ':' + changes.minute;
+          changes.endTime = [(endTime/60 >> 0) % 24, endTime % 60]
+                              .map(function(unit) {
+                                return (unit < 10 ? '0' : '') + unit;
+                              })
+                              .join(':');
 
-        var durationMinutes = endMinutes - startMinutes;
-
-        $(self).find('.selectedValue').html(start + ' - ' + end);
-        $(self).find('input[name=duration]').val(durationMinutes);
-        $(self).find('input[name=startTime]').val(start);
-
-        var changes = ocManager.getInputs(target);
-        var endTime = +changes.hour * 60 + +changes.minute + +changes.duration;
-        changes.startTime = changes.hour + ':' + changes.minute;
-        changes.endTime = [(endTime/60 >> 0) % 24, endTime % 60]
-                            .map(function(unit) {
-                              return (unit < 10 ? '0' : '') + unit;
-                            })
-                            .join(':');
-
-        $(target).addClass('checkConflicts')
-          .find('.modal-footer .btn-success').prop('disabled', true);
-        ocManager.checkConflictsForUpdate(ocManager.eventMgr.getEventsFromSelections(event.id.split(',')), changes)
-          .then(function() {
-            ocManager.clearConflicts(target);
-          })
-          .fail(function(conflicts) {
-            ocManager.displayUpdateConflicts(conflicts, changes);
-          }.bind(this))
-          .always(function() {
-            $(target).removeClass('checkConflicts')
-              .find('.btn-success').prop('disabled', false);
-          });
+          $(target).addClass('checkConflicts')
+            .find('.modal-footer .btn-success').prop('disabled', true);
+          ocManager.checkConflictsForUpdate(ocManager.eventMgr.getEventsFromSelections(event.id.split(',')), changes)
+            .then(function() {
+              ocManager.clearConflicts(target);
+            })
+            .fail(function(conflicts) {
+              ocManager.displayUpdateConflicts(error, changes);
+            }.bind(this))
+            .always(function() {
+              $(target).removeClass('checkConflicts')
+                .find('.btn-success').prop('disabled', false);
+            });
       });
-
-    var datePickerOpts = {
-      singleDatePicker: true
-    }
-    if (event.start_date !== 'Multiple') {
-      datePickerOpts.setStartdate = moment(event.start_date).format('YYYY-MM-DD');
-    }
-
-    $(target + ' .modal-body').find('[data-ref="start_date"]')
-      .daterangepicker(datePickerOpts, function(start) {
-        var parent = this.element[0];
-        $(parent).find('input[type=hidden]').val(moment(start).format('YYYY-MM-DD'));
-        $(parent).find('.selectedValue').html(moment(start).format('DD MMM, YYYY'));
-
-        $(target).find('button.btn-success').attr('disabled', 'true');
-        var changes = ocManager.getInputs(target);
-        var endTime = +changes.hour * 60 + +changes.minute + +changes.duration;
-        changes.startTime = changes.hour + ':' + changes.minute;
-        changes.endTime = [(endTime/60 >> 0) % 24, endTime % 60]
-                            .map(function(unit) {
-                              return (unit < 10 ? '0' : '') + unit;
-                            })
-                            .join(':');
-
-        $(target).addClass('checkConflicts')
-          .find('.modal-footer .btn-success').prop('disabled', true);
-        ocManager.checkConflictsForUpdate(ocManager.eventMgr.getEventsFromSelections(event.id.split(',')), changes)
-          .then(function() {
-            ocManager.clearConflicts(target);
-          })
-          .fail(function(conflicts) {
-            ocManager.displayUpdateConflicts(error, changes);
-          }.bind(this))
-          .always(function() {
-            $(target).removeClass('checkConflicts')
-              .find('.btn-success').prop('disabled', false);
-          });
-    });
   });
 
   $('#grid-body').on('click', 'button.publicationState', function(e) {
@@ -1511,7 +1522,7 @@ $(document).ready(function() {
   $('body').on('keyup', '.dropdown input[name=filterlist]', function(e) {
     e.stopImmediatePropagation();
     var search = $(this).val();
-    
+
     $(this).parents('.dropdown')
       .find('.filterList li').each(function() {
         if ($(this).data('ref').toLowerCase().indexOf(search) > -1 ||
@@ -1859,7 +1870,7 @@ $(document).ready(function() {
     var _otherTimeInput = (isStart === 1 ? $(this).siblings('input[name=endTime]') : $(this).siblings('input[name=startTime]'));
     var otherTimeArr = _otherTimeInput.val().split(':')
                          .map(function(unit) { return +unit; });
- 
+
     if (!timeText) {
       _otherTimeInput.next().find('li')
         .each(function() {
@@ -2173,7 +2184,7 @@ $(document).ready(function() {
       return;
     }
 
-    
+
     var isValid = true;
     timeArr.some(function(unit, i) {
       if (isNaN(unit) || +unit < 0 || unit > 59 || (i === 0 && unit > 23)) {
