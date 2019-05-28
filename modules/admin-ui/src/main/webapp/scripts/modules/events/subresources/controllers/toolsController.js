@@ -174,7 +174,6 @@ angular.module('adminNg.controllers')
     $scope.hasSubmitted = false;
 
     $scope.submit = function () {
-      console.warn('submitted:' + $scope.isLti + ' ' + $scope.video.workflow + ' ' + $routeParams.callback_url);
       $scope.activeTransaction = $scope.hasSubmitted = true;
       $scope.video.thumbnail.loading = $scope.video.thumbnail && $scope.video.thumbnail.type &&
               ($scope.video.thumbnail.type === 'DEFAULT');
@@ -231,7 +230,6 @@ angular.module('adminNg.controllers')
       // In 'My Video' we use the stereo publish workflow
       // might change if we open this up to all LTI
       $scope.video.workflow = 'uct-publish-after-edit-Stereo';
-      console.log('saveAndPublish: ' + $scope.video.workflow);
       $scope.submit();
     };
   }

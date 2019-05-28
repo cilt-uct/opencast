@@ -934,12 +934,18 @@ ocManager.eventMgr.on('event.update.progress', function(progress) {
 });
 
 ocManager.eventMgr.on('event.update.complete', function(details) {
-  console.log('event.update.complete: ' + details.isPersonal);
+  console.log('event.update.complete: ' + details.id + ' ' + details.isPersonal);
   console.log(details.metadataChanges);
-  if (details.isPersonal && details.metadataChanges.isPartOf) {
-    //Update ACLs since series was changed
-    this.addAccessRoles(details.id, ['ROLE_CILT_OBS'], ocManager.series.identifier, details.metadataChanges.isPartOf);
-    $('.modal.in').addClass('updateAcl');
+  if (details.isPersonal) {
+    if (details.metadataChanges.isPartOf) {
+      //Update ACLs since series was changed
+      this.addAccessRoles(details.id, ['ROLE_CILT_OBS'], ocManager.series.identifier, details.metadataChanges.isPartOf);
+      $('.modal.in').addClass('updateAcl');
+    }
+    else if (details.metadataChanges.title || details.metadataChanges.presenters) {
+      this.republish(details.id);
+      removeModal($('.modal.in')[0], details.title);
+    }
   } else {
     removeModal($('.modal.in')[0], details.title);
   }
@@ -1095,14 +1101,15 @@ function retractedControls(id) {
 }
 
 function personalEventEditable(id) {
-  var str = '<a type="button" target="_blank" href="/engage/theodul/ui/core.html?id=' + id + '" style="margin-right: 0.75rem;padding: 0.5rem;" title="Watch in player"><i class="fa fa-play-circle-o" style="font-size: 1.25em"></i></a>' +
-            '<a type="button" style="margin-right: 0.75rem;" href="/admin-ng/index.html#/events/events/' + id + '/tools/editor' +
+  var str = '<div style="display:flex; justify-content: space-between;">'+
+            '<a type="button" style="padding: 0.5rem;" href="/engage/theodul/ui/core.html?id=' + id + '" target="_blank" title="Watch in player"><i class="fa fa-play-circle-o" style="font-size: 1.25em"></i></a>' +
+            '<a type="button" style="padding: 0.5rem;" href="/admin-ng/index.html#/events/events/' + id + '/tools/editor' +
             '?ltimode=true&callback_url=' + encodeURIComponent('/ltitools/manage?sid=' + ocManager.series.id + '&type=personal') + '" title="Edit recording">' +
             '  <i class="fa fa-scissors"></i></a>' +
             '<button type="button" data-toggle="modal" data-event="' + id + '" data-target="#editPublishedModal" title="Edit recording details">' +
             '  <i class="fa fa-pencil"></i></button>' +
             '<button type="button" data-event="' + id + '"  data-target="#delModal" title="Remove recording">' +
-            '  <i class="fa fa-times-circle"></i></button>';
+            '  <i class="fa fa-times-circle"></i></button></div>';
   return str;
 }
 
@@ -1336,7 +1343,7 @@ $(document).ready(function() {
         }
       }
 
-      $(target + ' h4').html('Edit ' + ((event.title !== 'Multiple' ? event.title : '') || 'event(s)'));
+      $(target + ' h4').html('<span style="color:#555">Edit:</span> ' + ((event.title !== 'Multiple' ? event.title : '') || 'event(s)'));
 
       var timeOpts = {
       }
