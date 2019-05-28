@@ -217,6 +217,7 @@ angular.module('adminNg.controllers')
         //Editor launched via LTI. Send back to LTI
         $window.location.assign($routeParams.callback_url);
       } else {
+        // Editor launched from AdminUI
         Storage.put('pagination', $scope.resource, 'resume', true);
         $location.url('/events/' + $scope.resource);
       }

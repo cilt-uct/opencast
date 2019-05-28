@@ -46,7 +46,7 @@
                 ng-if="isLti"
                 ng-class="{disabled: submitButton}"
                 class="return-button"
-                translate="{{ 'Cancel' }}">
+                translate="{{ 'VIDEO_TOOL.BUTTONS.BACK' }}">
                 <!-- Cancel -->
             </a>
 
@@ -418,8 +418,11 @@
           <div data-admin-ng-notifications="" type="warning" show="activeTransaction" context="video-editor-event-access"></div>
 
           <div class="video-editor-actions-toolbar">
-            <div class="video-nav-controls" ng-hide="isLti">
+            <div class="video-nav-controls" ng-if="!isLti">
                 <a class="return-button" ng-click="navigateTo('/events/events')" translate>VIDEO_TOOL.BUTTONS.CLOSE</a>
+            </div>
+            <div class="video-nav-controls" ng-if="isLti">
+                <a class="return-button" ng-click="leave()" translate>VIDEO_TOOL.BUTTONS.BACK</a>
             </div>
 
             <div data-admin-ng-notifications=""></div>
@@ -442,20 +445,12 @@
                       <!-- Save and Continue -->
                   </a>
 
-                  <a ng-click="leave()"
-                      ng-if="isLti"
-                      ng-class="{disabled: submitButton}"
-                      class="return-button"
-                      translate="{{ 'Cancel' }}">
-                      <!-- Cancel -->
-                  </a>
-
                   <a ng-click="saveAndPublish()"
                       ng-if="isLti"
                       ng-class="{disabled: submitButton}"
                       class="save-and-close-button"
                       translate="{{ 'VIDEO_TOOL.BUTTONS.PROCESS' }}">
-                      <!-- Save and Continue using default org workflow -->
+                      <!-- Save and Continue using defined workflow -->
                   </a>
 
                   <a class="return-button" ng-hide="isLti"  ng-click="leave()" translate>VIDEO_TOOL.BUTTONS.CLOSE</a>

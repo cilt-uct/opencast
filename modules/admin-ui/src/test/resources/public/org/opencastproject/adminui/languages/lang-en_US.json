@@ -1652,6 +1652,7 @@
     "PREVIEW_MODE_TOOLTIP": "Play selected segments only",
     "ZOOM": "Zoom",
     "BUTTONS": {
+      "BACK":        "Back",
       "CLOSE":       "Close",
       "SAVE":        "Save",
       "PROCESS":     "Save & Continue",
