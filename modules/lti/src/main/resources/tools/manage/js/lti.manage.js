@@ -1116,6 +1116,8 @@ function personalEventEditable(id) {
 function getStatus(details) {
   var evStatus = 'Processing';
 
+  console.log("details:");
+  console.log(details);
   switch(details.event_status) {
 
     case 'EVENTS.EVENTS.STATUS.SCHEDULED':
