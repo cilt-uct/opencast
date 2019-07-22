@@ -464,7 +464,7 @@ define(['require', 'jquery', 'underscore', 'backbone', 'basil', 'bootbox', 'enga
           return $(attachments[index]).attr('type').search(timelinePreviewsRegex) !== -1;
         });
 
-        console.log("timelinePreviews loaded: ", timelinePreview);
+        //console.log("timelinePreviews loaded: ", timelinePreview);
 
         var timelinePreviewsProperties = timelinePreview.get(0).additionalProperties;
 
@@ -1108,9 +1108,15 @@ define(['require', 'jquery', 'underscore', 'backbone', 'basil', 'bootbox', 'enga
         Engage.trigger(plugin.events.focusVideo.getName(), currentFocusFlavor);
         videosInitialReadyness = false;
       }
+
       if (Engage.model.get("captions")) {
-        $("#" + id_captions_button).removeClass("disabled");
+        $("#" + id_captions_button).removeClass("disabled").addClass('active');
+        captionsOn = true;
       }
+      console.log("Captions: ", Engage.model.get("captions") + '-' + captionsOn);
+
+      console.log('Engage.model:');
+      console.log(Engage.model);
     }
   }
 
@@ -1613,7 +1619,8 @@ define(['require', 'jquery', 'underscore', 'backbone', 'basil', 'bootbox', 'enga
           }
         });
         Engage.on(plugin.events.captionsFound.getName(), function () {
-            $("#" + id_captions_button).removeClass("disabled");
+            $("#" + id_captions_button).removeClass("disabled").addClass('active');
+            captionsOn = true;
         });
       }
 
