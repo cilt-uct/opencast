@@ -389,7 +389,7 @@ EventManager.prototype = {
       this.fetchEventViaExternal()
         .then(function(events) {
           this.events = this.filteredEvents = events.map(function(event) {
-                                                event.agent_id = event.agent_id || event.location;
+                                                event.agent_id = event.location || event.agent_id;
                                                 return event;
                                               });
           d.resolve(events);
@@ -401,7 +401,7 @@ EventManager.prototype = {
       this.fetchEventsViaAdmin()
         .then(function(events) {
           this.events = this.filteredEvents = events.map(function(event) {
-                                                event.agent_id = event.agent_id || event.location;
+                                                event.agent_id = event.location || event.agent_id;
                                                 event.status = getStatus(event);
 
                                                 return event;
@@ -460,7 +460,7 @@ EventManager.prototype = {
                                   .filter(function(status, i, arr) { return arr.indexOf(status) === i });
           var currentEventIndex = currentEvents.indexOf(event.id);
           if (currentEventIndex === -1) {
-            event.agent_id = event.agent_id || event.location;
+            event.agent_id = event.location || event.agent_id;
             event.status = getStatus(event);
             this.events.push(event);
           }
