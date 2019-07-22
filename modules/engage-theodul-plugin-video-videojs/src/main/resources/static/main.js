@@ -1257,7 +1257,6 @@ define(['require', 'jquery', 'underscore', 'backbone', 'basil', 'bowser', 'engag
         }
       }
     }
-    console.log(videodisplayMaster);
 
     loadAndAppendCaptions(videoDataView);
   }
@@ -2418,7 +2417,7 @@ define(['require', 'jquery', 'underscore', 'backbone', 'basil', 'bowser', 'engag
         language: 'en',
         label: 'Caption',
         src: captionsURL,
-        mode: "hidden"
+        mode: "showing" // we are showing by default
       }, true);
     });
 
@@ -2433,10 +2432,10 @@ define(['require', 'jquery', 'underscore', 'backbone', 'basil', 'bowser', 'engag
     });
 
     Engage.on(plugin.events.captionsFound.getName(), function (data) {
-      var captionMode = activeCaption.mode;
-      activeCaption.mode = "hidden";
+      var captionMode = activeCaption.mode; // remember previous setting
+      activeCaption.mode = "hidden"; // hide current
       activeCaption = videojs("videojs_videodisplay_" + data).textTracks()[0];
-      activeCaption.mode = captionMode;
+      activeCaption.mode = captionMode; // restore setting
       if(data == "none") {
         console.warn("none " + data);
       } else {
