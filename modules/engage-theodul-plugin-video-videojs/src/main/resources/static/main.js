@@ -2436,7 +2436,6 @@ define(['require', 'jquery', 'underscore', 'backbone', 'basil', 'bowser', 'engag
       activeCaption.mode = "hidden"; // hide current
       activeCaption = videojs("videojs_videodisplay_" + data).textTracks()[0];
       activeCaption.mode = captionMode; // restore setting
-      //activeCaption.mode = "showing"; //"hidden"; we want captions on by default
       if(data == "none") {
         console.warn("none " + data);
       } else {
