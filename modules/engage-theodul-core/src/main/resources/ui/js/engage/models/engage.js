@@ -114,7 +114,7 @@ define(['jquery', 'backbone', 'bowser', 'basil', 'engage/models/pluginInfo', 'en
             "meInfo": new MeInfoModel(),
             "urlParameters": {},
             "language": "en-US",
-            "captions": true // false
+            "captions": false
         }
     });
 

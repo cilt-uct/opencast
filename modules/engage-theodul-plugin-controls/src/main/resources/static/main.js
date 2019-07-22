@@ -1114,9 +1114,6 @@ define(['require', 'jquery', 'underscore', 'backbone', 'basil', 'bootbox', 'enga
         captionsOn = true;
       }
       console.log("Captions: ", Engage.model.get("captions") + '-' + captionsOn);
-
-      console.log('Engage.model:');
-      console.log(Engage.model);
     }
   }
 

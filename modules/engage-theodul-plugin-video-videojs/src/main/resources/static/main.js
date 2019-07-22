@@ -1257,11 +1257,6 @@ define(['require', 'jquery', 'underscore', 'backbone', 'basil', 'bowser', 'engag
         }
       }
     }
-    console.log("videodisplayMaster:");
-    console.log(videodisplayMaster);
-
-    console.log("videoDataView:");
-    console.log(videoDataView);
 
     loadAndAppendCaptions(videoDataView);
   }
@@ -2427,8 +2422,6 @@ define(['require', 'jquery', 'underscore', 'backbone', 'basil', 'bowser', 'engag
     });
 
     activeCaption = videojs(videoDisplays[0]).remoteTextTracks()[0];
-    console.log ("activeCaption:");
-    console.log (activeCaption);
 
     Engage.on(plugin.events.toggleCaptions.getName(), function(data) {
       if(data) {
@@ -2442,10 +2435,8 @@ define(['require', 'jquery', 'underscore', 'backbone', 'basil', 'bowser', 'engag
       var captionMode = activeCaption.mode; // remember previous setting
       activeCaption.mode = "hidden"; // hide current
       activeCaption = videojs("videojs_videodisplay_" + data).textTracks()[0];
-      console.log ("activeCaption:");
-      console.log (activeCaption);
-      //activeCaption.mode = captionMode; // restore setting
-      activeCaption.mode = "showing"; //"hidden"; we want captions on by default
+      activeCaption.mode = captionMode; // restore setting
+      //activeCaption.mode = "showing"; //"hidden"; we want captions on by default
       if(data == "none") {
         console.warn("none " + data);
       } else {
