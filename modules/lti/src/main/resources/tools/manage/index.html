@@ -553,7 +553,7 @@
                     <td>{%=o['title']%}</td>
                     <td>{%=o['presenters'].join(', ')%}</td>
                     <td>{%=moment(o['start_date']).format('ddd D MMM YYYY, HH:mm') + (o['end_date'] ? ' - ' + moment(o['end_date']).format('HH:mm') : '')%}</td> <!-- TODO: add day of week -->
-                    <td>{%=getVenueName(o['agent_id'])%}</td>
+                    <td>{%=getVenueName(o['location'] || o['agent_id'])%}</td>
                     <td>{%=getStatus(o)%}</td>
                     <td>{%#getEditControls(o)%}</td>
                 </tr>
@@ -573,7 +573,7 @@
                     <td>{%=o['title']%}</td>
                     <td>{%=o['series']['title']%}</td>
                     <td>{%=moment(o['start_date']).format('ddd D MMM YYYY, HH:mm') + (o['end_date'] ? ' - ' + moment(o['end_date']).format('HH:mm') : '')%}</td> <!-- TODO: add day of week -->
-                    <td>{%=getVenueName(o['agent_id'])%}</td>
+                    <td>{%=getVenueName(o['location'] || o['agent_id'])%}</td>
                     <td>{%=getStatus(o)%}</td>
                     <td>{%#getEditControls(o)%}</td>
                 </tr>
@@ -599,12 +599,12 @@
                 <div class="col-xs-6 col-md-6 text-right">
                     <nav aria-label="...">
                         <ul class="pagination pull-right">
-                            <li><a href="#" aria-label="Previous"><span aria-hidden="true">&laquo;</span></a></li>{% for (var i=0; i < pages; i++) { 
+                            <li><a href="#" aria-label="Previous"><span aria-hidden="true">&laquo;</span></a></li>{% for (var i=0; i < pages; i++) {
                                  if (pages < 13) {
                             %}<li {%= i === o.start ? 'class=active': '' %}>
                                 <a href="#page_{%=i+1%}">{%=i+1%}<span class="sr-only"><%=i%></span></a>
                               </li>{%   }
-                                 else if (i < 2 || i > pages - 3 || (i >= o.start - 2 && i <= o.start + 2 && o.start >= 7) || 
+                                 else if (i < 2 || i > pages - 3 || (i >= o.start - 2 && i <= o.start + 2 && o.start >= 7) ||
                                           (i < 8 && o.start < 7) || (i > pages - 9 && o.start > pages - 7)) {
                             %}<li {%= i === o.start ? 'class=active': '' %}>
                                       <a href="#page_{%=i+1%}">{%=i+1%}<span class="sr-only"><%=i%></span></a>
