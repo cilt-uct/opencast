@@ -156,39 +156,39 @@ define(["jquery", "underscore", "backbone", "engage/core"], function($, _, Backb
     }
 
     function sortByResolution(tracksForSorting) {
-	tracksForSorting.sort(function(a, b){
-		var resA = getPixelCount(a),
-                    resB = getPixelCount(b);
+    	tracksForSorting.sort(function(a, b){
+    		var resA = getPixelCount(a),
+                        resB = getPixelCount(b);
 
-		if (resA < resB) return 1;
-		if (resA > resB) return -1;
-		return 0;
-	    });
-	return tracksForSorting;
+    		if (resA < resB) return 1;
+    		if (resA > resB) return -1;
+    		return 0;
+    	    });
+    	return tracksForSorting;
     }
 
     function sortByType(tracksForSorting){
-	tracksForSorting.sort(function(a, b){
-		var typeA = (typeof a.type === "string") ? a.type : "",
-                    typeB = (typeof b.type === "string") ? b.type : "";
+    	tracksForSorting.sort(function(a, b){
+    		var typeA = (typeof a.type === "string") ? a.type : "",
+                        typeB = (typeof b.type === "string") ? b.type : "";
 
-		if (typeA < typeB) return -1;
-		if (typeA > typeB) return 1;
-		return 0;
-	    });
-	return tracksForSorting;
+    		if (typeA < typeB) return -1;
+    		if (typeA > typeB) return 1;
+    		return 0;
+    	    });
+    	return tracksForSorting;
     }
 
     function sortByMimetype(tracksForSorting){
-	tracksForSorting.sort(function(a, b){
-		var typeA = (typeof a.mimetype === "string") ? a.mimetype : "",
-                    typeB = (typeof b.mimetype === "string") ? b.mimetype : "";
+    	tracksForSorting.sort(function(a, b){
+    		var typeA = (typeof a.mimetype === "string") ? a.mimetype : "",
+                        typeB = (typeof b.mimetype === "string") ? b.mimetype : "";
 
-		if (typeA > typeB) return -1;
-		if (typeA < typeB) return 1;
-		return 0;
-	    });
-	return tracksForSorting;
+    		if (typeA > typeB) return -1;
+    		if (typeA < typeB) return 1;
+    		return 0;
+    	    });
+    	return tracksForSorting;
     }
 
     function momento(dateStr) {
@@ -196,20 +196,33 @@ define(["jquery", "underscore", "backbone", "engage/core"], function($, _, Backb
     }
 
     function getDownloadList(model) {
-      //Filter function for downloads, i.e. use this to remove any streaming/unnecessary tracks
-      var list = [];
-      _.each(model.get('tracks'), function(item) {
+        //Filter function for downloads, i.e. use this to remove any streaming/unnecessary tracks
+        var list = [];
+        _.each(model.get('tracks'), function(item) {
           if (!item.hasOwnProperty('transport') && item.url.indexOf('rtmp') == -1 && item.url.indexOf('flv') === -1) {
               item.url = window.location.protocol + item.url.substring(item.url.indexOf('/'));
               list.push(item);
           }
-      });
+        });
 
-      list = sortByType(list);
-      list = sortByMimetype(list);
-      list = sortByResolution(list);
+        list = sortByType(list);
+        list = sortByMimetype(list);
+        list = sortByResolution(list);
 
-      return list;
+        return list;
+    }
+
+    function getCaptionList(model) {
+        //Filter function for captions, i.e. use this to remove any other attachments
+        var list = [];
+        _.each(model.get('attachments'), function(item) {
+          if (item.type.indexOf('captions') >= 0 || item.mimetype == 'text/vtt') {
+              item.url = window.location.protocol + item.url.substring(item.url.indexOf('/'));
+              list.push(item);
+          }
+        });
+
+        return list;
     }
 
     var DownloadsTabView = Backbone.View.extend({
@@ -225,19 +238,21 @@ define(["jquery", "underscore", "backbone", "engage/core"], function($, _, Backb
         render: function() {
             if (!mediapackageError) {
                 var src = {},
-		    filteredTracks = [],
-		    mediaSeries = this.model.get("series"),
-		    mediaDate = momento(this.model.get("date")),
-		    downloadURL = "";
+    		    filteredTracks = [],
+                captions = [],
+    		    mediaSeries = this.model.get("series"),
+    		    mediaDate = momento(this.model.get("date")),
+    		    downloadURL = "";
 
                 filteredTracks = getDownloadList(this.model);
+                captions = getCaptionList(this.model);
 
                 if (mediaSeries) {
                   mediaSeries = (mediaSeries.indexOf(',') > -1 ? mediaSeries.substring(0, mediaSeries.indexOf(',')) : mediaSeries);
                 }
 
-		// Construct a download URL
-		downloadURL =  mediaSeries ? (mediaSeries + "_" + mediaDate) : mediaDate;
+        		// Construct a download URL
+        		downloadURL =  mediaSeries ? (mediaSeries + "_" + mediaDate) : mediaDate;
                 downloadURL = '/download/' + downloadURL
                                                .replace(/\//g, '_')
                                                .replace(/\s/g, '_');
@@ -249,7 +264,8 @@ define(["jquery", "underscore", "backbone", "engage/core"], function($, _, Backb
                           series: this.model.get("series"),
                             date: this.model.get("date"),
                           tracks: filteredTracks,
-	             downloadURL: downloadURL
+                        captions: captions,
+                     downloadURL: downloadURL
                 };
 
                 var tpl = _.template(this.template);
