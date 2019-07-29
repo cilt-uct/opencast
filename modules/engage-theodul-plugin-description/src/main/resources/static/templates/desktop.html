@@ -9,9 +9,9 @@
     <div id="engage_basic_description_info">
         <% if(typeof creator !== "undefined" ){ %>
         <div id="engage_basic_description_creator" class="engage_basic_description_wrap"
-          aria-label="<%- str_creator %>: <%- creator %>"><%- creator %></div>
+          aria-label="<%- str_creator %>: <%- creator %>" data-label="<%- creator %>"><%- creator %></div>
         <% } %>
-        <% if((typeof creator !== "undefined" ) && (typeof date !== "undefined" ) && (creator !== "")) { %>
+        <% if((typeof creator !== "undefined" ) && (typeof date !== "undefined" ) && (creator !== "") && (creator !== " ")) { %>
         <div class="engage_basic_description_wrap">, &nbsp;</div>
         <% } %>
         <% if(typeof date !== "undefined" ){ %>
