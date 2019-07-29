@@ -2417,7 +2417,7 @@ define(['require', 'jquery', 'underscore', 'backbone', 'basil', 'bowser', 'engag
         language: 'en',
         label: 'Caption',
         src: captionsURL,
-        mode: "showing" // we are showing by default
+        mode: "hidden"
       }, true);
     });
 

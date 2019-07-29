@@ -1112,8 +1112,8 @@ define(['require', 'jquery', 'underscore', 'backbone', 'basil', 'bootbox', 'enga
       if (Engage.model.get("captions")) {
         $("#" + id_captions_button).removeClass("disabled").addClass('active');
         captionsOn = true;
+        Engage.trigger(plugin.events.toggleCaptions.getName(), captionsOn);
       }
-      console.log("Captions: ", Engage.model.get("captions") + '-' + captionsOn);
     }
   }
 
@@ -1618,6 +1618,7 @@ define(['require', 'jquery', 'underscore', 'backbone', 'basil', 'bootbox', 'enga
         Engage.on(plugin.events.captionsFound.getName(), function () {
             $("#" + id_captions_button).removeClass("disabled").addClass('active');
             captionsOn = true;
+            Engage.trigger(plugin.events.toggleCaptions.getName(), captionsOn);
         });
       }
 
