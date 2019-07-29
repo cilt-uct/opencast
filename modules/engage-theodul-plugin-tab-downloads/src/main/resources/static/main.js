@@ -216,12 +216,12 @@ define(["jquery", "underscore", "backbone", "engage/core"], function($, _, Backb
         //Filter function for captions, i.e. use this to remove any other attachments
         var list = [];
         _.each(model.get('attachments'), function(item) {
+           // type: "captions/timedtext", mimetype: "text/vtt"
           if (item.type.indexOf('captions') >= 0 || item.mimetype == 'text/vtt') {
               item.url = window.location.protocol + item.url.substring(item.url.indexOf('/'));
               list.push(item);
           }
         });
-
         return list;
     }
 
