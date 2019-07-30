@@ -693,10 +693,8 @@ var OCManager = (function($) {
                                   cache: false,
                                    data: fd
                           }).done(function(res) {
-                            console.log(res);
                             d.resolve(res);
                           }).fail(function() {
-                            console.log(res);
                             d.reject(sched);
                           });
                           d.resolve();
