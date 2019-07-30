@@ -7086,7 +7086,9 @@ function _createXHR(options) {
 
     var key;
     var aborted;
+    var isHTTPS = location.protocol == "https:";
     var uri = xhr.url = options.uri || options.url;
+    uri = (isHTTPS && uri.indexOf('https') == -1? uri.replace('http','https') : uri);
     var method = xhr.method = options.method || "GET";
     var body = options.body || options.data;
     var headers = xhr.headers = options.headers || {};

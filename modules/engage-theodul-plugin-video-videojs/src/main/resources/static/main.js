@@ -108,6 +108,8 @@ define(['require', 'jquery', 'underscore', 'backbone', 'basil', 'bowser', 'engag
   var isEmbedMode = false;
   var isMobileMode = false;
 
+  var isHTTPS = location.protocol == "https:";
+
   // desktop, embed and mobile logic
   switch (Engage.model.get('mode')) {
     case 'embed':
@@ -2242,7 +2244,7 @@ define(['require', 'jquery', 'underscore', 'backbone', 'basil', 'bowser', 'engag
               loadHls = true;
             }
             videoSources[mainFlavor].push({
-              src: track.url,
+              src: srcProtocol(track.url),
               type: track.mimetype,
               typemh: track.type,
               resolution: resolution,
@@ -2254,7 +2256,7 @@ define(['require', 'jquery', 'underscore', 'backbone', 'basil', 'bowser', 'engag
               duration = track.duration;
             }
             videoSources.audio.push({
-              src: track.url,
+              src: srcProtocol(track.url),
               type: track.mimetype,
               typemh: track.type,
               tags: track.tags
@@ -2416,7 +2418,7 @@ define(['require', 'jquery', 'underscore', 'backbone', 'basil', 'bowser', 'engag
         kind: 'caption',
         language: 'en',
         label: 'Caption',
-        src: captionsURL,
+        src: srcProtocol(captionsURL),
         mode: "hidden"
       }, true);
     });
@@ -2442,6 +2444,10 @@ define(['require', 'jquery', 'underscore', 'backbone', 'basil', 'bowser', 'engag
         console.warn("else " + data);
       }
     });
+  }
+
+  function srcProtocol(_src) {
+      return (isHTTPS && _src.indexOf('https') == 1? _src.replace('http','https') : _src);
   }
 
   function initPlugin() {
