@@ -693,8 +693,10 @@ var OCManager = (function($) {
                                   cache: false,
                                    data: fd
                           }).done(function(res) {
+                            console.log(res);
                             d.resolve(res);
                           }).fail(function() {
+                            console.log(res);
                             d.reject(sched);
                           });
                           d.resolve();
@@ -1118,10 +1120,11 @@ function getStatus(details) {
 
   console.log("details:");
   console.log(details);
+
+  var isFuture = (new Date()).getTime() < (new Date(details.start_date)).getTime();
   switch(details.event_status) {
 
     case 'EVENTS.EVENTS.STATUS.SCHEDULED':
-      var isFuture = (new Date()).getTime() < (new Date(details.start_date)).getTime();
       evStatus = isFuture ? 'Upcoming' : 'Expired';
       break;
 
@@ -1136,18 +1139,23 @@ function getStatus(details) {
 
     case 'EVENTS.EVENTS.STATUS.INGESTING':
     case 'EVENTS.EVENTS.STATUS.PROCESSING':
+    case 'EVENTS.EVENTS.STATUS.PENDING':
       evStatus = 'Processing';
       break;
 
     case 'EVENTS.EVENTS.STATUS.PROCESSED':
-      if (details.publications && details.publications.length > 0) {
-        evStatus = 'Published';
-      }
-      else if (!details.has_open_comments) {
-        evStatus = 'Unwanted';
-      }
-      else {
-        evStatus = 'Awaiting Review';
+      if (isFuture) {
+          evStatus = 'Upcoming';
+      } else {
+          if (details.publications && details.publications.length > 0) {
+              evStatus = 'Published';
+          } else {
+              if (details.has_comments && !details.has_open_comments){
+                  evStatus = 'Unwanted';
+              } else {
+                  evStatus = 'Awaiting Review';
+              }
+          }
       }
       break;
     }
