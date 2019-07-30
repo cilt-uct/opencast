@@ -1118,9 +1118,6 @@ function personalEventEditable(id) {
 function getStatus(details) {
   var evStatus = 'Processing';
 
-  console.log("details:");
-  console.log(details);
-
   var isFuture = (new Date()).getTime() < (new Date(details.start_date)).getTime();
   switch(details.event_status) {
 
