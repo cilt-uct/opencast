@@ -60,16 +60,22 @@ Timetable.prototype = {
   fetchTimetable: function(course) {
     return $.Deferred(function(d) {
       var timetable = null;
-      $.ajax({
-             url: 'https://srvslscet001.uct.ac.za/timetable/?course=' + course,
-      })
-      .done(function(tt) {
-        timetable = tt;
-      })
-      .always(function() {
-        d.resolve(timetable);
-      });
-    }).promise();
+
+      course = course.split(",");
+      if(course.length !== 2 || !is_numeric(course[1])){
+        // Do nothing
+      }else{
+        $.ajax({
+              url: 'https://srvslscet001.uct.ac.za/timetable/?course=' + course,       
+        })
+        .done(function(tt) {
+          timetable = tt;
+        })
+        .always(function() {
+          d.resolve(timetable);
+        });
+      }
+      }).promise();
   },
   setCourseTimetable: function(course) {
     return $.Deferred(function(d) {
@@ -79,9 +85,9 @@ Timetable.prototype = {
             this[tt.course + ',' + tt.term] = tt;
           }
           d.resolve();
-        }.bind(this));
+      }.bind(this));
     }.bind(this)).promise();
-  },
+    },
   on: function(event, fn) {
     if (typeof fn != 'function' || event !== 'complete') {
       return;
@@ -91,7 +97,6 @@ Timetable.prototype = {
       fn(this);
       return;
     }
-
     this.oncomplete = fn;
   },
   emit: function() {
