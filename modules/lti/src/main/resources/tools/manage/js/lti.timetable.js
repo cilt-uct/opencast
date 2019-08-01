@@ -62,8 +62,8 @@ Timetable.prototype = {
       var timetable = null;
 
       course = course.split(",");
-      if(course.length !== 2 || !is_numeric(course[1])){
-        // Do nothing
+      if(course.length !== 2 || !isNaN(course[1])){
+        return;
       }else{
         $.ajax({
               url: 'https://srvslscet001.uct.ac.za/timetable/?course=' + course,       
