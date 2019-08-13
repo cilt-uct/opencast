@@ -106,6 +106,7 @@
     <module>modules/engage-theodul-plugin-tab-feedback</module>
     <module>modules/engage-theodul-plugin-tab-shortcuts</module>
     <module>modules/engage-theodul-plugin-tab-slidetext</module>
+    <module>modules/engage-theodul-plugin-tab-transcript</module>
     <module>modules/engage-theodul-plugin-timeline-statistics</module>
     <module>modules/engage-theodul-plugin-video-videojs</module>
     <module>modules/engage-ui</module>
