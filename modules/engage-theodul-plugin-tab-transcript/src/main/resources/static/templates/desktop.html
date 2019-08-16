@@ -1,103 +1,14 @@
-<% if((typeof str_type !== "undefined")
-    && (typeof str_mimetype !== "undefined")
-    && (typeof str_resolution !== "undefined")
-    && (typeof str_download !== "undefined")) { %>
-<div id="engage_tab_downloadableVideos_content">
-<table class="table table-bordered table-hover">
-<thead>
-	<tr>
-		<th><%= str_type %></th>
-		<th><%= str_mimetype %></th>
-		<th><%= str_resolution %></th>
-		<th><%= str_download %></th>
-	</tr>
-</thead>
-	<tbody>
-	<% if(tracks && Array.isArray(tracks)) { %>
-		<% _.each(tracks, function(item) {
-                        var type = ""; %>
-			<tr>
-                <% if (item.type.indexOf('pic-in-pic') > -1) { type = '_PicInPic'; %>
-                <td>Picture-in-Picture</td>
-
-                    <% } else if (item.type.indexOf('composite') > -1) { type = '_SideBySide'; %>
-				<td>Side By Side</td>
-
-                    <% } else if (item.type.indexOf('presenter') > -1 &&
-                                  item.mimetype.indexOf("audio") > -1) { %>
-				<td>Presenter (audio-only)</td>
-
-                    <% } else if (item.type.indexOf('presenter') > -1) { type = "_Presenter"; %>
-				<td>Presenter (video)</td>
-
-                    <% } else if (item.type.indexOf('presentation2') > -1) { type =
-                    "_Presentation"; %>
-				<td>Presentation 2 (video)</td>
-
-                    <% } else if (item.type.indexOf('presentation') > -1) { type =
-                    "_Presentation"; %>
-				<td>Presentation (video)</td>
-
-                    <% } else { %>
-                                <td>Media track (<% item.type %>)</td>
-                    <% } %>
-				<td>
-                    <%= item.mimetype.replace('audio/mpeg', 'audio/mp3') %>
-                </td>
-		   <%
-                      if(typeof item.video !== "undefined") {
-                        var vidDims = item.video.resolution
-                                        .split('x')
-                                        .map(function(dim) {
-                                          return parseInt(dim);
-                                        });
-                        var pixelCount = vidDims[0] * vidDims[1];
-                        var isLandscape = vidDims[0] > vidDims[1];
-
-		        if (pixelCount >= 921600 ){
-		   %><td>High Quality (<%= isLandscape ? vidDims[1] + 'p' : item.video.resolution  %>)</td><%
-                        }
-                        else if (pixelCount >= 307200 ){
-		          %><td>Medium Quality (<%= isLandscape ? vidDims[1] + 'p' : item.video.resolution %>)</td><%
-                        }
-                        else { %>
-		          <td>Low Quality (<%= isLandscape ? vidDims[1] + 'p' : item.video.resolution %>)</td><%
-                        }
-	              } else if (item.audio && item.audio.bitrate) { %>
-		        <td><%= parseInt(item.audio.bitrate/1000) %>kbps</td>
-		   <% } else { %>
-                        <td></td>
-                   <% } %>
-		  <td>
-                    <a class="btn btn-default" href="<%= item.url.replace('http://media', 'https://media') +
-				downloadURL + type + "." +
-				item.mimetype.substring(item.mimetype.lastIndexOf("/")+1,
-				item.mimetype.length).replace('mpeg', 'mp3') %>" role="button" download="<%= item.id %>">
-					    <span class="glyphicon glyphicon-download" aria-hidden="true"></span>
-				    </a>
-                </td>
-			</tr>
-		<% }); %>
-	<% } %>
-    <% if(captions && Array.isArray(captions)) { %>
-		<% _.each(captions, function(item) {
-                        var type = ""; %>
-			<tr>
-                <td>Caption</td>
-				<td><%= item.mimetype %></td>
-		        <td>&nbsp;</td>
-		        <td>
-                    <a class="btn btn-default" href="<%= item.url.replace('http://media', 'https://media') +
-        				downloadURL + type + "." +
-        				item.mimetype.substring(item.mimetype.lastIndexOf("/")+1, item.mimetype.length).replace('mpeg', 'mp3') %>"
-                        role="button" download="<%= item.id %>">
-					    <span class="glyphicon glyphicon-download" aria-hidden="true"></span>
-				    </a>
-                </td>
-			</tr>
-		<% }); %>
-	<% } %>
-	</tbody>
-</table>
+<div id="search-bar">
+	Search: <input type="text" id="transcript_tab_search">
+</div>
+<% if (typeof vttObjects !== "undefined") { %>
+<div id="transcript"  class="highlight">
+	<% if(vttObjects) { %>
+		<p>
+			<% _.each(vttObjects, function(object, id) { %>
+				<span id="<%= id %>"><%= object["text"] %> </span>
+			<% }); %>
+		</p>
+	<% } %>		
 </div>
 <% } %>

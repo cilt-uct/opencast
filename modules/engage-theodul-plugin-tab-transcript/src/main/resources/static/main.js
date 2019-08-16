@@ -37,7 +37,9 @@ define(["jquery", "underscore", "backbone", "engage/core"], function($, _, Backb
     var plugin;
     var events = {
         plugin_load_done: new Engage.Event("Core:plugin_load_done", "", "handler"),
-        mediaPackageModelError: new Engage.Event("MhConnection:mediaPackageModelError", "", "handler")
+        mediaPackageModelError: new Engage.Event("MhConnection:mediaPackageModelError", "", "handler"),
+        timeupdate: new Engage.Event('Video:timeupdate', 'notices a timeupdate', 'handler'),
+        seek: new Engage.Event('Video:seek', 'seek video to a given position in seconds', 'trigger')
     };
 
     var isDesktopMode = false;
@@ -94,13 +96,16 @@ define(["jquery", "underscore", "backbone", "engage/core"], function($, _, Backb
     var initCount = 4;
     var mediapackageError = false;
     var translations = new Array();
-    var locale = "en";
-    var dateFormat = "MMMM Do YYYY, h:mm:ss a";
     var Utils;
+    var vttObjects = {};
+    var currentTime = 0;
+    var startTime = "startTime";
+    var endTime = "endTime";
+    var text = "text";
 
     function initTranslate(language, funcSuccess, funcError) {
         var path = Engage.getPluginPath("EngagePluginTabTranscript").replace(/(\.\.\/)/g, "");
-        var jsonstr = window.location.origin + "/engage/theodul/" + path; // this solution is really bad, fix it...
+        var jsonstr = window.location.origin + "/engage/theodul/" + path;
 
         if (language == "de") {
             Engage.log("Tab:Downloads: Chosing german translations");
@@ -113,7 +118,7 @@ define(["jquery", "underscore", "backbone", "engage/core"], function($, _, Backb
             url: jsonstr,
             dataType: "json",
             async: false,
-            success: function(data) {
+            success: function (data) {
                 if (data) {
                     data.value_locale = language;
                     translations = data;
@@ -126,7 +131,7 @@ define(["jquery", "underscore", "backbone", "engage/core"], function($, _, Backb
                     }
                 }
             },
-            error: function(jqXHR, textStatus, errorThrown) {
+            error: function (jqXHR, textStatus, errorThrown) {
                 if (funcError) {
                     funcError();
                 }
@@ -134,99 +139,29 @@ define(["jquery", "underscore", "backbone", "engage/core"], function($, _, Backb
         });
     }
 
-    function translate(str, strIfNotFound) {
-        return (translations[str] != undefined) ? translations[str] : strIfNotFound;
-    }
-
-    function getPixelCount(track) {
-      if (!track.video) {
-        return 0;
-      }
-
-      var pixels = track.video.resolution
-                     .split('x')
-                     .map(function(dim) {
-                       return parseInt(dim);
-                     })
-                     .reduce(function(collect, dim) {
-                       return collect * dim;
-                     }, 1);
-
-      return pixels;
-    }
-
-    function sortByResolution(tracksForSorting) {
-    	tracksForSorting.sort(function(a, b){
-    		var resA = getPixelCount(a),
-                        resB = getPixelCount(b);
-
-    		if (resA < resB) return 1;
-    		if (resA > resB) return -1;
-    		return 0;
-    	    });
-    	return tracksForSorting;
-    }
-
-    function sortByType(tracksForSorting){
-    	tracksForSorting.sort(function(a, b){
-    		var typeA = (typeof a.type === "string") ? a.type : "",
-                        typeB = (typeof b.type === "string") ? b.type : "";
-
-    		if (typeA < typeB) return -1;
-    		if (typeA > typeB) return 1;
-    		return 0;
-    	    });
-    	return tracksForSorting;
-    }
-
-    function sortByMimetype(tracksForSorting){
-    	tracksForSorting.sort(function(a, b){
-    		var typeA = (typeof a.mimetype === "string") ? a.mimetype : "",
-                        typeB = (typeof b.mimetype === "string") ? b.mimetype : "";
-
-    		if (typeA > typeB) return -1;
-    		if (typeA < typeB) return 1;
-    		return 0;
-    	    });
-    	return tracksForSorting;
-    }
-
-    function momento(dateStr) {
-      return ( dateStr.split('T').map(function(str) { return str.replace(/-/g, ''); }))[0];
-    }
-
-    function getDownloadList(model) {
-        //Filter function for downloads, i.e. use this to remove any streaming/unnecessary tracks
-        var list = [];
-        _.each(model.get('tracks'), function(item) {
-          if (!item.hasOwnProperty('transport') && item.url.indexOf('rtmp') == -1 && item.url.indexOf('flv') === -1) {
-              item.url = window.location.protocol + item.url.substring(item.url.indexOf('/'));
-              list.push(item);
-          }
-        });
-
-        list = sortByType(list);
-        list = sortByMimetype(list);
-        list = sortByResolution(list);
-
-        return list;
-    }
-
     function getCaptionList(model) {
-        //Filter function for captions, i.e. use this to remove any other attachments
-        var list = [];
-        _.each(model.get('attachments'), function(item) {
-           // type: "captions/timedtext", mimetype: "text/vtt"
-          if (item.type.indexOf('captions') >= 0 || item.mimetype == 'text/vtt') {
-              item.url = window.location.protocol + item.url.substring(item.url.indexOf('/'));
-              list.push(item);
-          }
+
+        var captions = _.find(model.get('attachments'), function (item) {
+            // type: "captions/timedtext", mimetype: "text/vtt"
+            // assumption is that there is only one vvt file, FOR NOW!
+            if (item.type.indexOf('captions') >= 0 || item.mimetype == 'text/vtt') {
+                item.url = window.location.protocol + item.url.substring(item.url.indexOf('/'));
+                return item;
+            }
         });
-        return list;
+
+        return captions;
+    }
+
+    function getVTT(captions) {
+        var request = new XMLHttpRequest();
+        request.open('GET', captions["url"], false);
+        request.send(null);
+        return request.responseText;
     }
 
     var DownloadsTabView = Backbone.View.extend({
-        initialize: function(mediaPackageModel, template) {
+        initialize: function (mediaPackageModel, template) {
             this.setElement($(plugin.container)); // every plugin view has it's own container associated with it
             this.model = mediaPackageModel;
             this.template = template;
@@ -235,54 +170,80 @@ define(["jquery", "underscore", "backbone", "engage/core"], function($, _, Backb
             // listen for changes of the model and bind the render function to this
             this.model.bind("change", this.render);
         },
-        render: function() {
+        render: function () {
             if (!mediapackageError) {
-                var src = {},
-    		    filteredTracks = [],
-                captions = [],
-    		    mediaSeries = this.model.get("series"),
-    		    mediaDate = momento(this.model.get("date")),
-    		    downloadURL = "";
+                var vttText = [];
 
-                filteredTracks = getDownloadList(this.model);
-                captions = getCaptionList(this.model);
+                var captions = getCaptionList(this.model);
 
-                if (mediaSeries) {
-                  mediaSeries = (mediaSeries.indexOf(',') > -1 ? mediaSeries.substring(0, mediaSeries.indexOf(',')) : mediaSeries);
+                if (!_.isUndefined(captions)) {
+                    var vtt = getVTT(captions);
+                    vttText = vtt.split('\n\n');
+
+                    for (var i = 1; i < vttText.length; i++) {
+                        buildVTTObject(i, vttText)
+                    }
                 }
 
-        		// Construct a download URL
-        		downloadURL =  mediaSeries ? (mediaSeries + "_" + mediaDate) : mediaDate;
-                downloadURL = '/download/' + downloadURL
-                                               .replace(/\//g, '_')
-                                               .replace(/\s/g, '_');
                 var tempVars = {
-                        str_type: translate("str_type", "Type"),
-                    str_mimetype: translate("str_mimetype", "Format"),
-                  str_resolution: translate("str_resolution", "Resolution"),
-                    str_download: translate("str_download", "Download"),
-                          series: this.model.get("series"),
-                            date: this.model.get("date"),
-                          tracks: filteredTracks,
-                        captions: captions,
-                     downloadURL: downloadURL
+                    vttObjects: vttObjects
                 };
 
                 var tpl = _.template(this.template);
                 this.$el.html(tpl(tempVars));
+                addListeners(vttText);
             }
         }
     });
+
+    function addListeners(vttText) {
+        document.getElementById("transcript_tab_search").addEventListener("keyup", filterText);
+
+        for (var i = 1; i < vttText.length; i++) {
+            document.getElementById(i).addEventListener("click", updateVideo);
+        }
+    }
+
+    function filterText() {
+        var searchTerm = this.value;
+
+        _.each(vttObjects, function (object, key) {
+            var element = document.getElementById(key);
+            if (!vttObjects[key][text].toLowerCase().includes(searchTerm.toLowerCase())) {
+                element.classList.add("greyout");
+            }
+            else {
+                element.classList.remove("greyout");
+            }
+        });
+        
+    }
+
+    function buildVTTObject(index, vttText) {
+        var timeAndText = vttText[index].split(/(?<=\d{3})\s+(?=\w)/);
+        var times = timeAndText[0].split(' ');
+        var timeAndTextObject = {}
+        timeAndTextObject[startTime] = Utils.getTimeInMilliseconds(times[0]);
+        timeAndTextObject[endTime] = Utils.getTimeInMilliseconds(times[2]);
+        timeAndTextObject[text] = timeAndText[1];
+        vttObjects[index] = timeAndTextObject;
+    }
+
+    function updateVideo() {
+        var timeObject = vttObjects[this.id]
+        var time = timeObject[startTime];
+        Engage.trigger(plugin.events.seek.getName(), time / 1000);
+    }
 
     function initPlugin() {
         // only init if plugin template was inserted into the DOM
         if (isDesktopMode && plugin.inserted) {
             Engage.log("Tab:Downloads initialized");
             var downloadsTabView = new DownloadsTabView(Engage.model.get("mediaPackage"), plugin.template);
-            Engage.on(plugin.events.mediaPackageModelError.getName(), function(msg) {
+            Engage.on(plugin.events.mediaPackageModelError.getName(), function (msg) {
                 mediapackageError = true;
             });
-            Engage.model.get("views").on("change", function() {
+            Engage.model.get("views").on("change", function () {
                 downloadsTabView.render();
             });
             downloadsTabView.render();
@@ -296,16 +257,16 @@ define(["jquery", "underscore", "backbone", "engage/core"], function($, _, Backb
 
         // load utils class
 
-        require([relative_plugin_path + "utils"], function(utils) {
+        require([relative_plugin_path + "utils"], function (utils) {
             Engage.log("Tab:Downloads: Utils class loaded");
             Utils = new utils();
-            initTranslate(Utils.detectLanguage(), function() {
+            initTranslate(Utils.detectLanguage(), function () {
                 Engage.log("Tab:Downloads: Successfully translated.");
                 initCount -= 1;
                 if (initCount <= 0) {
                     initPlugin();
                 }
-            }, function() {
+            }, function () {
                 Engage.log("Tab:Downloads: Error translating...");
                 initCount -= 1;
                 if (initCount <= 0) {
@@ -314,7 +275,7 @@ define(["jquery", "underscore", "backbone", "engage/core"], function($, _, Backb
             });
         });
 
-        Engage.model.on(viewsModelChange, function() {
+        Engage.model.on(viewsModelChange, function () {
             initCount -= 1;
             if (initCount <= 0) {
                 initPlugin();
@@ -322,7 +283,7 @@ define(["jquery", "underscore", "backbone", "engage/core"], function($, _, Backb
         });
 
         // listen on a change/set of the mediaPackage model
-        Engage.model.on(mediapackageChange, function() {
+        Engage.model.on(mediapackageChange, function () {
             initCount -= 1;
             if (initCount <= 0) {
                 initPlugin();
@@ -330,11 +291,17 @@ define(["jquery", "underscore", "backbone", "engage/core"], function($, _, Backb
         });
 
         // all plugins loaded
-        Engage.on(plugin.events.plugin_load_done.getName(), function() {
+        Engage.on(plugin.events.plugin_load_done.getName(), function () {
             Engage.log("Tab:Downloads: Plugin load done");
             initCount -= 1;
             if (initCount <= 0) {
                 initPlugin();
+            }
+        });
+
+        Engage.on(plugin.events.timeupdate.getName(), function (_currentTime) {
+            if (!mediapackageError) {
+                currentTime = _currentTime;
             }
         });
     }

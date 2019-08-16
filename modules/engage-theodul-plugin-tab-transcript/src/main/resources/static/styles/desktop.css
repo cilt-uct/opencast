@@ -1,37 +1,12 @@
-#engage_description_tab_content {
-    width: 100%;
-    padding-top: 15px;
-    padding-right: 20px;
+.highlight>p>span:hover {
+    background-color: rgba(51,122,183, 0.5);
+    cursor: pointer;
 }
 
-.description-item {
-    border-radius: 4px;
-    padding: 5px;
-/*
-  color: #000000;
-  background-color: #F1F1F1;
-  border-color: #969696;
-  */
+.greyout {
+    color: lightgray;
 }
 
-.description-item-header {
-    font-size: 1.2em;
-    font-weight: bold;
-}
-
-.description-item-body {
-    margin-left: 8px;
-}
-
-.descriptionTabLeft {
-    float: left;
-    width: 50%;
-}
-
-.descriptionTabRight {
-    float: left;
-}
-
-.clear {
-    clear: both;
+#search-bar {
+    margin: 1%;
 }
