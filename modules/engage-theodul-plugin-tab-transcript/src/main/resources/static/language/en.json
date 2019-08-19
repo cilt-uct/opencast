@@ -1,7 +1,4 @@
 {
-  "value_locale":"en",
-  "str_type": "Type",
-  "str_mimetype": "Format",
-  "str_resolution": "Resolution",
-  "str_download": "Download"
+  "search_str":"Search",
+  "search_placeholder_str":"Search terms (space seperated)"
 }

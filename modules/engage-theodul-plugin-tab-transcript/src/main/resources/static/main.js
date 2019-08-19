@@ -87,9 +87,6 @@ define(["jquery", "underscore", "backbone", "engage/core"], function($, _, Backb
             break;
     }
 
-    /* change these variables */
-    var class_tabGroupItem = "tab-group-item";
-
     /* don't change these variables */
     var viewsModelChange = "change:views";
     var mediapackageChange = "change:mediaPackage";
@@ -108,10 +105,10 @@ define(["jquery", "underscore", "backbone", "engage/core"], function($, _, Backb
         var jsonstr = window.location.origin + "/engage/theodul/" + path;
 
         if (language == "de") {
-            Engage.log("Tab:Downloads: Chosing german translations");
+            Engage.log("Tab:Transcript: Chosing german translations");
             jsonstr += "language/de.json";
         } else { // No other languages supported, yet
-            Engage.log("Tab:Downloads: Chosing english translations");
+            Engage.log("Tab:Transcript: Chosing english translations");
             jsonstr += "language/en.json";
         }
         $.ajax({
@@ -139,11 +136,15 @@ define(["jquery", "underscore", "backbone", "engage/core"], function($, _, Backb
         });
     }
 
+    function translate(str, strIfNotFound) {
+        return (translations[str] != undefined) ? translations[str] : strIfNotFound;
+    }
+
     function getCaptionList(model) {
 
         var captions = _.find(model.get('attachments'), function (item) {
             // type: "captions/timedtext", mimetype: "text/vtt"
-            // assumption is that there is only one vvt file, FOR NOW!
+            // assumption is that there is only one vvt file per video.
             if (item.type.indexOf('captions') >= 0 || item.mimetype == 'text/vtt') {
                 item.url = window.location.protocol + item.url.substring(item.url.indexOf('/'));
                 return item;
@@ -157,10 +158,16 @@ define(["jquery", "underscore", "backbone", "engage/core"], function($, _, Backb
         var request = new XMLHttpRequest();
         request.open('GET', captions["url"], false);
         request.send(null);
-        return request.responseText;
+
+        if(request.status === 200) {
+            return request.responseText;
+        } else {
+            console.error(request.statusText);
+            return "";
+        }
     }
 
-    var DownloadsTabView = Backbone.View.extend({
+    var TranscriptTabView = Backbone.View.extend({
         initialize: function (mediaPackageModel, template) {
             this.setElement($(plugin.container)); // every plugin view has it's own container associated with it
             this.model = mediaPackageModel;
@@ -186,6 +193,8 @@ define(["jquery", "underscore", "backbone", "engage/core"], function($, _, Backb
                 }
 
                 var tempVars = {
+                    search_str: translate("search_str", "Search"),
+                    search_placeholder_str: translate("search_placeholder_str", "Search terms (space seperated)"),
                     vttObjects: vttObjects
                 };
 
@@ -205,69 +214,106 @@ define(["jquery", "underscore", "backbone", "engage/core"], function($, _, Backb
     }
 
     function filterText() {
-        var searchTerm = this.value;
+        var searchTerms = this.value.split(' ');
 
         _.each(vttObjects, function (object, key) {
             var element = document.getElementById(key);
-            if (!vttObjects[key][text].toLowerCase().includes(searchTerm.toLowerCase())) {
+            
+            if (!checkIfContainsAnySearchTerms(key, searchTerms)) {
                 element.classList.add("greyout");
             }
             else {
                 element.classList.remove("greyout");
             }
         });
+
+        if(searchTerms.length===1 && searchTerms[0] === "") {
+            var nodes = document.getElementById('transcript').getElementsByTagName("span");
+            for(var i=0; i<nodes.length; i++) {
+                nodes[i].classList.remove("greyout"); 
+            }
+        }
         
     }
 
+    function checkIfContainsAnySearchTerms(key, searchTerms) {
+        for(var i=0; i<searchTerms.length; i++) {
+            if(searchTerms[i] !== "" && vttObjects[key][text].toLowerCase().includes(searchTerms[i].toLowerCase())) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     function buildVTTObject(index, vttText) {
-        var timeAndText = vttText[index].split(/(?<=\d{3})\s+(?=\w)/);
-        var times = timeAndText[0].split(' ');
+        var timeAndText = vttText[index].match(/(.*\d{3}) --> (.*\d{3})\s(.*)/);
         var timeAndTextObject = {}
-        timeAndTextObject[startTime] = Utils.getTimeInMilliseconds(times[0]);
-        timeAndTextObject[endTime] = Utils.getTimeInMilliseconds(times[2]);
-        timeAndTextObject[text] = timeAndText[1];
+        timeAndTextObject[startTime] = Utils.getTimeInMilliseconds(timeAndText[1]);
+        timeAndTextObject[endTime] = Utils.getTimeInMilliseconds(timeAndText[2]);
+
+        if(index != 1 && newLineRequired(timeAndTextObject[startTime], index)) {
+            timeAndTextObject[text] = "\n\n" + timeAndText[3];
+        } else {
+            timeAndTextObject[text] = timeAndText[3];
+        }
         vttObjects[index] = timeAndTextObject;
     }
 
+    function newLineRequired(time, index) {
+        //new line is required if there is a 2 second gap between talking.
+        return time - vttObjects[index-1][endTime] > 2000;
+    }
+
+    function getIndexByTime(arr, time) { 
+        var index = -1; 
+        $.each(arr, function (i, el) { 
+            if ((el[startTime] <= time) && (time < el[endTime])) { 
+                index=i;
+                return; 
+            } 
+        }); 
+        return index; 
+    }
+
     function updateVideo() {
-        var timeObject = vttObjects[this.id]
-        var time = timeObject[startTime];
+        var vttObject = vttObjects[this.id]
+        var time = vttObject[startTime];
         Engage.trigger(plugin.events.seek.getName(), time / 1000);
     }
 
     function initPlugin() {
         // only init if plugin template was inserted into the DOM
         if (isDesktopMode && plugin.inserted) {
-            Engage.log("Tab:Downloads initialized");
-            var downloadsTabView = new DownloadsTabView(Engage.model.get("mediaPackage"), plugin.template);
+            Engage.log("Tab:Transcript initialized");
+            var transcriptTabView = new TranscriptTabView(Engage.model.get("mediaPackage"), plugin.template);
             Engage.on(plugin.events.mediaPackageModelError.getName(), function (msg) {
                 mediapackageError = true;
             });
             Engage.model.get("views").on("change", function () {
-                downloadsTabView.render();
+                transcriptTabView.render();
             });
-            downloadsTabView.render();
+            transcriptTabView.render();
         }
     }
 
     if (isDesktopMode) {
         // init event
-        Engage.log("Tab:Downloads: Init");
+        Engage.log("Tab:Transcript: Init");
         var relative_plugin_path = Engage.getPluginPath("EngagePluginTabTranscript");
 
         // load utils class
-
         require([relative_plugin_path + "utils"], function (utils) {
-            Engage.log("Tab:Downloads: Utils class loaded");
+            Engage.log("Tab:Transcript: Utils class loaded");
             Utils = new utils();
             initTranslate(Utils.detectLanguage(), function () {
-                Engage.log("Tab:Downloads: Successfully translated.");
+                Engage.log("Tab:Transcript: Successfully translated.");
                 initCount -= 1;
                 if (initCount <= 0) {
                     initPlugin();
                 }
             }, function () {
-                Engage.log("Tab:Downloads: Error translating...");
+                Engage.log("Tab:Transcript: Error translating...");
                 initCount -= 1;
                 if (initCount <= 0) {
                     initPlugin();
@@ -292,7 +338,7 @@ define(["jquery", "underscore", "backbone", "engage/core"], function($, _, Backb
 
         // all plugins loaded
         Engage.on(plugin.events.plugin_load_done.getName(), function () {
-            Engage.log("Tab:Downloads: Plugin load done");
+            Engage.log("Tab:Transcript: Plugin load done");
             initCount -= 1;
             if (initCount <= 0) {
                 initPlugin();
@@ -302,6 +348,12 @@ define(["jquery", "underscore", "backbone", "engage/core"], function($, _, Backb
         Engage.on(plugin.events.timeupdate.getName(), function (_currentTime) {
             if (!mediapackageError) {
                 currentTime = _currentTime;
+                var index = getIndexByTime(vttObjects, currentTime*1000);
+                $('.highlight span').removeClass('play');
+
+                if (index > -1) {
+                    document.getElementById(index).classList.add("play");
+                }
             }
         });
     }

@@ -1,6 +1,10 @@
-.highlight>p>span:hover {
+.highlight > p > span:hover {
     background-color: rgba(51,122,183, 0.5);
     cursor: pointer;
+}
+
+.highlight > p > span.play {
+    background-color: rgba(51,122,183, 0.2);
 }
 
 .greyout {
@@ -8,5 +12,9 @@
 }
 
 #search-bar {
-    margin: 1%;
+    margin: 1% 0%;
+}
+
+#transcript_tab_search {
+    width: 30%;
 }

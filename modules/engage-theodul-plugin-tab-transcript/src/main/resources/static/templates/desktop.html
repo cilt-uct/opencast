@@ -1,12 +1,20 @@
+<% if ((typeof vttObjects !== "undefined")
+	&& (typeof search_str !== "undefined")
+	&& (typeof search_placeholder_str !== "undefined")) { %>
+
 <div id="search-bar">
-	Search: <input type="text" id="transcript_tab_search">
+	<%= search_str %>: <input type="text" id="transcript_tab_search" placeholder="<%= search_placeholder_str %>">
 </div>
-<% if (typeof vttObjects !== "undefined") { %>
 <div id="transcript"  class="highlight">
 	<% if(vttObjects) { %>
 		<p>
-			<% _.each(vttObjects, function(object, id) { %>
-				<span id="<%= id %>"><%= object["text"] %> </span>
+			<% _.each(vttObjects, function(object, id) { 
+				if(object["text"].includes("\n\n")) { %>
+					</p> <p>
+			<% } %>
+			
+			<span id="<%= id %>"><%= object["text"] %> </span>
+
 			<% }); %>
 		</p>
 	<% } %>		
