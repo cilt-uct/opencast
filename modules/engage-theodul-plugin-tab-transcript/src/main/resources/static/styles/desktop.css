@@ -1,20 +1,35 @@
-.highlight > p > span:hover {
-    background-color: rgba(51,122,183, 0.5);
+#engage_transcript_tab .highlight > p > span:hover {
+    background-color: #24425C;
+    color: #fff;
     cursor: pointer;
 }
 
-.highlight > p > span.play {
-    background-color: rgba(51,122,183, 0.2);
+#engage_transcript_tab .highlight > p > span.play {
+    background-color: #9AC6EA;
+    color: #222222;
 }
 
-.greyout {
-    color: lightgray;
+#engage_transcript_tab .greyout {
+    color: #969696;
 }
 
-#search-bar {
+#engage_transcript_tab #search-bar {
     margin: 1% 0%;
 }
 
-#transcript_tab_search {
+#engage_transcript_tab #transcript_tab_search {
     width: 30%;
+}
+
+#engage_transcript_tab p {
+    text-align: justify;
+    margin-right: 1%;
+}
+
+#engage_transcript_tab #clear_transcript_tab_search{
+    padding: 1px 5px;
+    font: inherit;
+    color: white;
+    background-color: #24425C;
+    cursor: pointer;
 }

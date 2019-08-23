@@ -99,18 +99,15 @@ define(["jquery", "underscore", "backbone", "engage/core"], function($, _, Backb
     var startTime = "startTime";
     var endTime = "endTime";
     var text = "text";
+    var sentencesCount = 0;
 
     function initTranslate(language, funcSuccess, funcError) {
         var path = Engage.getPluginPath("EngagePluginTabTranscript").replace(/(\.\.\/)/g, "");
         var jsonstr = window.location.origin + "/engage/theodul/" + path;
 
-        if (language == "de") {
-            Engage.log("Tab:Transcript: Chosing german translations");
-            jsonstr += "language/de.json";
-        } else { // No other languages supported, yet
-            Engage.log("Tab:Transcript: Chosing english translations");
-            jsonstr += "language/en.json";
-        }
+        Engage.log("Tab:Transcript: Choosing english translations");
+        jsonstr += "language/en.json";
+        
         $.ajax({
             url: jsonstr,
             dataType: "json",
@@ -180,7 +177,6 @@ define(["jquery", "underscore", "backbone", "engage/core"], function($, _, Backb
         render: function () {
             if (!mediapackageError) {
                 var vttText = [];
-
                 var captions = getCaptionList(this.model);
 
                 if (!_.isUndefined(captions)) {
@@ -194,7 +190,8 @@ define(["jquery", "underscore", "backbone", "engage/core"], function($, _, Backb
 
                 var tempVars = {
                     search_str: translate("search_str", "Search"),
-                    search_placeholder_str: translate("search_placeholder_str", "Search terms (space seperated)"),
+                    search_placeholder_str: translate("search_placeholder_str", "Search terms (space separated)"),
+                    request_transcript_str: translate("request_transcript_str", "No captions or transcript are available for this video. Request a transcript "),
                     vttObjects: vttObjects
                 };
 
@@ -206,15 +203,24 @@ define(["jquery", "underscore", "backbone", "engage/core"], function($, _, Backb
     });
 
     function addListeners(vttText) {
-        document.getElementById("transcript_tab_search").addEventListener("keyup", filterText);
-
+        $( "#transcript_tab_search" ).keyup(filterText);
+        $( "#clear_transcript_tab_search" ).click(filterText);
+        
         for (var i = 1; i < vttText.length; i++) {
-            document.getElementById(i).addEventListener("click", updateVideo);
+            $( "#" + i ).click(updateVideo);
         }
     }
 
     function filterText() {
         var searchTerms = this.value.split(' ');
+
+        if(searchTerms.length===1 && (searchTerms[0] === "" || this.id === "clear_transcript_tab_search")) {
+            var nodes = document.getElementById('transcript').getElementsByTagName("span");
+            for(var i=0; i<nodes.length; i++) {
+                nodes[i].classList.remove("greyout"); 
+            }
+            return;
+        }
 
         _.each(vttObjects, function (object, key) {
             var element = document.getElementById(key);
@@ -226,14 +232,6 @@ define(["jquery", "underscore", "backbone", "engage/core"], function($, _, Backb
                 element.classList.remove("greyout");
             }
         });
-
-        if(searchTerms.length===1 && searchTerms[0] === "") {
-            var nodes = document.getElementById('transcript').getElementsByTagName("span");
-            for(var i=0; i<nodes.length; i++) {
-                nodes[i].classList.remove("greyout"); 
-            }
-        }
-        
     }
 
     function checkIfContainsAnySearchTerms(key, searchTerms) {
@@ -247,22 +245,36 @@ define(["jquery", "underscore", "backbone", "engage/core"], function($, _, Backb
     }
 
     function buildVTTObject(index, vttText) {
-        var timeAndText = vttText[index].match(/(.*\d{3}) --> (.*\d{3})\s(.*)/);
+        var line = vttText[index].replace(/\n/g, ' ')
+        var timeAndText = line.match(/(.*\d{3}) --> (.*\d{3})\s(.*)/);
         var timeAndTextObject = {}
         timeAndTextObject[startTime] = Utils.getTimeInMilliseconds(timeAndText[1]);
         timeAndTextObject[endTime] = Utils.getTimeInMilliseconds(timeAndText[2]);
-
-        if(index != 1 && newLineRequired(timeAndTextObject[startTime], index)) {
-            timeAndTextObject[text] = "\n\n" + timeAndText[3];
+        var sentence = timeAndText[3];
+        if(index != 1 && newLineRequired(sentence)) {
+            timeAndTextObject[text] = sentence + "\n";
         } else {
-            timeAndTextObject[text] = timeAndText[3];
+            timeAndTextObject[text] = sentence;
         }
         vttObjects[index] = timeAndTextObject;
     }
 
-    function newLineRequired(time, index) {
-        //new line is required if there is a 2 second gap between talking.
-        return time - vttObjects[index-1][endTime] > 2000;
+    function newLineRequired(line) {
+        //new line is required after every 10 sentences.
+        var sentenceEnd = (line.match(/[\.\?\!]/g) || []).length;
+        
+        if(sentenceEnd === 0) {
+            return false;
+        } else {
+            sentencesCount += sentenceEnd;
+            
+            if(sentencesCount >= 10) {
+                sentencesCount = 0;
+                return true;
+            }
+        }
+
+        return false;
     }
 
     function getIndexByTime(arr, time) { 

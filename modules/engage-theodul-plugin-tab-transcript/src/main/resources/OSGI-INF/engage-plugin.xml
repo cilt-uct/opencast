@@ -7,7 +7,7 @@
   
   <!-- Engage Plugin Properties: at least name and path must be set -->
   <property name="opencast.engage.plugin.name" value="EngagePluginTabTranscript" />
-  <property name="opencast.engage.plugin.description" value="List Downloads in Tab" />
+  <property name="opencast.engage.plugin.description" value="Display transcript in Tab" />
   <property name="opencast.engage.plugin.rest" value="false" />
   
   <service>
