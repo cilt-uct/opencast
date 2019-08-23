@@ -191,7 +191,7 @@ define(["jquery", "underscore", "backbone", "engage/core"], function($, _, Backb
                 var tempVars = {
                     search_str: translate("search_str", "Search"),
                     search_placeholder_str: translate("search_placeholder_str", "Search terms (space separated)"),
-                    request_transcript_str: translate("request_transcript_str", "No captions or transcript are available for this video. Request a transcript "),
+                    request_transcript_str: translate("request_transcript_str", "No captions or transcripts are available for this video. Request a transcript "),
                     vttObjects: vttObjects
                 };
 
