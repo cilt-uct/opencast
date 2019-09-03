@@ -1,0 +1,34 @@
+<% if ((typeof vttObjects !== "undefined")
+	&& (typeof search_str !== "undefined")
+	&& (typeof search_placeholder_str !== "undefined")
+	&& (typeof request_transcript_str !== "undefined")
+	&& (typeof request_transcript_link_text_str !== "undefined")) { %>
+	<div id="engage_transcript_tab">
+		<% if(_.size(vttObjects) > 0) { %>
+			<div id="search-bar">
+				<form>
+					<div class="controls">
+						<label for="transcript_tab_search"><%= search_str %>:</label>
+						<input type="text" id="transcript_tab_search" placeholder="<%= search_placeholder_str %>">
+						<input type="reset" value="Clear" id="clear_transcript_tab_search">
+					</div>
+				</form>
+			</div>
+			<div id="transcript"  class="highlight">
+				<% if(vttObjects) { %>
+					<p>
+						<% _.each(vttObjects, function(object, id) { %>
+							<span id="<%= id %>"><%= object["text"] %> </span>
+							<% if(object["text"].includes("\n")) { %></p> <p><% } %>
+						<% }); %>
+					</p>
+				<% } %>		
+			</div>
+		<% } else { %>
+			<p> 
+				<%= request_transcript_str%> 
+				<a href="mailto:help@vula.uct.ac.za?Subject=Captions%20request" target="_top"><%= request_transcript_link_text_str%></a>
+			</p>
+		<% } %>
+	</div>
+<% } %>
