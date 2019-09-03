@@ -1,5 +1,6 @@
 {
   "search_str":"Search",
   "search_placeholder_str":"Search terms (space separated)",
-  "request_transcript_str":"No captions or transcripts are available for this video. Request a transcript "
+  "request_transcript_str":"No captions or transcripts are available for this video. ",
+  "request_transcript_link_text_str":"Request a transcript.",
 }

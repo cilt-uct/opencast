@@ -1,7 +1,8 @@
 <% if ((typeof vttObjects !== "undefined")
 	&& (typeof search_str !== "undefined")
 	&& (typeof search_placeholder_str !== "undefined")
-	&& (typeof request_transcript_str !== "undefined")) { %>
+	&& (typeof request_transcript_str !== "undefined")
+	&& (typeof request_transcript_link_text_str !== "undefined")) { %>
 	<div id="engage_transcript_tab">
 		<% if(_.size(vttObjects) > 0) { %>
 			<div id="search-bar">
@@ -26,7 +27,7 @@
 		<% } else { %>
 			<p> 
 				<%= request_transcript_str%> 
-				<a href="mailto:help@vula.uct.ac.za?Subject=Captions%20request" target="_top">here</a>.
+				<a href="mailto:help@vula.uct.ac.za?Subject=Captions%20request" target="_top"><%= request_transcript_link_text_str%></a>.
 			</p>
 		<% } %>
 	</div>
