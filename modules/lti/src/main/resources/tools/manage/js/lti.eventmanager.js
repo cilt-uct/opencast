@@ -1083,8 +1083,6 @@ EventManager.prototype = {
     var hasTime = false;
     var hasDate = false;
     var hasLicense = false;
-    console.log("series:");
-    console.log(this.series);
 
     if (data.isPartOf && this.isPersonal) {
       metadata[0].fields[0].value = data.isPartOf;
@@ -1141,14 +1139,12 @@ EventManager.prototype = {
     if (!hasLicense) {
       metadata[0].fields.push({
         id: 'license',
-        value: 'CC-BY-NC-ND', // TEMP
+        value: this.series.license,
         label: 'EVENTS.EVENTS.DETAILS.METADATA.LICENSE',
         type: 'text'
       })
     }
 
-    console.log("metadata:");
-    console.log(metadata);
     return metadata;
   },
   createSchedule: function(schedules) {
