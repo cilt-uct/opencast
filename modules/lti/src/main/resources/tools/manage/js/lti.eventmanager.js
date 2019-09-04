@@ -1082,6 +1082,7 @@ EventManager.prototype = {
     }];
     var hasTime = false;
     var hasDate = false;
+    var hasLicense = false;
 
     if (data.isPartOf && this.isPersonal) {
       metadata[0].fields[0].value = data.isPartOf;
@@ -1119,6 +1120,9 @@ EventManager.prototype = {
       if (key === 'startTime') {
         hasTime = true;
       }
+      if (key === 'license') {
+        hasLicense = true;
+      }
       if (key === 'start_date') {
         hasDate = true;
       }
@@ -1129,6 +1133,15 @@ EventManager.prototype = {
         value: moment(moment(event.technical_start).format('YYYY-MM-DD') + 'T' + data.startTime).utc().format('YYYY-MM-DDTHH:mm:ss') + '.000Z',
         label: 'EVENTS.EVENTS.DETAILS.METADATA.START_DATE',
         type: 'date'
+      })
+    }
+
+    if (!hasLicense) {
+      metadata[0].fields.push({
+        id: 'license',
+        value: this.series.license,
+        label: 'EVENTS.EVENTS.DETAILS.METADATA.LICENSE',
+        type: 'text'
       })
     }
 
