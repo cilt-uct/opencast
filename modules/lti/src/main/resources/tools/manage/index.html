@@ -78,7 +78,7 @@
                           aria-haspopup="true" aria-expanded="true">
                           All
                   </button>
-                  <ul class="dropdown-menu dropdown-menu-right" aria-labelledby="statusDropdown">
+                  <ul class="dropdown-menu dropdown-menu-right" aria-describedby="statusDropdown">
                       <li data-ref="Upcoming" role="presentation" class=""><a href="#">Upcoming <span class="badge"></span></a></li>
                       <li data-ref="Processing" role="presentation"><a href="#">Processing <span class="badge"></span></a></li>
                       <li data-ref="Published" role="presentation"><a href="#">Published <span class="badge"></span></a></li>
@@ -88,8 +88,8 @@
                 </div>
                 <div class="dropdown">
                   <button class="btn btn-default dropdown-toggle" type="button" id="dayDropdown" data-toggle="dropdown"
-                          aria-haspopup="true" aria-expanded="true"></button>
-                  <ul class="dropdown-menu dropdown-menu-right" aria-labelledby="dayDropdown">
+                          aria-haspopup="true" aria-expanded="true" ></button>
+                  <ul class="dropdown-menu dropdown-menu-right" aria-describedby="dayDropdown">
                       <li data-ref="Mon" role="presentation" class=""><a href="#">Monday<span class="badge"></span></a></li>
                       <li data-ref="Tue" role="presentation" class=""><a href="#">Tuesday<span class="badge"></span></a></li>
                       <li data-ref="Wed" role="presentation" class=""><a href="#">Wednesday<span class="badge"></span></a></li>
@@ -541,6 +541,7 @@
     <script type="text/x-tmpl" id="tmpl-body">
         {% for (var i=0; i < o.length; i++) { var item=o [i]; include( 'tmpl-row', o[i]); } %} </script>
 
+   
             <script type="text/x-tmpl" id="tmpl-row">
                 <tr id="row-{%=o['id']%}" data-status="{%=o['status']%}">
                     <td class="text-center">
@@ -554,7 +555,7 @@
                     <td>{%=o['presenters'].join(', ')%}</td>
                     <td>{%=moment(o['start_date']).format('ddd D MMM YYYY, HH:mm') + (o['end_date'] ? ' - ' + moment(o['end_date']).format('HH:mm') : '')%}</td> <!-- TODO: add day of week -->
                     <td>{%=getVenueName(o['location'] || o['agent_id'])%}</td>
-                    <td>{%=getStatus(o)%}</td>
+                    <td title="{%=getTooltip(o)%}">{%=getStatus(o)%}</td>
                     <td>{%#getEditControls(o)%}</td>
                 </tr>
             </script>
@@ -574,7 +575,7 @@
                     <td>{%=o['series']['title']%}</td>
                     <td>{%=moment(o['start_date']).format('ddd D MMM YYYY, HH:mm') + (o['end_date'] ? ' - ' + moment(o['end_date']).format('HH:mm') : '')%}</td> <!-- TODO: add day of week -->
                     <td>{%=getVenueName(o['location'] || o['agent_id'])%}</td>
-                    <td>{%=getStatus(o)%}</td>
+                    <td title="{%=getTooltip(o)%}">{%=getStatus(o)%}</td>
                     <td>{%#getEditControls(o)%}</td>
                 </tr>
             </script>

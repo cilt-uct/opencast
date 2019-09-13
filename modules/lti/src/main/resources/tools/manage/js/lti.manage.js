@@ -212,7 +212,7 @@ var OCManager = (function($) {
                    },
       setStatuses: function(statuses) {
                      var remove = true;
-                     $('.dropdown-menu[aria-labelledby="statusDropdown"] li').each(function() {
+                     $('.dropdown-menu[aria-describedby="statusDropdown"] li').each(function() {
                        if ($(this).hasClass('divider')) {
                          return false;
                        }
@@ -229,7 +229,7 @@ var OCManager = (function($) {
                                                 })
                                                );
 
-                       $('.dropdown-menu[aria-labelledby="statusDropdown"]').prepend(statusEl);
+                       $('.dropdown-menu[aria-describedby="statusDropdown"]').prepend(statusEl);
                      });
                    },
    getInputs: function(_form) {
@@ -1112,6 +1112,22 @@ function personalEventEditable(id) {
             '  <i class="fa fa-times-circle"></i></button></div>';
   return str;
 }
+function getTooltip(details){
+    var status = getStatus(details);
+
+    if (status == "Processing"){
+        return "Being processed for publication";
+    }
+    else if (status == "Unwanted"){
+        return "No lecture/consent OR removal requested";
+    }
+    else if(status == "Awaiting Review"){
+        return "To be edited or awaiting consent";
+    }
+    else if(status == "Failed"){
+        return "Technical Failure (will publish when/where possible)";
+    }
+}
 
 function getStatus(details) {
   var evStatus = 'Processing';
@@ -1157,6 +1173,7 @@ function getStatus(details) {
 
   return evStatus;
 }
+
 
 function getVenues(event, expectObj) {
   var res;
@@ -1240,9 +1257,9 @@ $(document).ready(function() {
     }
   });
 
-  $('[aria-labelledby="statusDropdown"],[aria-labelledby="dayDropdown"]').on('click', 'li', function(e) {
+  $('[aria-describedby="statusDropdown"],[aria-describedby="dayDropdown"]').on('click', 'li', function(e) {
     var filterVal = $(this).data('ref');
-    var filterField = ($(this).parent().attr('aria-labelledby').split('D'))[0];
+    var filterField = ($(this).parent().attr('aria-describedby').split('D'))[0];
 
     if (filterVal == 'All') {
       ocManager.eventMgr.removeFilter(filterField);
