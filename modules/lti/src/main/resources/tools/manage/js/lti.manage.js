@@ -1112,20 +1112,21 @@ function personalEventEditable(id) {
             '  <i class="fa fa-times-circle"></i></button></div>';
   return str;
 }
-function getTooltip(details){
+
+function getTooltip(details) {
     var status = getStatus(details);
 
-    if (status == "Processing"){
-        return "Being processed for publication";
+    if (status == "Processing") {
+        return "Processing: please check back later";
     }
-    else if (status == "Unwanted"){
-        return "No lecture/consent OR removal requested";
+    else if (status == "Unwanted") {
+        return "No event, no consent provided, or recording was published and later retracted.";
     }
-    else if(status == "Awaiting Review"){
-        return "To be edited or awaiting consent";
+    else if(status == "Awaiting Review") {
+        return "Queued for editing, or waiting for consent to be provided (if requested)";
     }
-    else if(status == "Failed"){
-        return "Technical Failure (will publish when/where possible)";
+    else if(status == "Failed") {
+        return "Technical failure: event not recorded successfully";
     }
 }
 
@@ -1170,10 +1171,8 @@ function getStatus(details) {
       }
       break;
     }
-
   return evStatus;
 }
-
 
 function getVenues(event, expectObj) {
   var res;
@@ -1186,9 +1185,7 @@ function getVenues(event, expectObj) {
         res += '<li data-ref="' + key + '">' + ocManager.captureAgents[key].name + '</li>';
       }
     }
-
   }
-
   return res;
 }
 
