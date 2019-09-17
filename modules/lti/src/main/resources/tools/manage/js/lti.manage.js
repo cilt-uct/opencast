@@ -212,7 +212,7 @@ var OCManager = (function($) {
                    },
       setStatuses: function(statuses) {
                      var remove = true;
-                     $('.dropdown-menu[aria-labelledby="statusDropdown"] li').each(function() {
+                     $('.dropdown-menu[aria-describedby="statusDropdown"] li').each(function() {
                        if ($(this).hasClass('divider')) {
                          return false;
                        }
@@ -229,7 +229,7 @@ var OCManager = (function($) {
                                                 })
                                                );
 
-                       $('.dropdown-menu[aria-labelledby="statusDropdown"]').prepend(statusEl);
+                       $('.dropdown-menu[aria-describedby="statusDropdown"]').prepend(statusEl);
                      });
                    },
    getInputs: function(_form) {
@@ -1113,6 +1113,23 @@ function personalEventEditable(id) {
   return str;
 }
 
+function getTooltip(details) {
+    var status = getStatus(details);
+
+    if (status == "Processing") {
+        return "Processing: please check back later";
+    }
+    else if (status == "Unwanted") {
+        return "No event, no consent provided, or recording was published and later retracted.";
+    }
+    else if(status == "Awaiting Review") {
+        return "Queued for editing, or waiting for consent to be provided (if requested)";
+    }
+    else if(status == "Failed") {
+        return "Technical failure: event not recorded successfully";
+    }
+}
+
 function getStatus(details) {
   var evStatus = 'Processing';
 
@@ -1154,7 +1171,6 @@ function getStatus(details) {
       }
       break;
     }
-
   return evStatus;
 }
 
@@ -1169,9 +1185,7 @@ function getVenues(event, expectObj) {
         res += '<li data-ref="' + key + '">' + ocManager.captureAgents[key].name + '</li>';
       }
     }
-
   }
-
   return res;
 }
 
@@ -1240,9 +1254,9 @@ $(document).ready(function() {
     }
   });
 
-  $('[aria-labelledby="statusDropdown"],[aria-labelledby="dayDropdown"]').on('click', 'li', function(e) {
+  $('[aria-describedby="statusDropdown"],[aria-describedby="dayDropdown"]').on('click', 'li', function(e) {
     var filterVal = $(this).data('ref');
-    var filterField = ($(this).parent().attr('aria-labelledby').split('D'))[0];
+    var filterField = ($(this).parent().attr('aria-describedby').split('D'))[0];
 
     if (filterVal == 'All') {
       ocManager.eventMgr.removeFilter(filterField);
