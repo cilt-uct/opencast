@@ -538,27 +538,24 @@
     <script src="js/util.js"></script>
     <script src="../shared/js/he.js"></script>
 
-    <script type="text/x-tmpl" id="tmpl-body">
-        {% for (var i=0; i < o.length; i++) { var item=o [i]; include( 'tmpl-row', o[i]); } %} </script>
-
-   
-            <script type="text/x-tmpl" id="tmpl-row">
-                <tr id="row-{%=o['id']%}" data-status="{%=o['status']%}">
-                    <td class="text-center">
-                      <input type="checkbox"  id="chk-{%=o['id']%}" />
-                      <label class="checkbox" for="chk-{%=o['id']%}">
-                        <span class="fa fa-square-o"></span>
-                        <span class="fa fa-check-square-o"></span>
-                      </label>
-                    </td>
-                    <td>{%=o['title']%}</td>
-                    <td>{%=o['presenters'].join(', ')%}</td>
-                    <td>{%=moment(o['start_date']).format('ddd D MMM YYYY, HH:mm') + (o['end_date'] ? ' - ' + moment(o['end_date']).format('HH:mm') : '')%}</td> <!-- TODO: add day of week -->
-                    <td>{%=getVenueName(o['location'] || o['agent_id'])%}</td>
-                    <td title="{%=getTooltip(o)%}">{%=getStatus(o)%}</td>
-                    <td>{%#getEditControls(o)%}</td>
-                </tr>
-            </script>
+    <script type="text/x-tmpl" id="tmpl-body">{% for (var i=0; i < o.length; i++) { var item=o [i]; include( 'tmpl-row', o[i]); } %} </script>  
+    <script type="text/x-tmpl" id="tmpl-row">
+        <tr id="row-{%=o['id']%}" data-status="{%=o['status']%}">
+            <td class="text-center">
+                <input type="checkbox"  id="chk-{%=o['id']%}" />
+                <label class="checkbox" for="chk-{%=o['id']%}">
+                <span class="fa fa-square-o"></span>
+                <span class="fa fa-check-square-o"></span>
+                </label>
+            </td>
+            <td>{%=o['title']%}</td>
+            <td>{%=o['presenters'].join(', ')%}</td>
+            <td>{%=moment(o['start_date']).format('ddd D MMM YYYY, HH:mm') + (o['end_date'] ? ' - ' + moment(o['end_date']).format('HH:mm') : '')%}</td> <!-- TODO: add day of week -->
+            <td>{%=getVenueName(o['location'] || o['agent_id'])%}</td>
+            <td title="{%=getTooltip(o)%}">{%=getStatus(o)%}</td>
+            <td>{%#getEditControls(o)%}</td>
+        </tr>
+    </script>
     <script type="text/x-tmpl" id="tmpl-personalbody">
         {% for (var i=0; i < o.length; i++) { var item=o [i]; include( 'tmpl-personalrow', o[i]); } %} </script>
 
