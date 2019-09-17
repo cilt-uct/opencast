@@ -13,8 +13,9 @@
 	</tr>
 </thead>
 	<tbody>
-	<% if(tracks && Array.isArray(tracks)) { %>
-		<% _.each(tracks, function(item) {
+    <% if(tracks && Array.isArray(tracks)) {
+        var caption_type = '';
+		_.each(tracks, function(item) {
                         var type = ""; %>
 			<tr>
                 <% if (item.type.indexOf('pic-in-pic') > -1) { type = '_PicInPic'; %>
@@ -27,15 +28,19 @@
                                   item.mimetype.indexOf("audio") > -1) { %>
 				<td>Presenter (audio-only)</td>
 
-                    <% } else if (item.type.indexOf('presenter') > -1) { type = "_Presenter"; %>
+                    <% } else if (item.type.indexOf('presenter') > -1) {
+                        type = "_Presenter";
+                        if (caption_type == '') { caption_type = type; } %>
 				<td>Presenter (video)</td>
 
-                    <% } else if (item.type.indexOf('presentation2') > -1) { type =
-                    "_Presentation"; %>
+                    <% } else if (item.type.indexOf('presentation2') > -1) {
+                        type = "_Presentation";
+                        if (caption_type == '') { caption_type = type; } %>
 				<td>Presentation 2 (video)</td>
 
-                    <% } else if (item.type.indexOf('presentation') > -1) { type =
-                    "_Presentation"; %>
+                    <% } else if (item.type.indexOf('presentation') > -1) {
+                        type = "_Presentation";
+                        if (caption_type == '') { caption_type = type; } %>
 				<td>Presentation (video)</td>
 
                     <% } else { %>
@@ -80,15 +85,14 @@
 		<% }); %>
 	<% } %>
     <% if(captions && Array.isArray(captions)) { %>
-		<% _.each(captions, function(item) {
-                        var type = ""; %>
+		<% _.each(captions, function(item) { %>
 			<tr>
                 <td>Caption</td>
 				<td><%= item.mimetype %></td>
 		        <td>&nbsp;</td>
 		        <td>
                     <a class="btn btn-default" href="<%= item.url.replace('http://media', 'https://media') +
-        				downloadURL + type + "." +
+        				downloadURL + caption_type + "." +
         				item.mimetype.substring(item.mimetype.lastIndexOf("/")+1, item.mimetype.length).replace('mpeg', 'mp3') %>"
                         role="button" download="<%= item.id %>">
 					    <span class="glyphicon glyphicon-download" aria-hidden="true"></span>
