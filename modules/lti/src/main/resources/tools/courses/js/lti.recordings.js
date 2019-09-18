@@ -128,6 +128,7 @@ function downloadTrack(e) {
   });
 }
 
+
 function getDuration(millis) {
   return new Date(millis).toISOString().substr(11, 8);
 }
@@ -234,7 +235,6 @@ function listEpisode(info) {
   epiItem.setAttribute('data-title', info.dcTitle || 'track');
   return epiItem;
 }
-
     var courseID = $.getURLParameter("sid"),
         limit = 10000,
         url = "/search/episode.json?sid=" + (courseID || '') + "&limit=" + limit + "&sort=DATE_PUBLISHED_DESC";
@@ -245,9 +245,27 @@ xhr({url: url, responseType: 'json'},
         .setAttribute('data-total',json['search-results'].total);
       var episodeList = document.querySelector('.lti-oc-all .list');
       if (Array.isArray(json['search-results'].result)) {
-        json['search-results'].result.forEach(function(episode) {
-          episodeList.appendChild( listEpisode(episode) );
-        });
+        var results = json['search-results'].result;
+        var results_count = results.length;
+        var courseYear = new Date(results[0]["dcCreated"]);
+        var currYear = new Date();
+
+        try {
+            if(courseYear.getFullYear() < currYear.getFullYear()) {
+                for(var x = results_count-1; x > 0; x--) {
+                    console.log(results[x]["dcCreated"]);
+                    episode = results[x];
+                    episodeList.appendChild( listEpisode(episode) );
+                    document.querySelector('.sorting').setAttribute('data-sort', 'asc');
+                }
+            } else {
+                json['search-results'].result.forEach(function(episode) {
+                    episodeList.appendChild( listEpisode(episode) );
+                });
+            }
+        } catch (e) {
+            console.log(e);
+        }
       }
       else if (typeof json['search-results'].result === 'object' && json['search-results'].result != null) {
         episodeList.appendChild( listEpisode(json['search-results'].result) );
@@ -264,8 +282,7 @@ xhr({url: url, responseType: 'json'},
     }
 );
 
-  var latestEpisodesURL = '/search/episode.json?sid=' + (courseID || '') + '&limit=3&sort=DATE_CREATED_DESC';         //fetch latest 3 (max) episodes for series
-  
+    var latestEpisodesURL = '/search/episode.json?sid=' + (courseID || '') + '&limit=3&sort=DATE_CREATED_DESC';         //fetch latest 3 (max) episodes for series
 
 xhr({url: latestEpisodesURL, responseType: 'json'}, 
   function(response) {
@@ -284,7 +301,6 @@ $('#neverRemindManagement').on('change', function(e) {
     localStorage.setItem('manageNotify', $(this)[0].checked);
   }
 });
-
 
 function toggleFilter(e) {
   this.parentNode
@@ -362,6 +378,7 @@ var EventsTable = function() {
   };
 
   this.toggleSort = function(e) {
+
     var sortDir = this.getAttribute('data-sort') === 'asc' ? 'desc' : 'asc';
     this.setAttribute('data-sort', sortDir);
     var curSort = this.parentNode.querySelector('.sorting');
