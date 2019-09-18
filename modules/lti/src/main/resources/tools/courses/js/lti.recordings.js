@@ -128,7 +128,6 @@ function downloadTrack(e) {
   });
 }
 
-
 function getDuration(millis) {
   return new Date(millis).toISOString().substr(11, 8);
 }
@@ -235,9 +234,10 @@ function listEpisode(info) {
   epiItem.setAttribute('data-title', info.dcTitle || 'track');
   return epiItem;
 }
-    var courseID = $.getURLParameter("sid"),
-        limit = 10000,
-        url = "/search/episode.json?sid=" + (courseID || '') + "&limit=" + limit + "&sort=DATE_PUBLISHED_DESC";
+
+var courseID = $.getURLParameter("sid"),
+    limit = 10000,
+    url = "/search/episode.json?sid=" + (courseID || '') + "&limit=" + limit + "&sort=DATE_PUBLISHED_DESC";
 
 xhr({url: url, responseType: 'json'},
     function(json) {
@@ -269,6 +269,7 @@ xhr({url: url, responseType: 'json'},
       else if (typeof json['search-results'].result === 'object' && json['search-results'].result != null) {
         episodeList.appendChild( listEpisode(json['search-results'].result) );
       }
+
       if (window.self !== window.top) {
         window.top.postMessage(JSON.stringify({
           subject: "lti.frameResize",
@@ -281,7 +282,7 @@ xhr({url: url, responseType: 'json'},
     }
 );
 
-    var latestEpisodesURL = '/search/episode.json?sid=' + (courseID || '') + '&limit=3&sort=DATE_CREATED_DESC';         //fetch latest 3 (max) episodes for series
+var latestEpisodesURL = '/search/episode.json?sid=' + (courseID || '') + '&limit=3&sort=DATE_CREATED_DESC';         //fetch latest 3 (max) episodes for series
 
 xhr({url: latestEpisodesURL, responseType: 'json'}, 
   function(response) {
