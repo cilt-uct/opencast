@@ -245,15 +245,14 @@ xhr({url: url, responseType: 'json'},
         .setAttribute('data-total',json['search-results'].total);
       var episodeList = document.querySelector('.lti-oc-all .list');
       if (Array.isArray(json['search-results'].result)) {
+        var currYear = new Date();
         var results = json['search-results'].result;
         var results_count = results.length;
         var courseYear = new Date(results[0]["dcCreated"]);
-        var currYear = new Date();
 
         try {
             if(courseYear.getFullYear() < currYear.getFullYear()) {
                 for(var x = results_count-1; x > 0; x--) {
-                    console.log(results[x]["dcCreated"]);
                     episode = results[x];
                     episodeList.appendChild( listEpisode(episode) );
                     document.querySelector('.sorting').setAttribute('data-sort', 'asc');
@@ -378,7 +377,6 @@ var EventsTable = function() {
   };
 
   this.toggleSort = function(e) {
-
     var sortDir = this.getAttribute('data-sort') === 'asc' ? 'desc' : 'asc';
     this.setAttribute('data-sort', sortDir);
     var curSort = this.parentNode.querySelector('.sorting');
