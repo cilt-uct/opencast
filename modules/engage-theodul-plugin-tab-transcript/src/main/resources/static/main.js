@@ -152,16 +152,26 @@ define(["jquery", "underscore", "backbone", "engage/core"], function($, _, Backb
     }
 
     function getVTT(captions) {
-        var request = new XMLHttpRequest();
-        request.open('GET', captions["url"], false);
-        request.send(null);
-
-        if(request.status === 200) {
-            return request.responseText;
-        } else {
-            console.error(request.statusText);
-            return "";
+        var vtt;
+        var settings = {
+            "async": true,
+            "crossDomain": true,
+            "url": captions['url'],
+            "method": "GET",
+            "headers": {
+                "Accept": "*/*",
+            }
         }
+
+        $.ajax(settings).done(function (response) {
+                vtt = response;
+            }
+        ).fail(function() {
+                vtt = undefined;
+            }
+        );
+
+        return vtt
     }
 
     var TranscriptTabView = Backbone.View.extend({
@@ -181,10 +191,13 @@ define(["jquery", "underscore", "backbone", "engage/core"], function($, _, Backb
 
                 if (!_.isUndefined(captions)) {
                     var vtt = getVTT(captions);
-                    vttText = vtt.split('\n\n');
+                    console.log(vtt);
 
-                    for (var i = 1; i < vttText.length; i++) {
-                        buildVTTObject(i, vttText)
+                    if(vtt) {
+                        vttText = vtt.split('\n\n');
+                        for (var i = 1; i < vttText.length; i++) {
+                            buildVTTObject(i, vttText)
+                        }
                     }
                 }
 
@@ -247,6 +260,9 @@ define(["jquery", "underscore", "backbone", "engage/core"], function($, _, Backb
 
     function buildVTTObject(index, vttText) {
         var line = vttText[index].replace(/\n/g, ' ')
+        if(line.trim() == '') {
+            return;
+        }
         var timeAndText = line.match(/(.*\d{3}) --> (.*\d{3})\s(.*)/);
         var timeAndTextObject = {}
         timeAndTextObject[startTime] = Utils.getTimeInMilliseconds(timeAndText[1]);
