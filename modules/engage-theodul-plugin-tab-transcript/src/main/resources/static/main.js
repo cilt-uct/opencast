@@ -152,26 +152,16 @@ define(["jquery", "underscore", "backbone", "engage/core"], function($, _, Backb
     }
 
     function getVTT(captions) {
-        var vtt;
-        var settings = {
-            "async": true,
-            "crossDomain": true,
-            "url": captions['url'],
-            "method": "GET",
-            "headers": {
-                "Accept": "*/*",
-            }
+        var request = new XMLHttpRequest();
+        request.open('GET', captions["url"], false);
+        request.send(null);
+
+        if(request.status === 200) {
+            return request.responseText;
+        } else {
+            console.error(request.statusText);
+            return undefined;
         }
-
-        $.ajax(settings).done(function (response) {
-                vtt = response;
-            }
-        ).fail(function() {
-                vtt = undefined;
-            }
-        );
-
-        return vtt
     }
 
     var TranscriptTabView = Backbone.View.extend({
@@ -191,7 +181,6 @@ define(["jquery", "underscore", "backbone", "engage/core"], function($, _, Backb
 
                 if (!_.isUndefined(captions)) {
                     var vtt = getVTT(captions);
-                    console.log(vtt);
 
                     if(vtt) {
                         vttText = vtt.split('\n\n');
