@@ -94,6 +94,7 @@ define(["jquery", "underscore", "backbone", "engage/core"], function($, _, Backb
     var mediapackageError = false;
     var translations = new Array();
     var Utils;
+    var Parser;
     var vttObjects = {};
     var currentTime = 0;
     var startTime = "startTime";
@@ -160,7 +161,7 @@ define(["jquery", "underscore", "backbone", "engage/core"], function($, _, Backb
             return request.responseText;
         } else {
             console.error(request.statusText);
-            return "";
+            return undefined;
         }
     }
 
@@ -181,10 +182,12 @@ define(["jquery", "underscore", "backbone", "engage/core"], function($, _, Backb
 
                 if (!_.isUndefined(captions)) {
                     var vtt = getVTT(captions);
-                    vttText = vtt.split('\n\n');
 
-                    for (var i = 1; i < vttText.length; i++) {
-                        buildVTTObject(i, vttText)
+                    if(vtt) {
+                        var vttText = Parser.parse(vtt, 'metadata')['cues'];
+                        for (var i = 0; i < vttText.length; i++) {
+                            buildVTTObject(i, vttText[i])
+                        }
                     }
                 }
 
@@ -246,12 +249,10 @@ define(["jquery", "underscore", "backbone", "engage/core"], function($, _, Backb
     }
 
     function buildVTTObject(index, vttText) {
-        var line = vttText[index].replace(/\n/g, ' ')
-        var timeAndText = line.match(/(.*\d{3}) --> (.*\d{3})\s(.*)/);
         var timeAndTextObject = {}
-        timeAndTextObject[startTime] = Utils.getTimeInMilliseconds(timeAndText[1]);
-        timeAndTextObject[endTime] = Utils.getTimeInMilliseconds(timeAndText[2]);
-        var sentence = timeAndText[3];
+        timeAndTextObject[startTime] = vttText[startTime]*1000;
+        timeAndTextObject[endTime] = vttText[endTime]*1000;
+        var sentence = vttText[text].replace(/\n/, " ");
         if(index != 1 && newLineRequired(sentence)) {
             timeAndTextObject[text] = sentence + "\n";
         } else {
@@ -332,6 +333,12 @@ define(["jquery", "underscore", "backbone", "engage/core"], function($, _, Backb
                     initPlugin();
                 }
             });
+        });
+
+        // load parser class
+        require([relative_plugin_path + "parser"], function (parser) {
+            Engage.log("Tab:Transcript: parser class loaded");
+            Parser = new WebVTTParser();
         });
 
         Engage.model.on(viewsModelChange, function () {
