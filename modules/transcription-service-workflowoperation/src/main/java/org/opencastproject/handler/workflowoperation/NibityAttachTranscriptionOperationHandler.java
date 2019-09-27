@@ -44,6 +44,8 @@ import org.slf4j.LoggerFactory;
 
 import java.io.InputStream;
 import java.net.URI;
+import java.util.SortedMap;
+import java.util.TreeMap;
 import java.util.UUID;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
@@ -55,14 +57,27 @@ public class NibityAttachTranscriptionOperationHandler extends AbstractWorkflowO
 
   /** Workflow configuration option keys */
   static final String TRANSCRIPTION_JOB_ID = "transcription-job-id";
-  static final String TARGET_CAPTION_FORMAT = "target-caption-format";
   static final String HAS_VTT = "has-vtt";
+  static final String TARGET_FLAVOR = "target-flavor";
+  static final String TARGET_TAG = "target-tag";
+  static final String TARGET_CAPTION_FORMAT = "target-caption-format";
 
   /** The transcription service */
   private TranscriptionService service = null;
 
   /** Workspace service */
   private Workspace workspace;
+
+  /** The configuration options for this handler */
+  private static final SortedMap<String, String> CONFIG_OPTIONS;
+
+  static {
+    CONFIG_OPTIONS = new TreeMap<String, String>();
+    CONFIG_OPTIONS.put(TRANSCRIPTION_JOB_ID, "The job id that identifies the file to be attached");
+    CONFIG_OPTIONS.put(TARGET_FLAVOR, "The target \"flavor\" of the transcription file");
+    CONFIG_OPTIONS.put(TARGET_TAG, "The target \"tag\" of the transcription file");
+    CONFIG_OPTIONS.put(TARGET_CAPTION_FORMAT, "The target caption format of the transcription file (dfxp, etc)");
+  }
 
   @Override
   protected void activate(ComponentContext cc) {

@@ -104,6 +104,14 @@
             <Export-Package>
               org.opencastproject.workflow.handler.workflowoperation;version=${project.version}
             </Export-Package>
+            <Service-Component>
+              OSGI-INF/google-speech-attach-transcription.xml,
+              OSGI-INF/google-speech-start-transcription.xml,
+              OSGI-INF/nibity-attach-transcription.xml,
+              OSGI-INF/nibity-start-transcription.xml,
+              OSGI-INF/start-watson-transcription.xml,
+              OSGI-INF/attach-watson-transcription.xml
+            </Service-Component>
           </instructions>
         </configuration>
       </plugin>

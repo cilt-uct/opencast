@@ -52,6 +52,7 @@ import org.opencastproject.transcription.persistence.TranscriptionDatabaseExcept
 import org.opencastproject.transcription.persistence.TranscriptionJobControl;
 import org.opencastproject.transcription.persistence.TranscriptionProviderControl;
 import org.opencastproject.util.OsgiUtil;
+import org.opencastproject.util.PathSupport;
 import org.opencastproject.util.data.Option;
 import org.opencastproject.workflow.api.ConfiguredWorkflow;
 import org.opencastproject.workflow.api.WorkflowDefinition;
@@ -137,7 +138,8 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
   private static final String DEFAULT_LANGUAGE = "en-US";
 
   // Nibity API
-  private static final String NIBITY_BASE_URL = "https://news.waywithwords.net/api/private";
+  // private static final String NIBITY_BASE_URL = "https://news.waywithwords.net/api/private";
+  private static final String NIBITY_BASE_URL = "https://api.nibity.com/v1";
   private static final long NIBITY_STATUS_SUCCESS = 500;
 
   private static final String PROVIDER = "nibity";
@@ -444,6 +446,10 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
 
   /**
    * Asynchronous Requests and Responses call to Nibity API
+   * https://documenter.getpostman.com/view/5815470/RznFpyb6
+   * https://api.nibity.com/v1/{id}/submit
+   * 
+   * New API endpoints
    * https://documenter.getpostman.com/view/6839874/2s9YeAAEsy
    * https://news.waywithwords.net/api/private/submit-job
    *
@@ -474,7 +480,8 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
 
     CloseableHttpResponse response = null;
 
-    String submitUrl = NIBITY_BASE_URL + "/" + nibityClientId + "/submit-job";
+    // String submitUrl = NIBITY_BASE_URL + "/" + nibityClientId + "/submit-job"; (new api endpoint)
+    String submitUrl = NIBITY_BASE_URL + "/" + nibityClientId + "/submit";
 
     logger.debug("Submitting new transcription job to Nibity API at {}", submitUrl);
 
@@ -571,6 +578,14 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
   }
 
   /**
+   * Get transcription job result:
+   * POST https://api.nibity.com/v1/{id}/check/ with files[0]=jobId
+   *   response: { "3765": { "auth": 504, "transcript_id": 7645 }, "3766": { "auth": 504, "transcript_id": 7735 } }
+   *
+   * POST https://api.nibity.com/v1/{id}/transcript/ with transcripts[0]=transcript_id
+   *   response: the transcript itself
+   * 
+   * New API endpoint
    * Get transcription job progress:
    * GET https://news.waywithwords.net/api/private/check/{job_id}/{file_id}
    *   response: {"data": [{"file_id": 500,
@@ -578,7 +593,7 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
    *                        "status": "Pending",
    *                        "captioning_status": "To be submitted"}
    *             ], "status": true, "code": 200}
-   *
+   * 
    * Called by WorkflowDispatcher.run() every WorkflowDispatchInterval
    */
   boolean checkJobResults(String jobId) throws TranscriptionServiceException, IOException {
@@ -677,7 +692,8 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
   }
 
   /**
-   * Get transcription result: https://news.waywithwords.net/api/private/collect/{job_id}/{file_id}
+   * Get transcription result: https://news.waywithwords.net/api/private/collect/{job_id}/{file_id} (NEW API)
+   * Get transcription result: https://api.nibity.com/v1/{id}/transcript/
    *
    * @param jobId
    * @return job details
@@ -690,10 +706,12 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
     CloseableHttpClient httpClient = makeHttpClient();
     CloseableHttpResponse response = null;
 
-    String transcriptUrl = NIBITY_BASE_URL + "/" + nibityClientId + "/collect";
+    // String transcriptUrl = NIBITY_BASE_URL + "/" + nibityClientId + "/collect"; (NEW API)
+
+    String transcriptUrl = NIBITY_BASE_URL + "/" + nibityClientId + "/transcript";
 
     List <NameValuePair> nvps = new ArrayList<NameValuePair>();
-    nvps.add(new BasicNameValuePair("files[0]", jobId));
+    // nvps.add(new BasicNameValuePair("files[0]", jobId));
     nvps.add(new BasicNameValuePair("transcripts[0][transcript_id]", Long.toString(transcriptId)));
     nvps.add(new BasicNameValuePair("transcripts[0][type]", "transcript"));
     nvps.add(new BasicNameValuePair("transcripts[1][transcript_id]", Long.toString(transcriptId)));
