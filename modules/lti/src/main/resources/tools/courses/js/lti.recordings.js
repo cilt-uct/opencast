@@ -75,6 +75,47 @@ function xhr(params, cb, fail, always) {
   request.send(params.data);
 }
 
+var user = [],
+    userUrl = '/info/me.json';
+
+xhr({url: userUrl, responseType: 'json'}, 
+  function(response) {
+    user = response.user;
+});
+
+$('#feedbackBtn').on('click', function() {
+  var parts = [],
+      feedbackUrl = "https://docs.google.com/forms/d/e/1FAIpQLSeXmOzYY3rwuB3Plj27kMcI-8B7PpBHkZOo_zi8dd15Zv3u4Q/viewform"; 
+
+  var tempVars = {
+    user: user,
+    mediaPackage_title: information.dcTitle,
+    mediaPackage_series: information.mediapackage.seriestitle,
+    mediaPackage_seriesid: 'S['+information.mediapackage.series+']',
+    mediaPackage_date: information.mediapackage.start
+  };  
+
+  if (tempVars.user['email']) {
+    parts.push('entry.508626498=' + tempVars.user.email);
+  }
+  if (tempVars.user['username']) {
+    parts.push('entry.277413167=' + tempVars.user.username);
+  }
+  if (tempVars.mediaPackage_series) {
+    parts.push('entry.1631189828=' + tempVars.mediaPackage_series);
+  }
+  if (tempVars.mediaPackage_seriesid) {
+    parts.push('entry.1638000924=' + tempVars.mediaPackage_seriesid);
+  }
+  if (tempVars.mediaPackage_date) {
+    var dt = new Date(tempVars.mediaPackage_date);
+    parts.push('entry.1375271116_year=' + dt.getFullYear());
+    parts.push('entry.1375271116_month=' + (dt.getMonth()+1));
+    parts.push('entry.1375271116_day=' + dt.getDate());
+  }
+  $('#feedbackBtn').attr('href', encodeURI(feedbackUrl + (parts.length > 0 ? '?' + parts.join('&') : '')));
+});
+
 function manageDownload(el, link) {
   if (isMac()) {
     if (!el.nextElementSibling || !el.nextElementSibling.tagName.toLowerCase != 'a') {
@@ -136,7 +177,10 @@ function isMac() {
   return navigator.platform.indexOf('Mac') > -1;
 }
 
+var information = undefined;
+
 function listEpisode(info) {
+    information = info;
   var epiItem = document.createElement('li');
 
   //Various DOM elements to contain episode information
