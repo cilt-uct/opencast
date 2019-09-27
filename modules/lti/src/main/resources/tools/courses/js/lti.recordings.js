@@ -75,12 +75,20 @@ function xhr(params, cb, fail, always) {
   request.send(params.data);
 }
 
-var user = [],
-    userUrl = '/info/me.json';
+var courseID = $.getURLParameter("sid"),
+    user = [],
+    seriesTitle = undefined,
+    userURL = "/info/me.json",
+    seriesURL = '/api/series/'+ courseID + '/metadata';
 
-xhr({url: userUrl, responseType: 'json'}, 
+xhr({url: userURL, responseType: 'json'}, 
   function(response) {
     user = response.user;
+});
+
+xhr({url: seriesURL, responseType: 'json'}, 
+  function(response) {
+    seriesTitle = response[0].fields[0].value;
 });
 
 $('#feedbackBtn').on('click', function() {
@@ -89,9 +97,8 @@ $('#feedbackBtn').on('click', function() {
 
   var tempVars = {
     user: user,
-    mediaPackage_title: information.dcTitle,
-    mediaPackage_series: information.mediapackage.seriestitle,
-    mediaPackage_seriesid: 'S['+information.mediapackage.series+']',
+    mediaPackage_series: seriesTitle,
+    mediaPackage_seriesid: 'S['+courseID+']',
     mediaPackage_date: information.mediapackage.start
   };  
 
@@ -279,8 +286,7 @@ function listEpisode(info) {
   return epiItem;
 }
 
-var courseID = $.getURLParameter("sid"),
-    limit = 10000,
+var limit = 10000,
     url = "/search/episode.json?sid=" + (courseID || '') + "&limit=" + limit + "&sort=DATE_PUBLISHED_DESC";
 
 xhr({url: url, responseType: 'json'},
