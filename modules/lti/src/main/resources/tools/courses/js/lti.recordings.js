@@ -75,11 +75,12 @@ function xhr(params, cb, fail, always) {
   request.send(params.data);
 }
 
+var maxLength = 0;
 var courseID = $.getURLParameter("sid"),
     user = [],
     seriesTitle = undefined,
     userURL = "/info/me.json",
-    seriesURL = '/api/series/'+ courseID + '/metadata';
+    seriesURL = '/api/series/'+ courseID + '/metadata';  
 
 xhr({url: userURL, responseType: 'json'}, 
   function(response) {
@@ -138,38 +139,6 @@ function manageDownload(el, link) {
   }
 }
 
-function downloadTrack(e) {
-  if (!this.value) {
-    return;
-  }
-  var url = this.value.replace('http:', 'https:');
-  var button = this.nextElementSibling;
-  button.href = url;
-  xhr({url: url, type: 'HEAD', responseType: 'response'}, function(res) {
-    if (res.status == 200) {
-      if (res.getResponseHeader('Content-Disposition')) {
-        var unitName = ['B', 'KB', 'MB', 'GB', 'TB', 'PB'];
-        var fileSize = parseInt(res.getResponseHeader('Content-Length'));
-        var unit = 0;
-        while (fileSize > 1024 && unit < 6) {
-          fileSize /= 1024;
-          unit++;
-        }
-        button.innerHTML = 'Download (' + parseInt(fileSize) + unitName[unit] + ')';
-   //     window.location = url;
-      }
-      else {
-        button.innerHTML = 'Download (Size unknown)';
-      }
-    }
-    else if (res.status == 404) {
-      alert('Unfortunately, that file could not be found. Please try another');
-    }
-  }, function(err) {
-    alert('Apologies, an error occurred in sourcing that file. The administrators have been contacted');
-  });
-}
-
 function getDuration(millis) {
   return new Date(millis).toISOString().substr(11, 8);
 }
@@ -178,103 +147,145 @@ function isMac() {
   return navigator.platform.indexOf('Mac') > -1;
 }
 
+function refreshModal() {
+    const mediaTrackList = document.getElementById("mediaList");
+    mediaTrackList.innerHTML = '';
+    mediaTrackList.parentNode.removeChild(mediaTrackList);
+}
+
+$(document).on("click", ".downloader", function () {
+    if(document.getElementById("mediaList")) {
+        refreshModal();
+    }
+
+    var modalLinks = document.getElementById('downloadLinks'),
+        dlLinks = document.createElement('ul'),
+        episodeTitle = $(this).data('title'),
+        episodePresenter = $(this).data('presenter'),
+        episodeDate = $(this).data('date'),
+        mediaTrack  = $(this).data('package')
+        timestamp = new Date(),
+        month = timestamp.getMonth() < 9 ? '0' + (timestamp.getMonth() + 1) : timestamp.getMonth() + 1,
+        day = (timestamp.getDate() < 10 ? '0' : '') + timestamp.getDate(),
+        dateStamp = "" + timestamp.getFullYear() + month + day; 
+
+        dlLinks.className = "list-group";
+        dlLinks.setAttribute('id', 'mediaList');
+        modalLinks.appendChild(dlLinks);
+
+    if (!Array.isArray(mediaTrack)) {
+        mediaTrack = [mediaTrack];
+    }
+
+    $('#titleHolder').html(episodeTitle);
+    $('#presenterHolder').html(episodePresenter);
+    $('#dateHolder').html(episodeDate);
+        
+    for(var i = 0; i < mediaTrack.length; i++) {
+        var downloadLink = document.createElement('li'),
+            dlHREF = document.createElement('a');
+
+        downloadLink.className = "list-group-item text-left";
+        dlHREF.title = "Download video";
+
+        var trackType = mediaTrack[i].type.split('/'),
+            fileType = mediaTrack[i].mimetype.split('/');
+        
+        dlHREF.href  = mediaTrack[i].url + '/download/' + episodeTitle + '_' + dateStamp + '_' + trackType[0].charAt(0).toUpperCase() + trackType[0].substring(1) + (fileType[0] === 'audio' ? '.mp3' : '.' + fileType[1]);
+
+        try {
+            var typeText = (trackType)[0];
+            dlHREF.innerHTML = '<i class="glyphicon glyphicon-download"></i>  ' + he.encode(typeText.charAt(0).toUpperCase() + typeText.substring(1) + ' - ' + (mediaTrack[i].hasOwnProperty('video') ? 'Video @ ' + mediaTrack[i].video.resolution : 
+            (mediaTrack[i].hasOwnProperty('audio') ? 'Audio' : "Undetermined Track"))) + '';
+
+            downloadLink.appendChild(dlHREF);
+            dlLinks.appendChild(downloadLink);
+            
+        } catch(e) {
+            console.log(e);
+        }
+        if (maxLength < mediaTrack.duration) {
+            maxLength = mediaTrack.duration;
+        }
+    }
+});
+
 function listEpisode(info) {
-  var epiItem = document.createElement('li');
+    var epiItem = document.createElement('li');
+    var recordid = info.id,
+        mediaTrack = info.mediapackage.media.track;
 
-  //Various DOM elements to contain episode information
-  var picSpan = document.createElement('span'),
-      titleSpan = document.createElement('span'),
-      creatorSpan = document.createElement('span'),
-      dateSpan = document.createElement('span'),
-      dlSpan = document.createElement('span'),
-      dlSelect = document.createElement('select'),
-      dlButton = document.createElement('a'),
-      vidLink = document.createElement('a'),
-      img = document.createElement('img');
-  epiItem.appendChild(picSpan);
-  epiItem.appendChild(titleSpan);
-  epiItem.appendChild(creatorSpan);
-  epiItem.appendChild(dateSpan);
-//  epiItem.appendChild(dlSpan);
+    //Various DOM elements to contain episode information
+    var picSpan = document.createElement('span'),
+        titleSpan = document.createElement('span'),
+        creatorSpan = document.createElement('span'),
+        dateSpan = document.createElement('span'),
+        dlSpan = document.createElement('span'),
+        downloadSpan = document.createElement('span'),
+        vidLink = document.createElement('a'),
+        img = document.createElement('img');
+        dlBtn = document.createElement('button'),
+        dlIcon = document.createElement('span'),
+        dlModal = document.createElement('div');
+    epiItem.appendChild(picSpan);
+    epiItem.appendChild(titleSpan);
+    epiItem.appendChild(creatorSpan);
+    epiItem.appendChild(dateSpan);
+    epiItem.appendChild(dlSpan);
+    dlSpan.appendChild(downloadSpan);
+    downloadSpan.appendChild(dlBtn);
 
-  titleSpan.innerHTML = '<span>' + he.encode(info.dcTitle) || '' + '</span>';
-  creatorSpan.innerHTML = '<span>' + he.encode(info.dcCreator ? info.dcCreator : '') + '</span>';
-  dateSpan.innerHTML = '<span>' + moment(info.dcCreated).format('D MMM YYYY HH:mm') || '' + '</span>';
+    titleSpan.innerHTML = '<span>' + he.encode(info.dcTitle) || '' + '</span>';
+    creatorSpan.innerHTML = '<span>' + he.encode(info.dcCreator ? info.dcCreator : '') + '</span>';
+    dateSpan.innerHTML = '<span>' + moment(info.dcCreated).format('D MMM YYYY HH:mm') || '' + '</span>';
 
-  vidLink.href = '/engage/theodul/ui/core.html?ltimode=true&id=' + info.id;
+    vidLink.href = '/engage/theodul/ui/core.html?ltimode=true&id=' + info.id;
 
-  picSpan.appendChild(vidLink);
+    picSpan.appendChild(vidLink);
 
-  //Loop thru pictures to find snapshot of video (append to img tag)
-  var attachments = info.mediapackage.attachments.attachment;
-  var fallback = "";
-  for (var i = 0, n = attachments.length; i < n; i++) {
-    if (!attachments[i].mimetype) {
-      continue;
+    //Loop thru pictures to find snapshot of video (append to img tag)
+    var attachments = info.mediapackage.attachments.attachment;
+    var fallback = "";
+    for (var i = 0, n = attachments.length; i < n; i++) {
+        if (!attachments[i].mimetype) {
+            continue;
+        }
+        else if (attachments[i].mimetype.indexOf('image') > -1 && attachments[i].type.indexOf('timeline+preview') === -1) {
+            fallback = info.mediapackage.attachments.attachment[i].url.replace('http:', 'https:');
+            if (attachments[i].type.indexOf('search+preview') > -1) {
+                img.src = info.mediapackage.attachments.attachment[i].url.replace('http:', 'https:'); //TODO: proper check to stop mixed-mode
+                break;
+            }
+        }
     }
-    else if (attachments[i].mimetype.indexOf('image') > -1 && attachments[i].type.indexOf('timeline+preview') === -1) {
-      fallback = info.mediapackage.attachments.attachment[i].url.replace('http:', 'https:');
-      if (attachments[i].type.indexOf('search+preview') > -1) {
-        img.src = info.mediapackage.attachments.attachment[i].url.replace('http:', 'https:'); //TODO: proper check to stop mixed-mode
-        break;
-      }
+    if (!img.src && fallback) {
+        img.src = fallback;
     }
-  }
-  if (!img.src && fallback) {
-    img.src = fallback;
-  }
-  vidLink.style.backgroundImage = 'url(' + img.src + ')'
+    vidLink.style.backgroundImage = 'url(' + img.src + ')';
+    vidLink.setAttribute('data-duration', getDuration(maxLength));
 
-  dlSpan.innerHTML = '<span></span>';
-  dlButton.innerHTML = 'Download';
-  dlButton.classList.add('button');
-  dlButton.target = '_blank';
-
-  //Populate select element with downloadable links
-  dlSpan.querySelector('span').appendChild(dlSelect);
-  dlSpan.querySelector('span').appendChild(dlButton);
-  dlSelect.innerHTML = '<option value="">--Select Media for Download--</option>';
-  var mediaTracks = info.mediapackage.media.track;
-  var maxLength = 0;
-  var timestamp = new Date();
-  var month = timestamp.getMonth() < 9 ? '0' + (timestamp.getMonth() + 1) : timestamp.getMonth() + 1;
-  var day = (timestamp.getDate() < 10 ? '0' : '') + timestamp.getDate();
-  var dateStamp = "" + timestamp.getFullYear() + month + day;    //TODO: consider multiple lectures on the same day
-  if (!Array.isArray(mediaTracks)) {
-    mediaTracks = [mediaTracks];
-  }
-  mediaTracks.forEach( function(mediaTrack) {
-    var trackType = mediaTrack.type.split('/');
-    var fileType = mediaTrack.mimetype.split('/');
-    var opt = document.createElement('option');
-    opt.value = mediaTrack.url + '/download/' + info.dcTitle + '_' + dateStamp + '_' + trackType[0].charAt(0).toUpperCase() + trackType[0].substring(1) + (fileType[0] === 'audio' ? '.mp3' : '.' + fileType[1]) ;
-    try {
-      var typeText = (mediaTrack.type.split('/'))[0];
-      opt.innerHTML = he.encode(typeText.charAt(0).toUpperCase() + typeText.substring(1) + ' - ' + (mediaTrack.hasOwnProperty('video') ? 'Video @ ' + mediaTrack.video.resolution : 
-                          (mediaTrack.hasOwnProperty('audio') ? 'Audio' : "Undetermined Track")));
-    } catch(e) {
-      console.log(e);
-    }
-    dlSelect.appendChild(opt);
-    if (maxLength < mediaTrack.duration) {
-      maxLength = mediaTrack.duration;
-    }
-  });
-  
-  //Event listener for the downloading of media tracks
-  dlSelect.addEventListener('change', downloadTrack, false);
-  vidLink.setAttribute('data-duration', getDuration(maxLength));
+    // design download button
+    dlBtn.setAttribute("id", recordid);
+    dlBtn.setAttribute("data-toggle", "modal");
+    dlBtn.className = "btn btn-primary downloader";
+    dlBtn.setAttribute("data-target", "#downloadModal"); 
+    dlBtn.setAttribute("data-id", recordid);
+    dlBtn.setAttribute("data-title", info.dcTitle);
+    dlBtn.setAttribute("data-presenter", info.dcCreator);
+    dlBtn.setAttribute("data-date", moment(info.dcCreated).format('D MMM YYYY HH:mm'));
+    dlBtn.setAttribute("data-package", JSON.stringify(mediaTrack));
+    dlBtn.innerHTML = '<i class="glyphicon glyphicon-download"></i> Download';
 
   //Set data attribute to make item searchable
-  var searchableObject = {
-    title: info.dcTitle || '',
-    createddate: info.dcCreated || '',
-    creator: info.dcCreator || ''
-  };
-  epiItem.setAttribute('data-id', info.id);
-  epiItem.setAttribute('data-search', JSON.stringify(searchableObject));
-  epiItem.setAttribute('data-title', info.dcTitle || 'track');
-  return epiItem;
+    var searchableObject = {
+        title: info.dcTitle || '',
+        createddate: info.dcCreated || '',
+        creator: info.dcCreator || ''
+    };
+    epiItem.setAttribute('data-id', info.id);
+    epiItem.setAttribute('data-search', JSON.stringify(searchableObject));
+    epiItem.setAttribute('data-title', info.dcTitle || 'track');
+    return epiItem;
 }
 
 var limit = 10000,

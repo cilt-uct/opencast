@@ -91,6 +91,25 @@
                       </div>
                     </div>
                   </ul>
+                  <div id="downloadModal" class="modal fade" data-backdrop="static" tabindex="-1" role="dialog" aria-labelledby="downloadModalLabel">
+                    <div class="modal-dialog" role="document">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal" aria-label="close">
+                                    <span aria-hidden="true" title="Close Popup">&times;</span>
+                                </button>
+                                <h3 class="modal-title" id="downloadModalLabel">Download videos</h3>
+                            </div>
+                            <div class="modal-body text-center" id="downloadLinks">
+                                <h3 id="titleHolder"></h3>
+                                <h4 id="presenterHolder"></h4>
+                                <h4 id="dateHolder"></h4>
+                            </div>
+                            <div class="modal-footer">
+                                <button class="btn btn-primary"  data-dismiss="modal" aria-hidden="true">Close</button>
+                            </div>
+                        </div>
+                    </div>
               </div>
           </div>
       </div>
@@ -102,6 +121,8 @@
     <script type="text/javascript" src="../shared/js/he.js"></script>
     <script type="text/javascript" src="../shared/js/lti.js?v=%version%"></script>
     <script type="text/javascript" src="js/lti.recordings.js?v=%version%"></script>
+    <script src= "https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+    <script  src= "https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
     <link href="https://fonts.googleapis.com/css?family=Open+Sans:300,300i,400,400i,600,600i,700,700i" rel="stylesheet">
   </body>
 </html>
