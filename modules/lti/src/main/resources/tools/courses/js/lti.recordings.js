@@ -75,6 +75,48 @@ function xhr(params, cb, fail, always) {
   request.send(params.data);
 }
 
+var courseID = $.getURLParameter("sid"),
+    user = [],
+    seriesTitle = undefined,
+    userURL = "/info/me.json",
+    seriesURL = '/api/series/'+ courseID + '/metadata';
+
+xhr({url: userURL, responseType: 'json'}, 
+  function(response) {
+    user = response.user;
+});
+
+xhr({url: seriesURL, responseType: 'json'}, 
+  function(response) {
+    seriesTitle = response[0].fields[0].value;
+});
+
+$('#feedbackBtn').on('click', function() {
+  var parts = [],
+      feedbackUrl = "https://docs.google.com/forms/d/e/1FAIpQLSeXmOzYY3rwuB3Plj27kMcI-8B7PpBHkZOo_zi8dd15Zv3u4Q/viewform"; 
+
+  var tempVars = {
+    user: user,
+    mediaPackage_series: seriesTitle,
+    mediaPackage_seriesid: 'S['+courseID+']'
+  };  
+
+  if (tempVars.user['email']) {
+    parts.push('entry.508626498=' + tempVars.user.email);
+  }
+  if (tempVars.user['username']) {
+    parts.push('entry.277413167=' + tempVars.user.username);
+  }
+  if (tempVars.mediaPackage_series) {
+    parts.push('entry.1631189828=' + tempVars.mediaPackage_series);
+  }
+  if (tempVars.mediaPackage_seriesid) {
+    parts.push('entry.1638000924=' + tempVars.mediaPackage_seriesid);
+  }
+
+  $('#feedbackBtn').attr('href', encodeURI(feedbackUrl + (parts.length > 0 ? '?' + parts.join('&') : '')));
+});
+
 function manageDownload(el, link) {
   if (isMac()) {
     if (!el.nextElementSibling || !el.nextElementSibling.tagName.toLowerCase != 'a') {
@@ -235,8 +277,7 @@ function listEpisode(info) {
   return epiItem;
 }
 
-var courseID = $.getURLParameter("sid"),
-    limit = 10000,
+var limit = 10000,
     url = "/search/episode.json?sid=" + (courseID || '') + "&limit=" + limit + "&sort=DATE_PUBLISHED_DESC";
 
 xhr({url: url, responseType: 'json'},
