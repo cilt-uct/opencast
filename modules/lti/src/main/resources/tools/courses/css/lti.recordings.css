@@ -757,6 +757,19 @@ li span span {
     color:white !important; 
   }
 
+#downloadModal.fade{
+    -webkit-transition: opacity .1s linear;
+    -moz-transition: opacity .1s linear;
+     -ms-transition: opacity .1s linear;
+      -o-transition: opacity .1s linear;
+         transition: opacity .1s linear;
+}
+
+.table-condensed>tbody>tr>td,.table-condensed>tbody>tr>th,.table-condensed>tfoot>tr>td,.table-condensed>tfoot>tr>th,.table-condensed>thead>tr>td,.table-condensed>thead>tr>th{
+    padding:2px;
+    font-size: .8rem;
+}
+
 @keyframes pulse {
   0% {
     background: rgba(0,160,255,0.3);

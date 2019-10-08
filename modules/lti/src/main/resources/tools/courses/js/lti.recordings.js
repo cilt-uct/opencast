@@ -147,67 +147,149 @@ function isMac() {
   return navigator.platform.indexOf('Mac') > -1;
 }
 
-function refreshModal() {
-    const mediaTrackList = document.getElementById("mediaList");
-    mediaTrackList.innerHTML = '';
-    mediaTrackList.parentNode.removeChild(mediaTrackList);
+function sortTable() {
+    var table, rows, switching, i, x, y, shouldSwitch;
+    table = document.getElementById("mediaTable");
+    switching = true;
+
+    while (switching) {
+        switching = false;
+        rows = table.rows;
+
+        for (i = 1; i < (rows.length - 1); i++) {
+            shouldSwitch = false;
+            x = rows[i].getElementsByTagName("td")[2];
+            y = rows[i + 1].getElementsByTagName("td")[2];
+        
+            if (x.innerHTML.toLowerCase() > y.innerHTML.toLowerCase()) {
+                shouldSwitch = true;
+                break;
+            }
+        }
+        if (shouldSwitch) {
+            rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
+            switching = true;
+        }
+    }
 }
 
 $(document).on("click", ".downloader", function () {
-    if(document.getElementById("mediaList")) {
-        refreshModal();
+    if(document.getElementById("mediaLinks")) {
+        $('#mediaLinks').html("");
     }
 
-    var modalLinks = document.getElementById('downloadLinks'),
-        dlLinks = document.createElement('ul'),
-        episodeTitle = $(this).data('title'),
+    var episodeTitle = $(this).data('title'),
         episodePresenter = $(this).data('presenter'),
         episodeDate = $(this).data('date'),
-        mediaTrack  = $(this).data('package')
+        mediaTrack  = $(this).data('package'),
+        captions  = $(this).data('captions'),
         timestamp = new Date(),
         month = timestamp.getMonth() < 9 ? '0' + (timestamp.getMonth() + 1) : timestamp.getMonth() + 1,
         day = (timestamp.getDate() < 10 ? '0' : '') + timestamp.getDate(),
         dateStamp = "" + timestamp.getFullYear() + month + day; 
 
-        dlLinks.className = "list-group";
-        dlLinks.setAttribute('id', 'mediaList');
-        modalLinks.appendChild(dlLinks);
+    $('#titleHolder').html(episodeTitle);
+    $('#presenterHolder').html(episodePresenter);
+    $('#dateHolder').html(episodeDate);
 
     if (!Array.isArray(mediaTrack)) {
         mediaTrack = [mediaTrack];
     }
 
-    $('#titleHolder').html(episodeTitle);
-    $('#presenterHolder').html(episodePresenter);
-    $('#dateHolder').html(episodeDate);
+    try {
+        var  tBody = document.getElementById('mediaLinks');
+        _.forEach(mediaTrack, function(item) {
+            var type, quality, videoName, caption_type, 
+                tRow = document.createElement('tr'),
+                tCol1 = document.createElement('td'),
+                tCol2 = document.createElement('td'),
+                tCol3 = document.createElement('td'),
+                tCol4 = document.createElement('td'),                
+                trackType = item.type.split('/'),
+                fileType = item.mimetype.split('/');
         
-    for(var i = 0; i < mediaTrack.length; i++) {
-        var downloadLink = document.createElement('li'),
-            dlHREF = document.createElement('a');
-
-        downloadLink.className = "list-group-item text-left";
-        dlHREF.title = "Download video";
-
-        var trackType = mediaTrack[i].type.split('/'),
-            fileType = mediaTrack[i].mimetype.split('/');
-        
-        dlHREF.href  = mediaTrack[i].url + '/download/' + episodeTitle + '_' + dateStamp + '_' + trackType[0].charAt(0).toUpperCase() + trackType[0].substring(1) + (fileType[0] === 'audio' ? '.mp3' : '.' + fileType[1]);
-
-        try {
-            var typeText = (trackType)[0];
-            dlHREF.innerHTML = '<i class="glyphicon glyphicon-download"></i>  ' + he.encode(typeText.charAt(0).toUpperCase() + typeText.substring(1) + ' - ' + (mediaTrack[i].hasOwnProperty('video') ? 'Video @ ' + mediaTrack[i].video.resolution : 
-            (mediaTrack[i].hasOwnProperty('audio') ? 'Audio' : "Undetermined Track"))) + '';
-
-            downloadLink.appendChild(dlHREF);
-            dlLinks.appendChild(downloadLink);
+            downloadURL = item.url.replace("http", "https") + '/download/' + episodeTitle + '_' + dateStamp + '_' + trackType[0].charAt(0).toUpperCase() + trackType[0].substring(1) + (fileType[0] === 'audio' ? '.mp3' : '.' + fileType[1]);
             
-        } catch(e) {
-            console.log(e);
+            if (item.type.indexOf('pic-in-pic') > -1) { 
+                type = '_PicInPic';
+                videoName = "Picture-in-Picture";
+            } else if (item.type.indexOf('composite') > -1) { 
+                type = '_SideBySide';
+                videoName = "Side By Side";
+            } else if (item.type.indexOf('presenter') > -1 &&
+                item.mimetype.indexOf("audio") > -1) {
+                videoName = "Presenter (audio-only)";
+            } else if (item.type.indexOf('presenter') > -1) {
+                type = "_Presenter";
+                if (caption_type == '') { caption_type = type; }
+                videoName = "Presenter (video)";
+            } else if (item.type.indexOf('presentation2') > -1) {
+                type = "_Presentation";
+                if (caption_type == '') { caption_type = type; }
+                videoName = "Presentation 2 (video)";
+            } else if (item.type.indexOf('presentation') > -1) {
+                type = "_Presentation";
+                if (caption_type == '') { caption_type = type; }
+                videoName = "Presentation (video)";
+            } else {
+                videoName = "Media track (" + item.type + ")";
+            }
+
+            if(typeof  item.video !== "undefined") {
+                var vidDims =  item.video.resolution.split('x')
+                                .map(function(dim) {
+                                    return parseInt(dim);
+                                });
+                var pixelCount = vidDims[0] * vidDims[1];
+                var isLandscape = vidDims[0] > vidDims[1];
+                if (pixelCount >= 921600 ){
+                    quality = 'High Quality (' +  ( isLandscape ? vidDims[1] + 'p' :  item.video.resolution) + ')';
+                } else if (pixelCount >= 307200 ){
+                    quality = 'Medium Quality (' + (isLandscape ? vidDims[1] + 'p' :  item.video.resolution) + ')';
+                } else {
+                    quality = 'Low Quality (' + (isLandscape ? vidDims[1] + 'p' :  item.video.resolution) + ')';
+                }
+            } else if (item.audio &&  item.audio.bitrate) {
+                quality = parseInt(item.audio.bitrate/1000) + "kbps";
+            }
+            
+            tBody.appendChild(tRow);
+            tCol1.innerHTML = videoName;
+            tCol2.innerHTML = item.mimetype;
+            tCol3.innerHTML = quality;
+            tCol4.innerHTML = '<a class="btn btn-default btn-sm" role="button" href="' + downloadURL + '"><i class="glyphicon glyphicon-download"></i></a>';
+        
+            tRow.appendChild(tCol1);
+            tRow.appendChild(tCol2);
+            tRow.appendChild(tCol3);
+            tRow.appendChild(tCol4);
+        });   
+        
+        if(captions && Array.isArray(captions)) {
+            _.forEach(captions, function(item) {
+                var tCaptionRow = document.createElement('tr'),
+                    tCaptionCol1 = document.createElement('td'),
+                    tCaptionCol2 = document.createElement('td'),
+                    tCaptionCol3 = document.createElement('td'),
+                    tCaptionCol4 = document.createElement('td'), 
+                    captionDownloadURL = item.url.replace("http", "https") + '/download/';
+
+                tBody.appendChild(tCaptionRow);
+                tCaptionCol1.innerHTML = "Caption";
+                tCaptionCol2.innerHTML = item.mimetype;
+                tCaptionCol3.innerHTML = "";
+                tCaptionCol4.innerHTML = "<a class='btn btn-default btn-sm' role='button' href='" + captionDownloadURL + "'><i class='glyphicon glyphicon-download'></i></a>";
+
+                tCaptionRow.appendChild(tCaptionCol1);
+                tCaptionRow.appendChild(tCaptionCol2);
+                tCaptionRow.appendChild(tCaptionCol3);
+                tCaptionRow.appendChild(tCaptionCol4);
+            });
         }
-        if (maxLength < mediaTrack.duration) {
-            maxLength = mediaTrack.duration;
-        }
+    } catch(e) {
+        console.log(e);
     }
+    sortTable();
 });
 
 function listEpisode(info) {
@@ -245,17 +327,19 @@ function listEpisode(info) {
 
     //Loop thru pictures to find snapshot of video (append to img tag)
     var attachments = info.mediapackage.attachments.attachment;
+    var captions = [];
     var fallback = "";
     for (var i = 0, n = attachments.length; i < n; i++) {
         if (!attachments[i].mimetype) {
             continue;
-        }
-        else if (attachments[i].mimetype.indexOf('image') > -1 && attachments[i].type.indexOf('timeline+preview') === -1) {
+        } else if (attachments[i].mimetype.indexOf('image') > -1 && attachments[i].type.indexOf('timeline+preview') === -1) {
             fallback = info.mediapackage.attachments.attachment[i].url.replace('http:', 'https:');
             if (attachments[i].type.indexOf('search+preview') > -1) {
                 img.src = info.mediapackage.attachments.attachment[i].url.replace('http:', 'https:'); //TODO: proper check to stop mixed-mode
                 break;
             }
+        } else if (attachments[i].type.indexOf('captions') >= 0 || attachments[i].mimetype == 'text/vtt') {
+            captions.push(attachments[i]);
         }
     }
     if (!img.src && fallback) {
@@ -274,6 +358,7 @@ function listEpisode(info) {
     dlBtn.setAttribute("data-presenter", info.dcCreator);
     dlBtn.setAttribute("data-date", moment(info.dcCreated).format('D MMM YYYY HH:mm'));
     dlBtn.setAttribute("data-package", JSON.stringify(mediaTrack));
+    dlBtn.setAttribute("data-captions", JSON.stringify(captions));
     dlBtn.innerHTML = '<i class="glyphicon glyphicon-download"></i> Download';
 
   //Set data attribute to make item searchable

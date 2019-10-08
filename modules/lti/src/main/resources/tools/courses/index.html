@@ -101,9 +101,20 @@
                                 <h3 class="modal-title" id="downloadModalLabel">Download videos</h3>
                             </div>
                             <div class="modal-body text-center" id="downloadLinks">
-                                <h3 id="titleHolder"></h3>
-                                <h4 id="presenterHolder"></h4>
-                                <h4 id="dateHolder"></h4>
+                                <h4 id="titleHolder"></h4>
+                                <h5 id="presenterHolder"></h5>
+                                <h5 id="dateHolder"></h5>
+                                <table class="table table-condensed table-sml table-bordered table-hover text-left" id="mediaTable">
+                                    <thead>
+                                        <tr>
+                                            <th>Type</th>
+                                            <th>Format</th>
+                                            <th>Resolution</th>
+                                            <th>Download</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="mediaLinks"></tbody>
+                                </table>
                             </div>
                             <div class="modal-footer">
                                 <button class="btn btn-primary"  data-dismiss="modal" aria-hidden="true">Close</button>
@@ -121,8 +132,9 @@
     <script type="text/javascript" src="../shared/js/he.js"></script>
     <script type="text/javascript" src="../shared/js/lti.js?v=%version%"></script>
     <script type="text/javascript" src="js/lti.recordings.js?v=%version%"></script>
-    <script src= "https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
-    <script  src= "https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    <script src= "js/jquery2.js"></script>
+    <script  src= "js/bootstrap.js"></script>
+    <script src="js/underscore.js"></script>
     <link href="https://fonts.googleapis.com/css?family=Open+Sans:300,300i,400,400i,600,600i,700,700i" rel="stylesheet">
-  </body>
+</body>
 </html>
