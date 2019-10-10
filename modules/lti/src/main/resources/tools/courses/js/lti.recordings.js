@@ -75,7 +75,7 @@ function xhr(params, cb, fail, always) {
   request.send(params.data);
 }
 
-var maxLength = 0;
+var maxLength = 0, clicked = false, episodeid = "";
 var courseID = $.getURLParameter("sid"),
     user = [],
     seriesTitle = undefined,
@@ -147,6 +147,48 @@ function isMac() {
   return navigator.platform.indexOf('Mac') > -1;
 }
 
+$(document).on("click", ".dlEpisode", function () {
+    var episodeURL = $(this).data('dlurl'),
+        episodeID = $(this).data('id');
+
+    window.location = episodeURL;
+    if(clicked) {
+        if(episodeID !== episodeid) {
+            clicked = false;
+            trackUser(episodeID);
+        }
+    }else {
+        trackUser(episodeID);
+    }
+});
+
+$(document).on("click", ".dlCaption", function () {
+    var episodeURL = $(this).data('dlurl'),
+        episodeID = $(this).data('id');
+
+    window.location = episodeURL;
+    if(clicked) {
+        if(episodeID !== episodeid) {
+            clicked = false;
+            trackUser(episodeID);
+        }
+    }else {
+        trackUser(episodeID);
+    }
+});
+
+function trackUser(episodeID) {
+    episodeid = episodeID;
+    $.ajax({
+        type: 'PUT', 
+        dataType: 'json', 
+        url:  "/usertracking", 
+        headers: {"Accept": "text/plain, */*; q=0.01"},
+        data: {"id": episodeID, "type": "VIEWS", "in" : 0}
+    });    
+    clicked = true;
+}
+
 function sortTable() {
     var table, rows, switching, i, x, y, shouldSwitch;
     table = document.getElementById("mediaTable");
@@ -183,10 +225,11 @@ $(document).on("click", ".downloader", function () {
         episodeDate = $(this).data('date'),
         mediaTrack  = $(this).data('package'),
         captions  = $(this).data('captions'),
+        episodeID  = $(this).data('id'),
         timestamp = new Date(),
         month = timestamp.getMonth() < 9 ? '0' + (timestamp.getMonth() + 1) : timestamp.getMonth() + 1,
         day = (timestamp.getDate() < 10 ? '0' : '') + timestamp.getDate(),
-        dateStamp = "" + timestamp.getFullYear() + month + day; 
+        dateStamp = "" + timestamp.getFullYear() + month + day;
 
     $('#titleHolder').html(episodeTitle);
     $('#presenterHolder').html(episodePresenter);
@@ -257,7 +300,7 @@ $(document).on("click", ".downloader", function () {
             tCol1.innerHTML = videoName;
             tCol2.innerHTML = item.mimetype;
             tCol3.innerHTML = quality;
-            tCol4.innerHTML = '<a class="btn btn-default btn-sm" role="button" href="' + downloadURL + '"><i class="glyphicon glyphicon-download"></i></a>';
+            tCol4.innerHTML = "<a class='btn btn-default btn-sm dlEpisode' id='" + episodeID + "' role='button' data-dlurl='" + downloadURL + "'data-id='" + episodeID +"'><i class='glyphicon glyphicon-download'></i></a>";
         
             tRow.appendChild(tCol1);
             tRow.appendChild(tCol2);
@@ -278,7 +321,7 @@ $(document).on("click", ".downloader", function () {
                 tCaptionCol1.innerHTML = "Caption";
                 tCaptionCol2.innerHTML = item.mimetype;
                 tCaptionCol3.innerHTML = "";
-                tCaptionCol4.innerHTML = "<a class='btn btn-default btn-sm' role='button' href='" + captionDownloadURL + "'><i class='glyphicon glyphicon-download'></i></a>";
+                tCaptionCol4.innerHTML = "<a class='btn btn-default btn-sm dlCaption' id='" + episodeID + "' role='button' data-dlurl='" + captionDownloadURL + "'data-id=" + episodeID +"><i class='glyphicon glyphicon-download'></i></a>";
 
                 tCaptionRow.appendChild(tCaptionCol1);
                 tCaptionRow.appendChild(tCaptionCol2);
