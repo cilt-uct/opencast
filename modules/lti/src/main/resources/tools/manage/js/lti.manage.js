@@ -1213,6 +1213,7 @@ function getDayTimeFromMinutes(mins) {
 }
 
 $(document).ready(function() {
+  closeSeries();
   $('li[data-ref="date_range"]').daterangepicker({
     opens: 'left',
     autoApply: true
@@ -2398,6 +2399,29 @@ function removeModal(_modal, title) {
   }, 15000);
 }
 
+function closeSeries() {
+    var urlParams = new URLSearchParams(window.location.search),
+        seriesID = urlParams.get('sid'),
+        url = "/api/series/" + seriesID + "/metadata?type=ext/series";
+
+    $.get({url: url, responseType: 'json'}, 
+        function(response) {
+            var seriesStatus = "";
+            for(var i = 0; i<response.length;i++){
+                if(response[i].id == 'series-locked') {
+                    seriesStatus = response[i].value;
+                }
+            }
+            if(seriesStatus === true) {
+                $('#btnTtScheduler').hide();
+                $('#btnSchedule').hide();
+                $('#btnUpload').hide();
+                $("#grid th:nth-child(7)").hide();
+                $("#grid td:nth-child(7)").hide();
+            }
+        }
+    )
+}
 
 var pollSession = setInterval(function() {
   $.ajax({
