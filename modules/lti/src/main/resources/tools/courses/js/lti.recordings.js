@@ -75,7 +75,7 @@ function xhr(params, cb, fail, always) {
   request.send(params.data);
 }
 
-var maxLength = 0, clicked = false, episodeid = "";
+var maxLength = 0;
 var courseID = $.getURLParameter("sid"),
     user = [],
     seriesTitle = undefined,
@@ -147,38 +147,34 @@ function isMac() {
   return navigator.platform.indexOf('Mac') > -1;
 }
 
-$(document).on("click", ".dlEpisode", function () {
-    var episodeURL = $(this).data('dlurl'),
-        episodeID = $(this).data('id');
+$(document).on("click", ".dlEpisode, .dlCaption", function () {
+    var episode_id = $(this).data('episodeId'),
+        $el = $('li[data-id="'+ episode_id +'"]');
 
-    window.location = episodeURL;
-    if(clicked) {
-        if(episodeID !== episodeid) {
-            clicked = false;
-            trackUser(episodeID);
-        }
-    }else {
-        trackUser(episodeID);
+    console.log(episode_id + ': '+ ($(el).data('downloaded')?'Y':'N'));
+
+    if ($(el).data('downloaded') === false) {
+        $el.data('downloaded', true);
+        trackUser(episode_id);
     }
 });
 
-$(document).on("click", ".dlCaption", function () {
-    var episodeURL = $(this).data('dlurl'),
-        episodeID = $(this).data('id');
+// $(document).on("click", ".dlCaption", function () {
+//     var episodeURL = $(this).data('dlurl'),
+//         episodeID = $(this).data('id');
 
-    window.location = episodeURL;
-    if(clicked) {
-        if(episodeID !== episodeid) {
-            clicked = false;
-            trackUser(episodeID);
-        }
-    }else {
-        trackUser(episodeID);
-    }
-});
+//     window.location = episodeURL;
+//     if(clicked) {
+//         if(episodeID !== episodeid) {
+//             clicked = false;
+//             trackUser(episodeID);
+//         }
+//     }else {
+//         trackUser(episodeID);
+//     }
+// });
 
 function trackUser(episodeID) {
-    episodeid = episodeID;
     $.ajax({
         type: 'PUT', 
         dataType: 'json', 
@@ -186,7 +182,6 @@ function trackUser(episodeID) {
         headers: {"Accept": "text/plain, */*; q=0.01"},
         data: {"id": episodeID, "type": "VIEWS", "in" : 0}
     });    
-    clicked = true;
 }
 
 function sortTable() {
@@ -300,7 +295,7 @@ $(document).on("click", ".downloader", function () {
             tCol1.innerHTML = videoName;
             tCol2.innerHTML = item.mimetype;
             tCol3.innerHTML = quality;
-            tCol4.innerHTML = "<a class='btn btn-default btn-sm dlEpisode' id='" + episodeID + "' role='button' data-dlurl='" + downloadURL + "'data-id='" + episodeID +"'><i class='glyphicon glyphicon-download'></i></a>";
+            tCol4.innerHTML = "<a class='btn btn-default btn-sm dlEpisode' data-episodeId='" + episodeID + "' role='button' data-dlurl='" + downloadURL + "'><i class='glyphicon glyphicon-download'></i></a>";
         
             tRow.appendChild(tCol1);
             tRow.appendChild(tCol2);
@@ -321,7 +316,7 @@ $(document).on("click", ".downloader", function () {
                 tCaptionCol1.innerHTML = "Caption";
                 tCaptionCol2.innerHTML = item.mimetype;
                 tCaptionCol3.innerHTML = "";
-                tCaptionCol4.innerHTML = "<a class='btn btn-default btn-sm dlCaption' id='" + episodeID + "' role='button' data-dlurl='" + captionDownloadURL + "'data-id=" + episodeID +"><i class='glyphicon glyphicon-download'></i></a>";
+                tCaptionCol4.innerHTML = "<a class='btn btn-default btn-sm dlCaption' data-episodeId='" + episodeID + "' role='button' data-dlurl='" + captionDownloadURL + "'><i class='glyphicon glyphicon-download'></i></a>";
 
                 tCaptionRow.appendChild(tCaptionCol1);
                 tCaptionRow.appendChild(tCaptionCol2);
@@ -398,6 +393,7 @@ function listEpisode(info) {
     dlBtn.setAttribute("data-target", "#downloadModal"); 
     dlBtn.setAttribute("data-id", recordid);
     dlBtn.setAttribute("data-title", info.dcTitle);
+    dlBtn.setAttribute("data-downloaded", false);
     dlBtn.setAttribute("data-presenter", info.dcCreator);
     dlBtn.setAttribute("data-date", moment(info.dcCreated).format('D MMM YYYY HH:mm'));
     dlBtn.setAttribute("data-package", JSON.stringify(mediaTrack));
