@@ -151,9 +151,9 @@ $(document).on("click", ".dlEpisode, .dlCaption", function () {
     var episode_id = $(this).data('episodeId'),
         $el = $('#'+ episode_id);
 
-    console.log(episode_id + ': '+ ($(el).data('downloaded')?'Y':'N'));
+    console.log(episode_id + ': '+ ($el.data('downloaded')?'Y':'N'));
 
-    if ($(el).data('downloaded') === false) {
+    if ($el.data('downloaded') === false) {
         $el.data('downloaded', true);
         trackUser(episode_id);
     }
