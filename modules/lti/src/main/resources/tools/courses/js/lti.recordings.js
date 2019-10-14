@@ -80,27 +80,27 @@ var courseID = $.getURLParameter("sid"),
     user = [],
     seriesTitle = undefined,
     userURL = "/info/me.json",
-    seriesURL = '/api/series/'+ courseID + '/metadata';  
+    seriesURL = '/api/series/'+ courseID + '/metadata';
 
-xhr({url: userURL, responseType: 'json'}, 
+xhr({url: userURL, responseType: 'json'},
   function(response) {
     user = response.user;
 });
 
-xhr({url: seriesURL, responseType: 'json'}, 
+xhr({url: seriesURL, responseType: 'json'},
   function(response) {
     seriesTitle = response[0].fields[0].value;
 });
 
 $('#feedbackBtn').on('click', function() {
   var parts = [],
-      feedbackUrl = "https://docs.google.com/forms/d/e/1FAIpQLSeXmOzYY3rwuB3Plj27kMcI-8B7PpBHkZOo_zi8dd15Zv3u4Q/viewform"; 
+      feedbackUrl = "https://docs.google.com/forms/d/e/1FAIpQLSeXmOzYY3rwuB3Plj27kMcI-8B7PpBHkZOo_zi8dd15Zv3u4Q/viewform";
 
   var tempVars = {
     user: user,
     mediaPackage_series: seriesTitle,
     mediaPackage_seriesid: 'S['+courseID+']'
-  };  
+  };
 
   if (tempVars.user['email']) {
     parts.push('entry.508626498=' + tempVars.user.email);
@@ -159,12 +159,12 @@ $(document).on("click", ".dlEpisode, .dlCaption", function () {
 
 function trackUser(episodeID) {
     $.ajax({
-        type: 'PUT', 
-        dataType: 'json', 
-        url:  "/usertracking", 
+        type: 'PUT',
+        dataType: 'json',
+        url:  "/usertracking",
         headers: {"Accept": "text/plain, */*; q=0.01"},
         data: {"id": episodeID, "type": "VIEWS", "in" : 0}
-    });    
+    });
 }
 
 function sortTable() {
@@ -180,7 +180,7 @@ function sortTable() {
             shouldSwitch = false;
             x = rows[i].getElementsByTagName("td")[2];
             y = rows[i + 1].getElementsByTagName("td")[2];
-        
+
             if (x.innerHTML.toLowerCase() > y.innerHTML.toLowerCase()) {
                 shouldSwitch = true;
                 break;
@@ -220,21 +220,21 @@ $(document).on("click", ".downloader", function () {
     try {
         var  tBody = document.getElementById('mediaLinks');
         _.forEach(mediaTrack, function(item) {
-            var type, quality, videoName, caption_type, 
+            var type, quality, videoName, caption_type,
                 tRow = document.createElement('tr'),
                 tCol1 = document.createElement('td'),
                 tCol2 = document.createElement('td'),
                 tCol3 = document.createElement('td'),
-                tCol4 = document.createElement('td'),                
+                tCol4 = document.createElement('td'),
                 trackType = item.type.split('/'),
                 fileType = item.mimetype.split('/');
-        
+
             downloadURL = item.url.replace("http", "https") + '/download/' + episodeTitle + '_' + dateStamp + '_' + trackType[0].charAt(0).toUpperCase() + trackType[0].substring(1) + (fileType[0] === 'audio' ? '.mp3' : '.' + fileType[1]);
-            
-            if (item.type.indexOf('pic-in-pic') > -1) { 
+
+            if (item.type.indexOf('pic-in-pic') > -1) {
                 type = '_PicInPic';
                 videoName = "Picture-in-Picture";
-            } else if (item.type.indexOf('composite') > -1) { 
+            } else if (item.type.indexOf('composite') > -1) {
                 type = '_SideBySide';
                 videoName = "Side By Side";
             } else if (item.type.indexOf('presenter') > -1 &&
@@ -273,27 +273,27 @@ $(document).on("click", ".downloader", function () {
             } else if (item.audio &&  item.audio.bitrate) {
                 quality = parseInt(item.audio.bitrate/1000) + "kbps";
             }
-            
+
             tBody.appendChild(tRow);
             tCol1.innerHTML = videoName;
             tCol2.innerHTML = item.mimetype;
             tCol3.innerHTML = quality;
             tCol4.className = "text-center";
             tCol4.innerHTML = "<a class='btn btn-default btn-sm dlEpisode' data-episode-id='" + episodeID + "' role='button' href='" + downloadURL + "'><i class='glyphicon glyphicon-download'></i></a>";
-        
+
             tRow.appendChild(tCol1);
             tRow.appendChild(tCol2);
             tRow.appendChild(tCol3);
             tRow.appendChild(tCol4);
-        });   
-        
+        });
+
         if(captions && Array.isArray(captions)) {
             _.forEach(captions, function(item) {
                 var tCaptionRow = document.createElement('tr'),
                     tCaptionCol1 = document.createElement('td'),
                     tCaptionCol2 = document.createElement('td'),
                     tCaptionCol3 = document.createElement('td'),
-                    tCaptionCol4 = document.createElement('td'), 
+                    tCaptionCol4 = document.createElement('td'),
                     captionDownloadURL = item.url.replace("http", "https") + '/download/';
 
                 tBody.appendChild(tCaptionRow);
@@ -375,7 +375,7 @@ function listEpisode(info) {
     dlBtn.setAttribute("id", recordid);
     dlBtn.setAttribute("data-toggle", "modal");
     dlBtn.className = "btn btn-primary downloader";
-    dlBtn.setAttribute("data-target", "#downloadModal"); 
+    dlBtn.setAttribute("data-target", "#downloadModal");
     dlBtn.setAttribute("data-id", recordid);
     dlBtn.setAttribute("data-title", info.dcTitle);
     dlBtn.setAttribute("data-downloaded", false);
@@ -445,7 +445,7 @@ xhr({url: url, responseType: 'json'},
 
 var latestEpisodesURL = '/search/episode.json?sid=' + (courseID || '') + '&limit=3&sort=DATE_CREATED_DESC';         //fetch latest 3 (max) episodes for series
 
-xhr({url: latestEpisodesURL, responseType: 'json'}, 
+xhr({url: latestEpisodesURL, responseType: 'json'},
   function(response) {
     var latestContainer = document.querySelector('.lti-oc-recent');
     response['search-results'].result.forEach( function(episode) {
@@ -506,29 +506,28 @@ var EventsTable = function() {
   }
 
   this.searchFound = function(searchStr) {
-    var found = (searchStr.toLowerCase().indexOf(this.filters[0].value.toLowerCase()) > -1 ? true : false);
-  
-    try {
-      var searchDates = JSON.parse(searchStr);
-      if (this.filters[1].value) {
-        found *= (new Date(this.filters[1].value).getTime() < new Date(searchDates.createddate).getTime() ? true : false);
-      }
-      if (this.filters[2].value) {
-        if (this.filters[1].value && this.filters[1].value === this.filters[2].value) {
-          found *= (new Date(this.filters[2].value).getTime()/1000 + 86400 > new Date(searchDates.createddate).getTime()/1000 ? true : false);
-        } else {
-          found *= (new Date(this.filters[2].value).getTime() > new Date(searchDates.createddate).getTime() ? true : false);
+    var found = (searchStr.toLowerCase().indexOf(this.filters[0].value.toLowerCase()) > -1 ? true : false),
+        searchDates = JSON.parse(searchStr),
+        dr = $('#daterange');
+
+    if (dr.data('use')) {
+        try {
+            var sd = new Date(dr.data('daterangepicker').startDate),
+                ed = new Date(dr.data('daterangepicker').endDate),
+                cd = new Date(searchDates.createddate);
+
+            found *= (sd <= cd) && (cd <= ed);
+        } catch (e) {
+        console.log(e);
         }
-      }
-    } catch (e) {
-      console.log(e);
     }
     return found;
   }
 
   this.clearFilters = function(e) {
     self.filters.forEach(function(filter) {
-      filter.value = '';
+      $(filter).val('');
+      $(filter).data('use', false);
     });
     self.filters[0].dispatchEvent(new Event('keyup'));
     this.classList.remove('display');
@@ -607,32 +606,34 @@ var EventsTable = function() {
     console.log(elData);
   };
 
-  //Attach events
-  Array.prototype.slice.call(document.querySelectorAll('.filter input'))
-    .forEach(function(filter, i) {
-      self.filters.push(filter);
-      filter.addEventListener('keyup', self.filterResults, false);
-      if (i > 0) {
-        $(filter).datepicker({
-          dateFormat: 'yy-mm-dd',
-          onSelect: function() {
-            $(this)[0].dispatchEvent(new Event('keyup'));
-          }
+    //Attach events
+    Array.prototype.slice.call(document.querySelectorAll('.filter input'))
+        .forEach(function(filter, i) {
+            self.filters.push(filter);
+            filter.addEventListener('keyup', self.filterResults, false);
+            if (i > 0) {
+                $(filter).daterangepicker({
+                    showDropdowns: true,
+                    autoUpdateInput: false,
+                    locale: {
+                        format: 'YYYY/MM/DD'
+                    }
+                });
+            }
         });
-        $(filter).on('click', function(e) {
-          if ($(this).is(':focus')) {
-            $(this)[0].dispatchEvent(new Event('focus'));
-          }
-        });
-      }
+
+    $('#daterange').on('apply.daterangepicker', function(ev, picker) {
+        $(this).data('use', true);
+        $(this).val(picker.startDate.format('YYYY/MM/DD') + ' to ' + picker.endDate.format('YYYY/MM/DD'));
+        self.filterResults();
     });
 
-  Array.prototype.slice.call(document.querySelectorAll('.lti-oc-all span[data-sort]'))
-    .forEach(function(el) {
-      el.addEventListener('click', self.toggleSort, false);
-    });
+    Array.prototype.slice.call(document.querySelectorAll('.lti-oc-all span[data-sort]'))
+        .forEach(function(el) {
+            el.addEventListener('click', self.toggleSort, false);
+        });
 
-  clearFiltersButton.addEventListener('click', self.clearFilters, false);
+    clearFiltersButton.addEventListener('click', self.clearFilters, false);
 }
 
 var eTable = new EventsTable();

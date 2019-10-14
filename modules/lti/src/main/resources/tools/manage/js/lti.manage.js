@@ -2404,7 +2404,7 @@ function closeSeries() {
         seriesID = urlParams.get('sid'),
         url = "/api/series/" + seriesID + "/metadata?type=ext/series";
 
-    $.get({url: url, responseType: 'json'}, 
+    $.get({url: url, responseType: 'json'},
         function(response) {
             var seriesStatus = "";
             for(var i = 0; i<response.length;i++){
