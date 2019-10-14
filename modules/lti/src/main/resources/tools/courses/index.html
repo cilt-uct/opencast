@@ -6,8 +6,8 @@
     <link rel="shortcut icon" href="img/favicon.ico">
     <!-- styles -->
     <link rel="stylesheet" type="text/css" href="../shared/css/bootstrap.min.css">
-    <link rel="stylesheet" type="text/css" href="../shared/css/jquery-ui/jquery-ui.css?v=%version%" />
     <link rel="stylesheet" type="text/css" href="../shared/css/player/shared.css?v=%version%">
+    <link rel="stylesheet" type="text/css" href="../shared/css/daterangepicker.css" />
     <link rel="stylesheet" type="text/css" href="../shared/css/lti.css?v=%version%" />
     <link rel="stylesheet" type="text/css" href="css/lti.recordings.css?v=%version%" />
     <!-- scripts -->
@@ -59,14 +59,16 @@
               </div>
 
               <div class="lti-oc-previous">
-                  <h2>All Recordings</h2>
-                  <div class="filter">
-                    <span class="noPseudo">Filter Recordings:</span>
-                    <button type="button" name="clearFilters" class="button">Clear Filters</button>
-                    <input type="text" name="filterstring" placeholder="Search by Title/Presenter">
-                    <input type="text" name="startdate" placeholder="Start Date">
-                    <input type="text" name="enddate" placeholder="End Date">
-                  </div>
+                    <h2>All Recordings</h2>
+                    <form autocomplete="off">
+                        <div class="filter">
+                            <span class="noPseudo">Filter Recordings:</span>
+                            <button type="button" name="clearFilters" class="button">Clear Filters</button>
+                            <input type="text" name="filterstring" placeholder="Search by Title/Presenter" data-use="false" />
+                            <input type="text" name="startdate" placeholder="Start Date" data-use="false" autocomplete="off" readonly/>
+                            <input type="text" name="enddate" placeholder="End Date" data-use="false" autocomplete="off" readonly/>
+                        </div>
+                    </form>
 
                   <ul class="lti-oc-all">
                     <li class="heading">
@@ -121,12 +123,13 @@
                             </div>
                         </div>
                     </div>
-              </div>
+                </div>
           </div>
       </div>
     <script type="text/javascript" src="../shared/js/jquery/jquery.min.js"></script>
     <script type="text/javascript" src="../shared/js/jquery/plugins/jquery.utils.js"></script>
     <script type="text/javascript" src="../shared/js/ext/moment.min.js"></script>
+    <script type="text/javascript" src="../shared/js/daterangepicker.js"></script>
     <script type="text/javascript" src="../shared/js/ext/date.helper.js"></script>
     <script type="text/javascript" src="../shared/js/he.js"></script>
     <script type="text/javascript" src="../shared/js/underscore.js?v=%version%"></script>
