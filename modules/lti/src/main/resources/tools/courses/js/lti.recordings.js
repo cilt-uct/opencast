@@ -148,10 +148,8 @@ function isMac() {
 }
 
 $(document).on("click", ".dlEpisode, .dlCaption", function () {
-    var episode_id = $(this).data('episodeId'),
+    var episode_id = $(this).data('episode-id'),
         $el = $('#'+ episode_id);
-
-    console.log(episode_id + ': '+ ($el.data('downloaded')?'Y':'N'));
 
     if ($el.data('downloaded') === false) {
         $el.data('downloaded', true);
@@ -280,7 +278,8 @@ $(document).on("click", ".downloader", function () {
             tCol1.innerHTML = videoName;
             tCol2.innerHTML = item.mimetype;
             tCol3.innerHTML = quality;
-            tCol4.innerHTML = "<a class='btn btn-default btn-sm dlEpisode' data-episodeId='" + episodeID + "' role='button' data-dlurl='" + downloadURL + "'><i class='glyphicon glyphicon-download'></i></a>";
+            tCol4.className = "text-center";
+            tCol4.innerHTML = "<a class='btn btn-default btn-sm dlEpisode' data-episode-id='" + episodeID + "' role='button' href='" + downloadURL + "'><i class='glyphicon glyphicon-download'></i></a>";
         
             tRow.appendChild(tCol1);
             tRow.appendChild(tCol2);
@@ -301,7 +300,8 @@ $(document).on("click", ".downloader", function () {
                 tCaptionCol1.innerHTML = "Caption";
                 tCaptionCol2.innerHTML = item.mimetype;
                 tCaptionCol3.innerHTML = "";
-                tCaptionCol4.innerHTML = "<a class='btn btn-default btn-sm dlCaption' data-episodeId='" + episodeID + "' role='button' data-dlurl='" + captionDownloadURL + "'><i class='glyphicon glyphicon-download'></i></a>";
+                tCaptionCol4.className = "text-center";
+                tCaptionCol4.innerHTML = "<a class='btn btn-default btn-sm dlCaption' data-episode-id='" + episodeID + "' role='button' href='" + captionDownloadURL + "'><i class='glyphicon glyphicon-download'></i></a>";
 
                 tCaptionRow.appendChild(tCaptionCol1);
                 tCaptionRow.appendChild(tCaptionCol2);
