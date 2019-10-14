@@ -149,7 +149,7 @@ function isMac() {
 
 $(document).on("click", ".dlEpisode, .dlCaption", function () {
     var episode_id = $(this).data('episodeId'),
-        $el = $('li[data-id="'+ episode_id +'"]');
+        $el = $('#'+ episode_id);
 
     console.log(episode_id + ': '+ ($(el).data('downloaded')?'Y':'N'));
 
@@ -158,21 +158,6 @@ $(document).on("click", ".dlEpisode, .dlCaption", function () {
         trackUser(episode_id);
     }
 });
-
-// $(document).on("click", ".dlCaption", function () {
-//     var episodeURL = $(this).data('dlurl'),
-//         episodeID = $(this).data('id');
-
-//     window.location = episodeURL;
-//     if(clicked) {
-//         if(episodeID !== episodeid) {
-//             clicked = false;
-//             trackUser(episodeID);
-//         }
-//     }else {
-//         trackUser(episodeID);
-//     }
-// });
 
 function trackUser(episodeID) {
     $.ajax({
