@@ -518,22 +518,20 @@ var EventsTable = function() {
   }
 
   this.searchFound = function(searchStr) {
-    var found = (searchStr.toLowerCase().indexOf(this.filters[0].value.toLowerCase()) > -1 ? true : false);
-    try {
-      var searchDates = JSON.parse(searchStr);
+    var found = (searchStr.toLowerCase().indexOf(this.filters[0].value.toLowerCase()) > -1 ? true : false),
+        searchDates = JSON.parse(searchStr),
+        dr = $('#daterange');
 
-      if (this.filters[1].value) {
-        found *= (new Date(this.filters[1].value).getTime() < new Date(searchDates.createddate).getTime() ? true : false);
-      }
-      if (this.filters[2].value) {
-        if (this.filters[1].value && this.filters[1].value === this.filters[2].value) {
-          found *= (new Date(this.filters[2].value).getTime()/1000 + 86400 > new Date(searchDates.createddate).getTime()/1000 ? true : false);
-        } else {
-          found *= (new Date(this.filters[2].value).getTime() > new Date(searchDates.createddate).getTime() ? true : false);
+    if (dr.data('use')) {
+        try {
+            var sd = new Date(dr.data('daterangepicker').startDate),
+                ed = new Date(dr.data('daterangepicker').endDate),
+                cd = new Date(searchDates.createddate);
+
+            found *= (sd <= cd) && (cd <= ed);
+        } catch (e) {
+        console.log(e);
         }
-      }
-    } catch (e) {
-      console.log(e);
     }
     return found;
   }
@@ -620,34 +618,34 @@ var EventsTable = function() {
     console.log(elData);
   };
 
-  //Attach events
-  Array.prototype.slice.call(document.querySelectorAll('.filter input'))
-    .forEach(function(filter, i) {
-      self.filters.push(filter);
-      filter.addEventListener('keyup', self.filterResults, false);
-      if (i > 0) {
-        $(filter).daterangepicker({
-            opens: 'left',
-            singleDatePicker: true,
-            showDropdowns: true,
-            autoUpdateInput: false,
-            locale: {
-                format: 'YYYY/MM/DD'
+    //Attach events
+    Array.prototype.slice.call(document.querySelectorAll('.filter input'))
+        .forEach(function(filter, i) {
+            self.filters.push(filter);
+            filter.addEventListener('keyup', self.filterResults, false);
+            if (i > 0) {
+                $(filter).daterangepicker({
+                    showDropdowns: true,
+                    autoUpdateInput: false,
+                    locale: {
+                        format: 'YYYY/MM/DD'
+                    }
+                });
             }
-        }, function(start, end, label) {
-            $(this.element).val(start.format('YYYY/MM/DD'));
-
-            self.filterResults();
         });
-      }
+
+    $('#daterange').on('apply.daterangepicker', function(ev, picker) {
+        $(this).data('use', true);
+        $(this).val(picker.startDate.format('YYYY/MM/DD') + ' to ' + picker.endDate.format('YYYY/MM/DD'));
+        self.filterResults();
     });
 
-  Array.prototype.slice.call(document.querySelectorAll('.lti-oc-all span[data-sort]'))
-    .forEach(function(el) {
-      el.addEventListener('click', self.toggleSort, false);
-    });
+    Array.prototype.slice.call(document.querySelectorAll('.lti-oc-all span[data-sort]'))
+        .forEach(function(el) {
+            el.addEventListener('click', self.toggleSort, false);
+        });
 
-  clearFiltersButton.addEventListener('click', self.clearFilters, false);
+    clearFiltersButton.addEventListener('click', self.clearFilters, false);
 }
 
 var eTable = new EventsTable();
