@@ -209,18 +209,6 @@ $(document).on("click", ".downloader", function () {
         day = (timestamp.getDate() < 10 ? '0' : '') + timestamp.getDate(),
         dateStamp = "" + timestamp.getFullYear() + month + day;
 
-    $('li[data-ref="date_range"]').daterangepicker({
-        opens: 'left',
-        autoApply: true
-        }, function(start, end, label) {
-        if (start) {
-            ocManager.eventMgr.addFilter('startDate', moment(start).format('YYYY-MM-DD'));
-        }
-        if (end) {
-            ocManager.eventMgr.addFilter('endDate', moment(end).format('YYYY-MM-DD'));
-        }
-    });
-
     $('#titleHolder').html(episodeTitle);
     $('#presenterHolder').html(episodePresenter);
     $('#dateHolder').html(episodeDate);
