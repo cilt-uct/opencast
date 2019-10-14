@@ -11,7 +11,7 @@
 
     <title>Start</title>
 
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="../shared/css/bootstrap.min.css">
     <link rel="stylesheet" type="text/css" href="../shared/css/admin.css?v=%version%" />
     <link rel="stylesheet" type="text/css" href="../shared/css/lti.css?v=%version%" />
     <link rel="stylesheet" type="text/css" href="css/font-awesome.min.css" />
@@ -52,7 +52,7 @@
           <p class="instruction" data-instruction="error"></p>
           <p class="instruction" data-instruction="warning"></p>
         </div>
-      <div class="container" style="width: auto;">
+        <div class="container" style="width: auto;">
         <br/>
         <div id="grid-header" class="row">
             <div class="col-md-4 pull-left" id="btns-select">
@@ -192,7 +192,7 @@
       </div>
     </div>
 
-     <form class="modal fade" id="retractModal" data-backdrop="static" tabindex="-1" role="dialog" aria-labelledby="rModal">
+    <form class="modal fade" id="retractModal" data-backdrop="static" tabindex="-1" role="dialog" aria-labelledby="rModal">
       <div class="modal-dialog" role="document" style="width: 720px;">
         <div class="modal-content">
           <div class="modal-header">
@@ -216,7 +216,7 @@
         </div>
       </div>
     </form>
-     <form class="modal fade" id="publishModal" data-backdrop="static" tabindex="-1" role="dialog" aria-labelledby="pModal">
+    <form class="modal fade" id="publishModal" data-backdrop="static" tabindex="-1" role="dialog" aria-labelledby="pModal">
       <div class="modal-dialog" role="document">
         <div class="modal-content">
           <div class="modal-header">
@@ -238,7 +238,7 @@
         </div>
       </div>
     </form>
-   <div class="modal fade" id="delModal" data-backdrop="static" tabindex="-1" role="dialog" aria-labelledby="dModal">
+    <div class="modal fade" id="delModal" data-backdrop="static" tabindex="-1" role="dialog" aria-labelledby="dModal">
       <div class="modal-dialog" role="document">
         <div class="modal-content">
           <div class="modal-header">
@@ -524,21 +524,7 @@
     </div>
     <div id="suggestion">
     </div>
-    <!-- Bootstrap core JavaScript
-    ================================================== -->
-    <!-- Placed at the end of the document so the pages load faster -->
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
-    <script type="text/javascript" src="js/moment.min.js"></script>
-    <script>
-        window.jQuery || document.write('<script src="../../assets/js/vendor/jquery.min.js"><\/script>')
-    </script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
-    <script type="text/javascript" src="js/daterangepicker.js"></script>
-    <script src="js/tmpl.min.js"></script>
-    <script src="js/util.js"></script>
-    <script src="../shared/js/he.js"></script>
-
-    <script type="text/x-tmpl" id="tmpl-body">{% for (var i=0; i < o.length; i++) { var item=o [i]; include( 'tmpl-row', o[i]); } %} </script>  
+    <script type="text/x-tmpl" id="tmpl-body">{% for (var i=0; i < o.length; i++) { var item=o [i]; include( 'tmpl-row', o[i]); } %} </script>
     <script type="text/x-tmpl" id="tmpl-row">
         <tr id="row-{%=o['id']%}" data-status="{%=o['status']%}">
             <td class="text-center">
@@ -557,254 +543,259 @@
         </tr>
     </script>
     <script type="text/x-tmpl" id="tmpl-personalbody">
-        {% for (var i=0; i < o.length; i++) { var item=o [i]; include( 'tmpl-personalrow', o[i]); } %} </script>
-
-            <script type="text/x-tmpl" id="tmpl-personalrow">
-                <tr id="row-{%=o['id']%}" data-status="{%=o['status']%}">
-                    <td class="text-center">
-                      <input type="checkbox"  id="chk-{%=o['id']%}" />
-                      <label class="checkbox" for="chk-{%=o['id']%}">
-                        <span class="fa fa-square-o"></span>
-                        <span class="fa fa-check-square-o"></span>
-                      </label>
-                    </td>
-                    <td>{%=o['title']%}</td>
-                    <td>{%=o['series']['title']%}</td>
-                    <td>{%=moment(o['start_date']).format('ddd D MMM YYYY, HH:mm') + (o['end_date'] ? ' - ' + moment(o['end_date']).format('HH:mm') : '')%}</td> <!-- TODO: add day of week -->
-                    <td>{%=getVenueName(o['location'] || o['agent_id'])%}</td>
-                    <td title="{%=getTooltip(o)%}">{%=getStatus(o)%}</td>
-                    <td>{%#getEditControls(o)%}</td>
-                </tr>
-            </script>
-            <script type="text/x-tmpl" id="tmpl-editable">
-              <button type="button" data-toggle="modal" data-event="{%=o.id%}" data-target="#editModal">
-                <img src="/ltitools/shared/img/icons/edit.png" /></button>
-              <button type="button" data-toggle="modal" data-event="{%=o.id%}" data-target="#delModal">
-                <img src="/ltitools/shared/img/icons/cross.png" /></button>
-            </script>
-            <script type="text/x-tmpl" id="tmpl-editpubs">
-              <button type="button" data-toggle="modal" data-event="{%=o.id%}" data-target="#editPublishedModal">
-                <img src="/ltitools/shared/img/icons/edit.png" /></button>
-              <button type="button" data-toggle="modal" data-event="{%=o.id%}" data-target="#retractModal">
-                <img src="/ltitools/shared/img/icons/cross.png" /></button>
-            </script>
-
-            <script type="text/x-tmpl" id="tmpl-footer">
-                {% var pages = Math.ceil(o['total']/o['shown']); %}
-                <div class="col-xs-6 col-md-6">
-                    Displaying <span id="currentTotals" data-start="" data-end=""></span> of {%=o['total']%} results <span id="isFiltered"></span>
-                </div>
-                <div class="col-xs-6 col-md-6 text-right">
-                    <nav aria-label="...">
-                        <ul class="pagination pull-right">
-                            <li><a href="#" aria-label="Previous"><span aria-hidden="true">&laquo;</span></a></li>{% for (var i=0; i < pages; i++) {
-                                 if (pages < 13) {
-                            %}<li {%= i === o.start ? 'class=active': '' %}>
+        {% for (var i=0; i < o.length; i++) { var item=o [i]; include( 'tmpl-personalrow', o[i]); } %}
+    </script>
+    <script type="text/x-tmpl" id="tmpl-personalrow">
+        <tr id="row-{%=o['id']%}" data-status="{%=o['status']%}">
+            <td class="text-center">
+                <input type="checkbox"  id="chk-{%=o['id']%}" />
+                <label class="checkbox" for="chk-{%=o['id']%}">
+                <span class="fa fa-square-o"></span>
+                <span class="fa fa-check-square-o"></span>
+                </label>
+            </td>
+            <td>{%=o['title']%}</td>
+            <td>{%=o['series']['title']%}</td>
+            <td>{%=moment(o['start_date']).format('ddd D MMM YYYY, HH:mm') + (o['end_date'] ? ' - ' + moment(o['end_date']).format('HH:mm') : '')%}</td> <!-- TODO: add day of week -->
+            <td>{%=getVenueName(o['location'] || o['agent_id'])%}</td>
+            <td title="{%=getTooltip(o)%}">{%=getStatus(o)%}</td>
+            <td>{%#getEditControls(o)%}</td>
+        </tr>
+    </script>
+    <script type="text/x-tmpl" id="tmpl-editable">
+        <button type="button" data-toggle="modal" data-event="{%=o.id%}" data-target="#editModal">
+        <img src="/ltitools/shared/img/icons/edit.png" /></button>
+        <button type="button" data-toggle="modal" data-event="{%=o.id%}" data-target="#delModal">
+        <img src="/ltitools/shared/img/icons/cross.png" /></button>
+    </script>
+    <script type="text/x-tmpl" id="tmpl-editpubs">
+        <button type="button" data-toggle="modal" data-event="{%=o.id%}" data-target="#editPublishedModal">
+        <img src="/ltitools/shared/img/icons/edit.png" /></button>
+        <button type="button" data-toggle="modal" data-event="{%=o.id%}" data-target="#retractModal">
+        <img src="/ltitools/shared/img/icons/cross.png" /></button>
+    </script>
+    <script type="text/x-tmpl" id="tmpl-footer">
+        {% var pages = Math.ceil(o['total']/o['shown']); %}
+        <div class="col-xs-6 col-md-6">
+            Displaying <span id="currentTotals" data-start="" data-end=""></span> of {%=o['total']%} results <span id="isFiltered"></span>
+        </div>
+        <div class="col-xs-6 col-md-6 text-right">
+            <nav aria-label="...">
+                <ul class="pagination pull-right">
+                    <li><a href="#" aria-label="Previous"><span aria-hidden="true">&laquo;</span></a></li>{% for (var i=0; i < pages; i++) {
+                            if (pages < 13) {
+                    %}<li {%= i === o.start ? 'class=active': '' %}>
+                        <a href="#page_{%=i+1%}">{%=i+1%}<span class="sr-only"><%=i%></span></a>
+                        </li>{%   }
+                            else if (i < 2 || i > pages - 3 || (i >= o.start - 2 && i <= o.start + 2 && o.start >= 7) ||
+                                    (i < 8 && o.start < 7) || (i > pages - 9 && o.start > pages - 7)) {
+                    %}<li {%= i === o.start ? 'class=active': '' %}>
                                 <a href="#page_{%=i+1%}">{%=i+1%}<span class="sr-only"><%=i%></span></a>
-                              </li>{%   }
-                                 else if (i < 2 || i > pages - 3 || (i >= o.start - 2 && i <= o.start + 2 && o.start >= 7) ||
-                                          (i < 8 && o.start < 7) || (i > pages - 9 && o.start > pages - 7)) {
-                            %}<li {%= i === o.start ? 'class=active': '' %}>
-                                      <a href="#page_{%=i+1%}">{%=i+1%}<span class="sr-only"><%=i%></span></a>
-                                    </li>{%
-                                 }
-                                 else if (i === pages - 4 || i === 3) { %}<li><a><span aria-hidden="true">&hellip;</span></a></li>{%
-                                 }
-                               } %}<li><a href="#" aria-label="Next"><span aria-hidden="true">&raquo;</span></a></li>
-                        </ul>
-                        <div class="dropup pull-right">
-                          <div class="btn btn-default dropdown-toggle" id="limitDropup" data-toggle="dropdown" >{%= (sessionStorage.getItem('table.limit') === '100000' ? 'All' : (sessionStorage.getItem('table.limit') || null)) || '10' %}</div>
-                          <div class="dropdown-menu" aria-labelledby="limitDropup">
-                            <li data-limit="10"></li>
-                            <li data-limit="20"></li>
-                            <li data-limit="50"></li>
-                            <li data-limit="100"></li>
-                            <li data-limit="100000">All</li>
-                          </div>
-                        </div>
-                    </nav>
-                </div>
-            </script>
-
-            <script type="text/x-tmpl" id="tmpl-editormodal">
-              <div class="instruction" data-instruction="warning">
-              </div>
-              <div class="instruction" data-instruction="success">
-              </div>
-              <ul class="infoList">
-                <li data-field="title" data-fieldtype="text">
-                  <span>Title</span>
-                  <span><input name="title" value="{%=o.title%}" placeholder="{%=o.title || 'Multiple events'%}" /></span>
-                </li>
-                <li data-field="presenters" data-fieldtype="mixed_text">
-                  <span>Presenters</span>
-                  <span><textarea name="presenters"{%#(o.presenters === 'Multiple' ? 'placeholder="Various presenters"' : '')%}>{%=(Array.isArray(o.presenters) ? o.presenters.join("\n") : (o.presenters !== 'Multiple' ? o.presenters : ''))%}</textarea></span>
-                </li>
-                {%
-                  if (o.target == '#editPublishedModal' && o.isAttachmentAllowed) { %}
-                  <li data-field="attachment">
-                    <span>Lecture notes</span>
-                    <a target="_blank" id="notes" class="emptyOnClose"></a><span class="fileContainer" id="notesContainer" data-mediatype="doc">
-                      <input autocomplete="off" type="file" name="attachment/notes" data-mediatype="doc"/>
-                      <progress min="0" value=0 max="100"></progress>
-                    </span>
-                  </li>
-                {%  } %}
-                {%
-                  if (o.target == '#editPublishedModal' && o.isPersonal) { %}
-                  <li data-field="attachment">
-                    <span>Recording series</span>
-                    <span class="dropdown">
-                      <input name="isPartOf" autocomplete="off" class="setField" />
-                      <i class="glyphicon fa fa-location-arrow" aria-hidden="true"></i>
-                      <button class="btn btn-default dropdown-toggle uneditableWhenChecking" type="button" id="seriesDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
-                        {%= o.series ? o.series.title : 'Choose series' %}
-                      </button>
-                      <ul class="dropdown-menu seriesList top-down" aria-labelledby="seriesDropdown">
-                        <li style="margin: 0 0 0.375rem;"><input type="text" name="filterlist" placeholder="Search series" autocomplete="off"></li>
-                        <li role="separator" class="divider"></li>
-                        <div class="filterList" data-series="true" data-searchtype="series"></div>
-                      </ul>
-                    </span>
-                  </li>
-                {%  } %}
-                {%
-                  if (o.target == '#editPublishedModal') { %}
-                  <video controls poster preload="metadata"></video>
-                  {% if (o.isPersonal) { %}
-                    <hr/>
-                    <h4>Media</h4>
-                    <ul id="mediaList" style="margin-top: 1em;">
-                    </ul>
-                  {% } %}
-                {% } else { %}
-                <li data-field="start_date" data-fieldtype="date">
-                  <span>Event Date</span>
-                  {%
-                    if (o.target == '#editModal') { %}
-                  <span data-ref="start_date" role="presentation" class="dateTimeSelector">
-                    <a href="#">
-                      <i class="glyphicon glyphicon-calendar fa fa-calendar"></i>
-                      <input name="start_date" type="hidden" value="{%=(o.start_date !== 'Multiple' ? moment(o.start_date).format('YYYY-MM-DD') : '')%}" class="pristine"/>
-                      <span class="selectedValue">
-                        {%=moment(o.start_date).format('D MMM, YYYY')%}
-                      </span>
-                    </a>
-                  </span>
-                  {% } else { %}
-                  <input name="start_date" type="hidden" value="{%= o.start_date !== 'Multiple' ? moment(o.start_date).format('YYYY-MM-DD') : '' %}" class="pristine"/>
-                  <span>{%=(o.startDate !== 'Multiple' ? o.startDate : 'Multiple dates')%}</span>
-                  {% } %}
-                </li>
-                <li data-field="startTime" data-fieldtype="time">
-                  <span>Event Time</span>
-                  <span data-ref="event_time" role="presentation" class="dateTimeSelector">
-                    <a href="#">
-                      <i class="glyphicon glyphicon-time fa fa-clock-o"></i>
-                      <input name="startTime" type="hidden" class="pristine" />
-                      <input name="duration" type="hidden" class="pristine" />
-                      <span class="selectedValue">
-                      {% if (o.target == '#editModal') { %}
-                        {%=moment(o.start_date).format('HH:mm') + ' - ' + moment(o.end_date).format('HH:mm')%}
-                      {% } else { %}
-                        {%=(o.startTime !== 'Multiple' ? o.startTime + ' - ' + o.endTime : 'Multiple start times')%}
-                      {% } %}
-                      </span>
-                    </a>
-                  </span>
-                </li>
-                <li data-field="location" data-fieldtype="text">
-                  <span>Venue</span>
-                  <span class="dropdown">
-                    <input name="location" class="setField pristine" value="{%= (o.agent_id !== 'Multiple' ? o.agent_id : '') || (o.location !== 'Multiple' ? o.location : '') || '' %}" />
-                    <i class="glyphicon fa fa-location-arrow" aria-hidden="true"></i>
-                    <button class="btn btn-default dropdown-toggle" type="button" id="venueDropdown" data-toggle="dropdown"
-                            aria-haspopup="true" aria-expanded="true" >{%= getVenueName(o.location) %}</button>
-                    <ul class="dropdown-menu" aria-labelledby="venueDropdown">
-                      <li style="margin: 0 0 0.5rem;"><input type="text" name="filterlist" placeholder="Search venues" /></li>
-                      <li role="separator" class="divider"></li>
-                      <div class="filterList">
-                        {%# getVenues(o) %}
-                      </div>
-                    </ul>
-                  </span>
-                </li>
-                {% } %}
-              </ul>
-                {% if (o.target == '#bulkModal') { %}
-                  <div id="updateProgress">
-                    <h4></h4>
-                    <progress min="0" max="100" value="0"></progress>
-                    <ul></ul>
-                    <button type="button" class="btn btn-warning">Return to reschedule conflicting events</button>
-                  </div>
-                {% } %}
-              <div class="instruction" data-instruction="error">
-                <b>There <span class="numConflicts"></span> for the timeframes and venue you have chosen.</b>
-                {% if (o.target == '#bulkModal') { %}
-                  <p id="bulkProceed" style="margin: 1rem 0 0;">
-                    If you choose to proceed, scheduling information for the conflicting events will not be updated (titles and presenters will be saved).
-                  </p>
-                {% } %}
-              </div>
-
-            </script>
-
-            <script type="text/x-tmpl" id="tmpl-delete">
-              Performing this action will delete
-              <p style="font-weight: bold; text-align: center;margin: 1rem 0;background: #eee; line-height: 3rem;">
-                {%= o.text %}
-              </p>
-              <p style="text-align: right; font-size: 1.2rem;">Are you sure?</p>
-            </script>
-            <script type="text/x-tmpl" id="tmpl-selection">
-              <li data-eventid="{%= o.id %}"><span class="remove" style="font-size: 2rem;" title="Remove from selections">&times;</span><span> {%= o.title %}</span></li>
-            </script>
-            <script type="text/x-tmpl" id="tmpl-selected">
-              <li data-eventid="{%= o.id %}">
-                <h4>{%= o.title %}</h4>
-                <ul>
-                  <li><span>{%# o.presenters.length > 1 ? 'Presenters' : 'Presenter' %}</span><span>{%# o.presenters.join('<br>')%}</span></li>
-                  <li><span>Date</span><span>{%= moment(o.start_date).format('ddd DD MMM, YYYY') %}</span></li>
-                  <li><span>Time</span><span>{%= moment(o.start_date).format('HH:mm') + ' - ' + moment(o.end_date).format('HH:mm') %}</span></li>
-                  <li><span>Venue</span><span>{%= getVenueName(o.location) %}</span></li>
+                            </li>{%
+                            }
+                            else if (i === pages - 4 || i === 3) { %}<li><a><span aria-hidden="true">&hellip;</span></a></li>{%
+                            }
+                        } %}<li><a href="#" aria-label="Next"><span aria-hidden="true">&raquo;</span></a></li>
                 </ul>
-              </li>
-            </script>
-            <script type="text/x-tmpl" id="tmpl-ttcourse">
-              <li data-course="{%= o.course %},{%= o.term %}">
-                <span data-field="course">{%= o.course %}</span>
-                <span data-field="header"><span>Timeframe</span><span>Time</span><span class="days"><a>Mo</a><a>Tu</a><a>We</a><a>Th</a><a>Fr</a><a>Sa</a><a>Su</a></span><span>Venue</span></span>
-                <div class="scheduleOptions">
-                {% for (var key in o) { if (['LEC', 'MOD', 'TUT', 'WKS', 'SEM'].indexOf(key) > -1) { %}
-                  <ul data-instr-type={%= key %}>
-                    {% for (var i = 0; i < o[key].length; i++) { o[key][i].course = o.course; if (moment(o[key][i].end_date).isAfter(moment())) {include('tmpl-ttrow', {obj: o[key][i], num: i});} } %}
-                  </ul>
-                {% }} %}
+                <div class="dropup pull-right">
+                    <div class="btn btn-default dropdown-toggle" id="limitDropup" data-toggle="dropdown" >{%= (sessionStorage.getItem('table.limit') === '100000' ? 'All' : (sessionStorage.getItem('table.limit') || null)) || '10' %}</div>
+                    <div class="dropdown-menu" aria-labelledby="limitDropup">
+                    <li data-limit="10"></li>
+                    <li data-limit="20"></li>
+                    <li data-limit="50"></li>
+                    <li data-limit="100"></li>
+                    <li data-limit="100000">All</li>
+                    </div>
                 </div>
-              </li>
-            </script>
-            <!-- setup o.term properly below, and DO NOT USE o.start_date as a substitute -->
-            <script type="text/x-tmpl" id="tmpl-ttrow">
-              <li class="{%= o.obj.ca_name ? '' : 'un' %}supported">
-                <span><i title="Scheduling Conflict" class="fa fa-exclamation-triangle" aria-hidden="true"></i><input id="{%= o.obj.course %},{%= moment(o.obj.start_date).format('YYYY') %}-{%= o.obj.activity_id %}-{%= o.num %}" value="{%= JSON.stringify(o.obj) %}" name="{%= o.obj.course %},{%= moment(o.obj.start_date).format('YYYY') %}-{%= o.obj.activity_id %}-{%= o.num %}" type="checkbox" /></span><span>{%= o.obj.class_section %}</span><span>{%= moment(o.obj.start_date).format('YYYY-MM-DD') %}</span><span>{%= moment(o.obj.end_date).format('YYYY-MM-DD') %}</span><span>{%= o.obj.start_time %}</span><span>{%= o.obj.end_time %}</span><ul class="activeDays">{% include('tmpl-ttdays', o.obj.days); %}</ul><span>{%= o.obj.venue || o.obj.sn_venue %}</span>
-              </li>
-            </script>
-            <script type="text/x-tmpl" id="tmpl-ttdays">{% for (var key in o) { %}<li class="{%= o[key] ? 'activeDay' : '' %}"><a></a></li>{% } %}
-            </script>
-            <script type="text/javascript" src="../shared/js/lti.js?v=%version%"></script>
-            <script type="text/javascript" src="js/lti.series.js?v=%version%"></script>
-            <script type="text/javascript" src="js/lti.entities.js?v=%version%"></script>
-            <script type="text/javascript" src="js/lti.data.js?v=%version%"></script>
-            <script type="text/javascript" src="js/lti.agents.js?v=%version%"></script>
-            <script type="text/javascript" src="js/lti.timetable.js?v=%version%"></script>
-            <script type="text/javascript" src="js/lti.eventmanager.js?v=%version%"></script>
-            <script type="text/javascript" src="js/lti.tableview.js?v=%version%"></script>
-            <script type="text/javascript" src="js/lti.manage.js?v=%version%"></script>
-            <script type="text/javascript" src="../shared/js/underscore.js?v=%version%"></script>
-            <script type="text/javascript" src="../shared/js/bootstrap.js?v=%version%"></script>
+            </nav>
+        </div>
+    </script>
+    <script type="text/x-tmpl" id="tmpl-editormodal">
+        <div class="instruction" data-instruction="warning">
+        </div>
+        <div class="instruction" data-instruction="success">
+        </div>
+        <ul class="infoList">
+        <li data-field="title" data-fieldtype="text">
+            <span>Title</span>
+            <span><input name="title" value="{%=o.title%}" placeholder="{%=o.title || 'Multiple events'%}" /></span>
+        </li>
+        <li data-field="presenters" data-fieldtype="mixed_text">
+            <span>Presenters</span>
+            <span><textarea name="presenters"{%#(o.presenters === 'Multiple' ? 'placeholder="Various presenters"' : '')%}>{%=(Array.isArray(o.presenters) ? o.presenters.join("\n") : (o.presenters !== 'Multiple' ? o.presenters : ''))%}</textarea></span>
+        </li>
+        {%
+            if (o.target == '#editPublishedModal' && o.isAttachmentAllowed) { %}
+            <li data-field="attachment">
+            <span>Lecture notes</span>
+            <a target="_blank" id="notes" class="emptyOnClose"></a><span class="fileContainer" id="notesContainer" data-mediatype="doc">
+                <input autocomplete="off" type="file" name="attachment/notes" data-mediatype="doc"/>
+                <progress min="0" value=0 max="100"></progress>
+            </span>
+            </li>
+        {%  } %}
+        {%
+            if (o.target == '#editPublishedModal' && o.isPersonal) { %}
+            <li data-field="attachment">
+            <span>Recording series</span>
+            <span class="dropdown">
+                <input name="isPartOf" autocomplete="off" class="setField" />
+                <i class="glyphicon fa fa-location-arrow" aria-hidden="true"></i>
+                <button class="btn btn-default dropdown-toggle uneditableWhenChecking" type="button" id="seriesDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+                {%= o.series ? o.series.title : 'Choose series' %}
+                </button>
+                <ul class="dropdown-menu seriesList top-down" aria-labelledby="seriesDropdown">
+                <li style="margin: 0 0 0.375rem;"><input type="text" name="filterlist" placeholder="Search series" autocomplete="off"></li>
+                <li role="separator" class="divider"></li>
+                <div class="filterList" data-series="true" data-searchtype="series"></div>
+                </ul>
+            </span>
+            </li>
+        {%  } %}
+        {%
+            if (o.target == '#editPublishedModal') { %}
+            <video controls poster preload="metadata"></video>
+            {% if (o.isPersonal) { %}
+            <hr/>
+            <h4>Media</h4>
+            <ul id="mediaList" style="margin-top: 1em;">
+            </ul>
+            {% } %}
+        {% } else { %}
+        <li data-field="start_date" data-fieldtype="date">
+            <span>Event Date</span>
+            {%
+            if (o.target == '#editModal') { %}
+            <span data-ref="start_date" role="presentation" class="dateTimeSelector">
+            <a href="#">
+                <i class="glyphicon glyphicon-calendar fa fa-calendar"></i>
+                <input name="start_date" type="hidden" value="{%=(o.start_date !== 'Multiple' ? moment(o.start_date).format('YYYY-MM-DD') : '')%}" class="pristine"/>
+                <span class="selectedValue">
+                {%=moment(o.start_date).format('D MMM, YYYY')%}
+                </span>
+            </a>
+            </span>
+            {% } else { %}
+            <input name="start_date" type="hidden" value="{%= o.start_date !== 'Multiple' ? moment(o.start_date).format('YYYY-MM-DD') : '' %}" class="pristine"/>
+            <span>{%=(o.startDate !== 'Multiple' ? o.startDate : 'Multiple dates')%}</span>
+            {% } %}
+        </li>
+        <li data-field="startTime" data-fieldtype="time">
+            <span>Event Time</span>
+            <span data-ref="event_time" role="presentation" class="dateTimeSelector">
+            <a href="#">
+                <i class="glyphicon glyphicon-time fa fa-clock-o"></i>
+                <input name="startTime" type="hidden" class="pristine" />
+                <input name="duration" type="hidden" class="pristine" />
+                <span class="selectedValue">
+                {% if (o.target == '#editModal') { %}
+                {%=moment(o.start_date).format('HH:mm') + ' - ' + moment(o.end_date).format('HH:mm')%}
+                {% } else { %}
+                {%=(o.startTime !== 'Multiple' ? o.startTime + ' - ' + o.endTime : 'Multiple start times')%}
+                {% } %}
+                </span>
+            </a>
+            </span>
+        </li>
+        <li data-field="location" data-fieldtype="text">
+            <span>Venue</span>
+            <span class="dropdown">
+            <input name="location" class="setField pristine" value="{%= (o.agent_id !== 'Multiple' ? o.agent_id : '') || (o.location !== 'Multiple' ? o.location : '') || '' %}" />
+            <i class="glyphicon fa fa-location-arrow" aria-hidden="true"></i>
+            <button class="btn btn-default dropdown-toggle" type="button" id="venueDropdown" data-toggle="dropdown"
+                    aria-haspopup="true" aria-expanded="true" >{%= getVenueName(o.location) %}</button>
+            <ul class="dropdown-menu" aria-labelledby="venueDropdown">
+                <li style="margin: 0 0 0.5rem;"><input type="text" name="filterlist" placeholder="Search venues" /></li>
+                <li role="separator" class="divider"></li>
+                <div class="filterList">
+                {%# getVenues(o) %}
+                </div>
+            </ul>
+            </span>
+        </li>
+        {% } %}
+        </ul>
+        {% if (o.target == '#bulkModal') { %}
+            <div id="updateProgress">
+            <h4></h4>
+            <progress min="0" max="100" value="0"></progress>
+            <ul></ul>
+            <button type="button" class="btn btn-warning">Return to reschedule conflicting events</button>
+            </div>
+        {% } %}
+        <div class="instruction" data-instruction="error">
+        <b>There <span class="numConflicts"></span> for the timeframes and venue you have chosen.</b>
+        {% if (o.target == '#bulkModal') { %}
+            <p id="bulkProceed" style="margin: 1rem 0 0;">
+            If you choose to proceed, scheduling information for the conflicting events will not be updated (titles and presenters will be saved).
+            </p>
+        {% } %}
+        </div>
+
+    </script>
+    <script type="text/x-tmpl" id="tmpl-delete">
+        Performing this action will delete
+        <p style="font-weight: bold; text-align: center;margin: 1rem 0;background: #eee; line-height: 3rem;">
+        {%= o.text %}
+        </p>
+        <p style="text-align: right; font-size: 1.2rem;">Are you sure?</p>
+    </script>
+    <script type="text/x-tmpl" id="tmpl-selection">
+        <li data-eventid="{%= o.id %}"><span class="remove" style="font-size: 2rem;" title="Remove from selections">&times;</span><span> {%= o.title %}</span></li>
+    </script>
+    <script type="text/x-tmpl" id="tmpl-selected">
+        <li data-eventid="{%= o.id %}">
+        <h4>{%= o.title %}</h4>
+        <ul>
+            <li><span>{%# o.presenters.length > 1 ? 'Presenters' : 'Presenter' %}</span><span>{%# o.presenters.join('<br>')%}</span></li>
+            <li><span>Date</span><span>{%= moment(o.start_date).format('ddd DD MMM, YYYY') %}</span></li>
+            <li><span>Time</span><span>{%= moment(o.start_date).format('HH:mm') + ' - ' + moment(o.end_date).format('HH:mm') %}</span></li>
+            <li><span>Venue</span><span>{%= getVenueName(o.location) %}</span></li>
+        </ul>
+        </li>
+    </script>
+    <script type="text/x-tmpl" id="tmpl-ttcourse">
+        <li data-course="{%= o.course %},{%= o.term %}">
+        <span data-field="course">{%= o.course %}</span>
+        <span data-field="header"><span>Timeframe</span><span>Time</span><span class="days"><a>Mo</a><a>Tu</a><a>We</a><a>Th</a><a>Fr</a><a>Sa</a><a>Su</a></span><span>Venue</span></span>
+        <div class="scheduleOptions">
+        {% for (var key in o) { if (['LEC', 'MOD', 'TUT', 'WKS', 'SEM'].indexOf(key) > -1) { %}
+            <ul data-instr-type={%= key %}>
+            {% for (var i = 0; i < o[key].length; i++) { o[key][i].course = o.course; if (moment(o[key][i].end_date).isAfter(moment())) {include('tmpl-ttrow', {obj: o[key][i], num: i});} } %}
+            </ul>
+        {% }} %}
+        </div>
+        </li>
+    </script>
+    <!-- setup o.term properly below, and DO NOT USE o.start_date as a substitute -->
+    <script type="text/x-tmpl" id="tmpl-ttrow">
+        <li class="{%= o.obj.ca_name ? '' : 'un' %}supported">
+        <span><i title="Scheduling Conflict" class="fa fa-exclamation-triangle" aria-hidden="true"></i><input id="{%= o.obj.course %},{%= moment(o.obj.start_date).format('YYYY') %}-{%= o.obj.activity_id %}-{%= o.num %}" value="{%= JSON.stringify(o.obj) %}" name="{%= o.obj.course %},{%= moment(o.obj.start_date).format('YYYY') %}-{%= o.obj.activity_id %}-{%= o.num %}" type="checkbox" /></span><span>{%= o.obj.class_section %}</span><span>{%= moment(o.obj.start_date).format('YYYY-MM-DD') %}</span><span>{%= moment(o.obj.end_date).format('YYYY-MM-DD') %}</span><span>{%= o.obj.start_time %}</span><span>{%= o.obj.end_time %}</span><ul class="activeDays">{% include('tmpl-ttdays', o.obj.days); %}</ul><span>{%= o.obj.venue || o.obj.sn_venue %}</span>
+        </li>
+    </script>
+    <script type="text/x-tmpl" id="tmpl-ttdays">{% for (var key in o) { %}<li class="{%= o[key] ? 'activeDay' : '' %}"><a></a></li>{% } %}
+    </script>
+
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script type="text/javascript" src="../shared/js/jquery/jquery.min.js"></script>
+    <script type="text/javascript" src="../shared/js/jquery/plugins/jquery.utils.js"></script>
+    <script type="text/javascript" src="../shared/js/ext/moment.min.js"></script>
+    <script type="text/javascript" src="../shared/js/he.js"></script>
+    <script type="text/javascript" src="../shared/js/underscore.js?v=%version%"></script>
+    <script type="text/javascript" src="../shared/js/bootstrap.js?v=%version%"></script>
+    <script type="text/javascript" src="../shared/js/lti.js?v=%version%"></script>
+
+    <script type="text/javascript" src="js/daterangepicker.js"></script>
+    <script type="text/javascript" src="js/tmpl.min.js"></script>
+    <script type="text/javascript" src="js/util.js"></script>
+    <script type="text/javascript" src="js/lti.series.js?v=%version%"></script>
+    <script type="text/javascript" src="js/lti.entities.js?v=%version%"></script>
+    <script type="text/javascript" src="js/lti.data.js?v=%version%"></script>
+    <script type="text/javascript" src="js/lti.agents.js?v=%version%"></script>
+    <script type="text/javascript" src="js/lti.timetable.js?v=%version%"></script>
+    <script type="text/javascript" src="js/lti.eventmanager.js?v=%version%"></script>
+    <script type="text/javascript" src="js/lti.tableview.js?v=%version%"></script>
+    <script type="text/javascript" src="js/lti.manage.js?v=%version%"></script>
     <link href="https://fonts.googleapis.com/css?family=Open+Sans:300,300i,400,400i,600,600i,700,700i" rel="stylesheet">
-
 </body>
-
 </html>

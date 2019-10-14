@@ -11,7 +11,7 @@
 
     <title>Start</title>
 
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="../shared/css/bootstrap.min.css">
     <link rel="stylesheet" type="text/css" href="../shared/css/admin.css?v=20170618" />
     <link rel="stylesheet" type="text/css" href="../shared/css/lti.css?v=20170618" />
     <link rel="stylesheet" type="text/css" href="css/font-awesome.min.css" />
@@ -47,10 +47,10 @@
             </div>
           </div>
           <div id="setupContainer" class="col-md-4">
-            
+
             <div id="stream-desktop">
               <a href="#" class="btn btn-default empty invalid" data-stream="desktop"><i class="fa fa-desktop" aria-hidden="true"></i> Desktop</a>
-              
+
               <section>
                   <a href="#" rel="change" class="btn btn-default btn-block" title="Change desktop window..."><i class="fa fa-refresh blue" aria-hidden="true"></i> Change</a>
                   <a href="#" rel="remove-desktop" class="btn btn-default btn-block" title="Don't use desktop window anymore."><i class="fa fa-ban red" aria-hidden="true"></i></a>
@@ -82,7 +82,7 @@
               <a href="#" class="btn btn-default empty invalid" data-stream="audio" style="margin-left: 8px;"><i class="fa" aria-hidden="true"></i> Microphone</a>
 
               <section style="margin-left: 8px;">
-                  
+
                   <a href="#" rel="remove-audio" class="btn btn-default btn-block" title="Don't use microphone."><i class="fa fa-ban red" aria-hidden="true"></i></a>
               </section>
             </div>
@@ -186,13 +186,10 @@
     <!-- Bootstrap core JavaScript
     ================================================== -->
     <!-- Placed at the end of the document so the pages load faster -->
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
-    <script type="text/javascript" src="js/moment.min.js"></script>
-    <script src="js/tmpl.min.js"></script>
-    <script>
-        window.jQuery || document.write('<script src="../../assets/js/vendor/jquery.min.js"><\/script>')
-    </script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+    <script type="text/javascript" src="../shared/js/jquery/jquery.min.js"></script>
+    <script type="text/javascript" src="../shared/js/jquery/plugins/jquery.utils.js"></script>
+    <script type="text/javascript" src="../shared/js/ext/moment.min.js"></script>
+    <script type="text/javascript" src="../shared/js/bootstrap.js?v=%version%"></script>
     <script type="text/javascript" src="js/mediamanager.js?v=%version%"></script>
     <script type="text/javascript" src="js/compositor.js?v=%version%"></script>
     <script type="text/javascript" src="js/audioanalyser.js?v=%version%"></script>
@@ -218,7 +215,7 @@
             <label for="uploadModal-input-presenter">Presenter</label>
             <input type="text" class="form-control" id="uploadModal-input-presenter" placeholder="Presenter" value="{%=o.presenter%}">
           </div>
-        </div>          
+        </div>
       </form>
     </script>
 
