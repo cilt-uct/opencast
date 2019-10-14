@@ -75,11 +75,12 @@ function xhr(params, cb, fail, always) {
   request.send(params.data);
 }
 
+var maxLength = 0;
 var courseID = $.getURLParameter("sid"),
     user = [],
     seriesTitle = undefined,
     userURL = "/info/me.json",
-    seriesURL = '/api/series/'+ courseID + '/metadata';
+    seriesURL = '/api/series/'+ courseID + '/metadata';  
 
 xhr({url: userURL, responseType: 'json'}, 
   function(response) {
@@ -138,38 +139,6 @@ function manageDownload(el, link) {
   }
 }
 
-function downloadTrack(e) {
-  if (!this.value) {
-    return;
-  }
-  var url = this.value.replace('http:', 'https:');
-  var button = this.nextElementSibling;
-  button.href = url;
-  xhr({url: url, type: 'HEAD', responseType: 'response'}, function(res) {
-    if (res.status == 200) {
-      if (res.getResponseHeader('Content-Disposition')) {
-        var unitName = ['B', 'KB', 'MB', 'GB', 'TB', 'PB'];
-        var fileSize = parseInt(res.getResponseHeader('Content-Length'));
-        var unit = 0;
-        while (fileSize > 1024 && unit < 6) {
-          fileSize /= 1024;
-          unit++;
-        }
-        button.innerHTML = 'Download (' + parseInt(fileSize) + unitName[unit] + ')';
-   //     window.location = url;
-      }
-      else {
-        button.innerHTML = 'Download (Size unknown)';
-      }
-    }
-    else if (res.status == 404) {
-      alert('Unfortunately, that file could not be found. Please try another');
-    }
-  }, function(err) {
-    alert('Apologies, an error occurred in sourcing that file. The administrators have been contacted');
-  });
-}
-
 function getDuration(millis) {
   return new Date(millis).toISOString().substr(11, 8);
 }
@@ -178,103 +147,254 @@ function isMac() {
   return navigator.platform.indexOf('Mac') > -1;
 }
 
-function listEpisode(info) {
-  var epiItem = document.createElement('li');
+$(document).on("click", ".dlEpisode, .dlCaption", function () {
+    var episode_id = $(this).data('episode-id'),
+        $el = $('#'+ episode_id);
 
-  //Various DOM elements to contain episode information
-  var picSpan = document.createElement('span'),
-      titleSpan = document.createElement('span'),
-      creatorSpan = document.createElement('span'),
-      dateSpan = document.createElement('span'),
-      dlSpan = document.createElement('span'),
-      dlSelect = document.createElement('select'),
-      dlButton = document.createElement('a'),
-      vidLink = document.createElement('a'),
-      img = document.createElement('img');
-  epiItem.appendChild(picSpan);
-  epiItem.appendChild(titleSpan);
-  epiItem.appendChild(creatorSpan);
-  epiItem.appendChild(dateSpan);
-//  epiItem.appendChild(dlSpan);
-
-  titleSpan.innerHTML = '<span>' + he.encode(info.dcTitle) || '' + '</span>';
-  creatorSpan.innerHTML = '<span>' + he.encode(info.dcCreator ? info.dcCreator : '') + '</span>';
-  dateSpan.innerHTML = '<span>' + moment(info.dcCreated).format('D MMM YYYY HH:mm') || '' + '</span>';
-
-  vidLink.href = '/engage/theodul/ui/core.html?ltimode=true&id=' + info.id;
-
-  picSpan.appendChild(vidLink);
-
-  //Loop thru pictures to find snapshot of video (append to img tag)
-  var attachments = info.mediapackage.attachments.attachment;
-  var fallback = "";
-  for (var i = 0, n = attachments.length; i < n; i++) {
-    if (!attachments[i].mimetype) {
-      continue;
+    if ($el.data('downloaded') === false) {
+        $el.data('downloaded', true);
+        trackUser(episode_id);
     }
-    else if (attachments[i].mimetype.indexOf('image') > -1 && attachments[i].type.indexOf('timeline+preview') === -1) {
-      fallback = info.mediapackage.attachments.attachment[i].url.replace('http:', 'https:');
-      if (attachments[i].type.indexOf('search+preview') > -1) {
-        img.src = info.mediapackage.attachments.attachment[i].url.replace('http:', 'https:'); //TODO: proper check to stop mixed-mode
-        break;
-      }
+});
+
+function trackUser(episodeID) {
+    $.ajax({
+        type: 'PUT', 
+        dataType: 'json', 
+        url:  "/usertracking", 
+        headers: {"Accept": "text/plain, */*; q=0.01"},
+        data: {"id": episodeID, "type": "VIEWS", "in" : 0}
+    });    
+}
+
+function sortTable() {
+    var table, rows, switching, i, x, y, shouldSwitch;
+    table = document.getElementById("mediaTable");
+    switching = true;
+
+    while (switching) {
+        switching = false;
+        rows = table.rows;
+
+        for (i = 1; i < (rows.length - 1); i++) {
+            shouldSwitch = false;
+            x = rows[i].getElementsByTagName("td")[2];
+            y = rows[i + 1].getElementsByTagName("td")[2];
+        
+            if (x.innerHTML.toLowerCase() > y.innerHTML.toLowerCase()) {
+                shouldSwitch = true;
+                break;
+            }
+        }
+        if (shouldSwitch) {
+            rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
+            switching = true;
+        }
     }
-  }
-  if (!img.src && fallback) {
-    img.src = fallback;
-  }
-  vidLink.style.backgroundImage = 'url(' + img.src + ')'
+}
 
-  dlSpan.innerHTML = '<span></span>';
-  dlButton.innerHTML = 'Download';
-  dlButton.classList.add('button');
-  dlButton.target = '_blank';
+$(document).on("click", ".downloader", function () {
+    if(document.getElementById("mediaLinks")) {
+        $('#mediaLinks').html("");
+    }
 
-  //Populate select element with downloadable links
-  dlSpan.querySelector('span').appendChild(dlSelect);
-  dlSpan.querySelector('span').appendChild(dlButton);
-  dlSelect.innerHTML = '<option value="">--Select Media for Download--</option>';
-  var mediaTracks = info.mediapackage.media.track;
-  var maxLength = 0;
-  var timestamp = new Date();
-  var month = timestamp.getMonth() < 9 ? '0' + (timestamp.getMonth() + 1) : timestamp.getMonth() + 1;
-  var day = (timestamp.getDate() < 10 ? '0' : '') + timestamp.getDate();
-  var dateStamp = "" + timestamp.getFullYear() + month + day;    //TODO: consider multiple lectures on the same day
-  if (!Array.isArray(mediaTracks)) {
-    mediaTracks = [mediaTracks];
-  }
-  mediaTracks.forEach( function(mediaTrack) {
-    var trackType = mediaTrack.type.split('/');
-    var fileType = mediaTrack.mimetype.split('/');
-    var opt = document.createElement('option');
-    opt.value = mediaTrack.url + '/download/' + info.dcTitle + '_' + dateStamp + '_' + trackType[0].charAt(0).toUpperCase() + trackType[0].substring(1) + (fileType[0] === 'audio' ? '.mp3' : '.' + fileType[1]) ;
+    var episodeTitle = $(this).data('title'),
+        episodePresenter = $(this).data('presenter'),
+        episodeDate = $(this).data('date'),
+        mediaTrack  = $(this).data('package'),
+        captions  = $(this).data('captions'),
+        episodeID  = $(this).data('id'),
+        timestamp = new Date(),
+        month = timestamp.getMonth() < 9 ? '0' + (timestamp.getMonth() + 1) : timestamp.getMonth() + 1,
+        day = (timestamp.getDate() < 10 ? '0' : '') + timestamp.getDate(),
+        dateStamp = "" + timestamp.getFullYear() + month + day;
+
+    $('#titleHolder').html(episodeTitle);
+    $('#presenterHolder').html(episodePresenter);
+    $('#dateHolder').html(episodeDate);
+
+    if (!Array.isArray(mediaTrack)) {
+        mediaTrack = [mediaTrack];
+    }
+
     try {
-      var typeText = (mediaTrack.type.split('/'))[0];
-      opt.innerHTML = he.encode(typeText.charAt(0).toUpperCase() + typeText.substring(1) + ' - ' + (mediaTrack.hasOwnProperty('video') ? 'Video @ ' + mediaTrack.video.resolution : 
-                          (mediaTrack.hasOwnProperty('audio') ? 'Audio' : "Undetermined Track")));
+        var  tBody = document.getElementById('mediaLinks');
+        _.forEach(mediaTrack, function(item) {
+            var type, quality, videoName, caption_type, 
+                tRow = document.createElement('tr'),
+                tCol1 = document.createElement('td'),
+                tCol2 = document.createElement('td'),
+                tCol3 = document.createElement('td'),
+                tCol4 = document.createElement('td'),                
+                trackType = item.type.split('/'),
+                fileType = item.mimetype.split('/');
+        
+            downloadURL = item.url.replace("http", "https") + '/download/' + episodeTitle + '_' + dateStamp + '_' + trackType[0].charAt(0).toUpperCase() + trackType[0].substring(1) + (fileType[0] === 'audio' ? '.mp3' : '.' + fileType[1]);
+            
+            if (item.type.indexOf('pic-in-pic') > -1) { 
+                type = '_PicInPic';
+                videoName = "Picture-in-Picture";
+            } else if (item.type.indexOf('composite') > -1) { 
+                type = '_SideBySide';
+                videoName = "Side By Side";
+            } else if (item.type.indexOf('presenter') > -1 &&
+                item.mimetype.indexOf("audio") > -1) {
+                videoName = "Presenter (audio-only)";
+            } else if (item.type.indexOf('presenter') > -1) {
+                type = "_Presenter";
+                if (caption_type == '') { caption_type = type; }
+                videoName = "Presenter (video)";
+            } else if (item.type.indexOf('presentation2') > -1) {
+                type = "_Presentation";
+                if (caption_type == '') { caption_type = type; }
+                videoName = "Presentation 2 (video)";
+            } else if (item.type.indexOf('presentation') > -1) {
+                type = "_Presentation";
+                if (caption_type == '') { caption_type = type; }
+                videoName = "Presentation (video)";
+            } else {
+                videoName = "Media track (" + item.type + ")";
+            }
+
+            if(typeof  item.video !== "undefined") {
+                var vidDims =  item.video.resolution.split('x')
+                                .map(function(dim) {
+                                    return parseInt(dim);
+                                });
+                var pixelCount = vidDims[0] * vidDims[1];
+                var isLandscape = vidDims[0] > vidDims[1];
+                if (pixelCount >= 921600 ){
+                    quality = 'High Quality (' +  ( isLandscape ? vidDims[1] + 'p' :  item.video.resolution) + ')';
+                } else if (pixelCount >= 307200 ){
+                    quality = 'Medium Quality (' + (isLandscape ? vidDims[1] + 'p' :  item.video.resolution) + ')';
+                } else {
+                    quality = 'Low Quality (' + (isLandscape ? vidDims[1] + 'p' :  item.video.resolution) + ')';
+                }
+            } else if (item.audio &&  item.audio.bitrate) {
+                quality = parseInt(item.audio.bitrate/1000) + "kbps";
+            }
+            
+            tBody.appendChild(tRow);
+            tCol1.innerHTML = videoName;
+            tCol2.innerHTML = item.mimetype;
+            tCol3.innerHTML = quality;
+            tCol4.className = "text-center";
+            tCol4.innerHTML = "<a class='btn btn-default btn-sm dlEpisode' data-episode-id='" + episodeID + "' role='button' href='" + downloadURL + "'><i class='glyphicon glyphicon-download'></i></a>";
+        
+            tRow.appendChild(tCol1);
+            tRow.appendChild(tCol2);
+            tRow.appendChild(tCol3);
+            tRow.appendChild(tCol4);
+        });   
+        
+        if(captions && Array.isArray(captions)) {
+            _.forEach(captions, function(item) {
+                var tCaptionRow = document.createElement('tr'),
+                    tCaptionCol1 = document.createElement('td'),
+                    tCaptionCol2 = document.createElement('td'),
+                    tCaptionCol3 = document.createElement('td'),
+                    tCaptionCol4 = document.createElement('td'), 
+                    captionDownloadURL = item.url.replace("http", "https") + '/download/';
+
+                tBody.appendChild(tCaptionRow);
+                tCaptionCol1.innerHTML = "Caption";
+                tCaptionCol2.innerHTML = item.mimetype;
+                tCaptionCol3.innerHTML = "";
+                tCaptionCol4.className = "text-center";
+                tCaptionCol4.innerHTML = "<a class='btn btn-default btn-sm dlCaption' data-episode-id='" + episodeID + "' role='button' href='" + captionDownloadURL + "'><i class='glyphicon glyphicon-download'></i></a>";
+
+                tCaptionRow.appendChild(tCaptionCol1);
+                tCaptionRow.appendChild(tCaptionCol2);
+                tCaptionRow.appendChild(tCaptionCol3);
+                tCaptionRow.appendChild(tCaptionCol4);
+            });
+        }
     } catch(e) {
-      console.log(e);
+        console.log(e);
     }
-    dlSelect.appendChild(opt);
-    if (maxLength < mediaTrack.duration) {
-      maxLength = mediaTrack.duration;
+    sortTable();
+});
+
+function listEpisode(info) {
+    var epiItem = document.createElement('li');
+    var recordid = info.id,
+        mediaTrack = info.mediapackage.media.track;
+
+    //Various DOM elements to contain episode information
+    var picSpan = document.createElement('span'),
+        titleSpan = document.createElement('span'),
+        creatorSpan = document.createElement('span'),
+        dateSpan = document.createElement('span'),
+        dlSpan = document.createElement('span'),
+        downloadSpan = document.createElement('span'),
+        vidLink = document.createElement('a'),
+        img = document.createElement('img');
+        dlBtn = document.createElement('button'),
+        dlIcon = document.createElement('span'),
+        dlModal = document.createElement('div');
+    epiItem.appendChild(picSpan);
+    epiItem.appendChild(titleSpan);
+    epiItem.appendChild(creatorSpan);
+    epiItem.appendChild(dateSpan);
+    epiItem.appendChild(dlSpan);
+    dlSpan.appendChild(downloadSpan);
+    downloadSpan.appendChild(dlBtn);
+
+    titleSpan.innerHTML = '<span>' + he.encode(info.dcTitle) || '' + '</span>';
+    creatorSpan.innerHTML = '<span>' + he.encode(info.dcCreator ? info.dcCreator : '') + '</span>';
+    dateSpan.innerHTML = '<span>' + moment(info.dcCreated).format('D MMM YYYY HH:mm') || '' + '</span>';
+
+    vidLink.href = '/engage/theodul/ui/core.html?ltimode=true&id=' + info.id;
+
+    picSpan.appendChild(vidLink);
+
+    //Loop thru pictures to find snapshot of video (append to img tag)
+    var attachments = info.mediapackage.attachments.attachment;
+    var captions = [];
+    var fallback = "";
+    for (var i = 0, n = attachments.length; i < n; i++) {
+        if (!attachments[i].mimetype) {
+            continue;
+        } else if (attachments[i].mimetype.indexOf('image') > -1 && attachments[i].type.indexOf('timeline+preview') === -1) {
+            fallback = info.mediapackage.attachments.attachment[i].url.replace('http:', 'https:');
+            if (attachments[i].type.indexOf('search+preview') > -1) {
+                img.src = info.mediapackage.attachments.attachment[i].url.replace('http:', 'https:'); //TODO: proper check to stop mixed-mode
+                break;
+            }
+        } else if (attachments[i].type.indexOf('captions') >= 0 || attachments[i].mimetype == 'text/vtt') {
+            captions.push(attachments[i]);
+        }
     }
-  });
-  
-  //Event listener for the downloading of media tracks
-  dlSelect.addEventListener('change', downloadTrack, false);
-  vidLink.setAttribute('data-duration', getDuration(maxLength));
+    if (!img.src && fallback) {
+        img.src = fallback;
+    }
+    vidLink.style.backgroundImage = 'url(' + img.src + ')';
+    vidLink.setAttribute('data-duration', getDuration(maxLength));
+
+    // design download button
+    dlBtn.setAttribute("id", recordid);
+    dlBtn.setAttribute("data-toggle", "modal");
+    dlBtn.className = "btn btn-primary downloader";
+    dlBtn.setAttribute("data-target", "#downloadModal"); 
+    dlBtn.setAttribute("data-id", recordid);
+    dlBtn.setAttribute("data-title", info.dcTitle);
+    dlBtn.setAttribute("data-downloaded", false);
+    dlBtn.setAttribute("data-presenter", info.dcCreator);
+    dlBtn.setAttribute("data-date", moment(info.dcCreated).format('D MMM YYYY HH:mm'));
+    dlBtn.setAttribute("data-package", JSON.stringify(mediaTrack));
+    dlBtn.setAttribute("data-captions", JSON.stringify(captions));
+    dlBtn.innerHTML = '<i class="glyphicon glyphicon-download"></i> Download';
 
   //Set data attribute to make item searchable
-  var searchableObject = {
-    title: info.dcTitle || '',
-    createddate: info.dcCreated || '',
-    creator: info.dcCreator || ''
-  };
-  epiItem.setAttribute('data-id', info.id);
-  epiItem.setAttribute('data-search', JSON.stringify(searchableObject));
-  epiItem.setAttribute('data-title', info.dcTitle || 'track');
-  return epiItem;
+    var searchableObject = {
+        title: info.dcTitle || '',
+        createddate: info.dcCreated || '',
+        creator: info.dcCreator || ''
+    };
+    epiItem.setAttribute('data-id', info.id);
+    epiItem.setAttribute('data-search', JSON.stringify(searchableObject));
+    epiItem.setAttribute('data-title', info.dcTitle || 'track');
+    return epiItem;
 }
 
 var limit = 10000,

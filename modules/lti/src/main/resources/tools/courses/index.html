@@ -91,6 +91,36 @@
                       </div>
                     </div>
                   </ul>
+                  <div id="downloadModal" class="modal fade" data-backdrop="static" tabindex="-1" role="dialog" aria-labelledby="downloadModalLabel">
+                    <div class="modal-dialog" role="document">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal" aria-label="close">
+                                    <span aria-hidden="true" title="Close Popup">&times;</span>
+                                </button>
+                                <h3 class="modal-title" id="downloadModalLabel">Download videos</h3>
+                            </div>
+                            <div class="modal-body text-center" id="downloadLinks">
+                                <h4 id="titleHolder"></h4>
+                                <h5 id="presenterHolder"></h5>
+                                <h5 id="dateHolder"></h5>
+                                <table class="table table-condensed table-sml table-bordered table-hover text-left" id="mediaTable">
+                                    <thead>
+                                        <tr>
+                                            <th>Type</th>
+                                            <th>Format</th>
+                                            <th>Resolution</th>
+                                            <th class="text-center">Download</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="mediaLinks"></tbody>
+                                </table>
+                            </div>
+                            <div class="modal-footer">
+                                <button class="btn btn-primary"  data-dismiss="modal" aria-hidden="true">Close</button>
+                            </div>
+                        </div>
+                    </div>
               </div>
           </div>
       </div>
@@ -102,6 +132,9 @@
     <script type="text/javascript" src="../shared/js/he.js"></script>
     <script type="text/javascript" src="../shared/js/lti.js?v=%version%"></script>
     <script type="text/javascript" src="js/lti.recordings.js?v=%version%"></script>
+    <script type="text/javascript" src= "js/jquery2.js"></script>
+    <script type="text/javascript" src= "../shared/js/bootstrap.js"></script>
+    <script type="text/javascript" src="../shared/js/underscore.js"></script>
     <link href="https://fonts.googleapis.com/css?family=Open+Sans:300,300i,400,400i,600,600i,700,700i" rel="stylesheet">
-  </body>
+</body>
 </html>
