@@ -2423,6 +2423,16 @@ function closeSeries() {
     )
 }
 
+function blockLongTtEvents(starttime, endtime) {
+    var startTime = moment(starttime, "hh:mm");
+    var endTime = moment(endtime, "hh:mm");
+    var duration = moment.duration(endTime.diff(startTime)).asMilliseconds();
+
+    if(duration > 18000000) {
+        return "disabled";
+    }
+}
+
 var pollSession = setInterval(function() {
   $.ajax({
     url: '/lti'
