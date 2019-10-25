@@ -51,6 +51,7 @@
                   <div class="lti-oc-title">
                       <a target="_blank" class="right button button-icon" data-icon="feedback" title="Report a quality issue with this video" id="feedbackBtn"><span>Feedback</span></a>
                       <a href="/ltitools/feed/index.html?sid=%courseID%&upload=%upload%&v=%version%" class="right button button-icon" data-icon="download" title="Download audio and video files for all recordings"><span>Download</span></a>
+                      <a target="_blank" class="btn btn-primary right upcoming" data-icon="upcoming" title="View upcoming recordings for next 7 days" id="upcomingBtn"><span></span></a>
                       <h2>Latest Recordings</h2>
                   </div>
               </div>
@@ -91,20 +92,34 @@
                       </div>
                     </div>
                   </ul>
-                  <div class="lti-oc-upcoming">
-                    <h2>Upcoming Recordings</h2><br/>
-                    <span class="noPseudo" id="upcoming_recs"></span>
-                    <table id="grid" class="table table-bordered table-hover ">
-                        <thead>
-                            <th>Title</th>
-                            <th>Presenter</th>
-                            <th>Date</th>
-                            <th>Venue</th>
-                            <th>Status</th>
-                        </thead>
-                        <tbody id="upcoming-grid-body">
-                        </tbody>
-                    </table>
+                  <div id="upcomingModal" class="modal fade" data-backdrop="static" tabindex="-1" role="dialog" aria-labelledby="upcomingModalLabel">
+                        <div class="modal-dialog" role="document">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <button type="button" class="close" data-dismiss="modal" aria-label="close">
+                                        <span aria-hidden="true" title="Close Popup">&times;</span>
+                                    </button>
+                                    <h3 class="modal-title" id="downloadModalLabel">Upcoming Recordings</h3>
+                                </div>
+                                <div class="modal-body text-center" id="upcomingTbl">
+                                    <h5 id="records_count"><b></b></h5>
+                                    <table class="table table-condensed table-sml table-bordered table-hover text-left" id="upcomingGrid">
+                                        <thead>
+                                            <tr>
+                                                <th>Title</th>
+                                                <th>Presenter</th>
+                                                <th>Date</th>
+                                                <th>Venue</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="upcoming-grid-body"></tbody>
+                                    </table>
+                                </div>
+                                <div class="modal-footer">
+                                    <button class="btn btn-primary"  data-dismiss="modal" aria-hidden="true">Close</button>
+                                </div>
+                            </div>
+                        </div>
                   </div>
                   <div id="downloadModal" class="modal fade" data-backdrop="static" tabindex="-1" role="dialog" aria-labelledby="downloadModalLabel">
                     <div class="modal-dialog" role="document">

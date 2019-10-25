@@ -703,15 +703,22 @@ var today = new Date(),
 
 seventhDate.setDate(seventhDate.getDate() + 7);
 seventhDate = seventhDate.toISOString().split('.')[0]+"Z";
-   
+
 var recordingsURL = "/api/events?filter=start:" + startDate + "/" + seventhDate + ",series:"+ courseID + "&sort=start_date:ASC&limit=100&offset=0";
-var agentsURL = "/mrtg/dashboard/cainfo.json";
 
-xhr({url: recordingsURL, responseType: 'json'}, 
-    function(response) {
-       var recordings_count ="for the next seven days (" + response.length + ")";      
-       $('#upcoming_recs').append(recordings_count);
+xhr({url: recordingsURL, responseType: 'json'}, function(response) {
+    var upcoming_btn = document.getElementById("upcomingBtn"); 
+    upcoming_btn.append("Upcoming Recordings (" + response.length + ")");
 
+    if(response.length <= 0) {
+        $('#upcomingBtn').attr("disabled", "disabled");
+    } else {
+        $('#records_count').append("<b>For the next 7 days (" + response.length +")</b>");
+        upcoming_btn.setAttribute("data-toggle", "modal");
+        upcoming_btn.setAttribute("data-target", "#upcomingModal");
+    }
+
+    try{
         _.forEach(response, function(item) {
             var details = item,
                 status = getStatus(details), 
@@ -723,35 +730,34 @@ xhr({url: recordingsURL, responseType: 'json'},
                 title_col = document.createElement('td'),
                 presenter_col = document.createElement('td'),
                 date_col = document.createElement('td'),
-                venue_col = document.createElement('td'),
-                status_col = document.createElement('td');
+                venue_col = document.createElement('td');
 
             title_col.innerHTML = item.title;
             if(presenters && Array.isArray(presenters)) {
                 presenter_col.innerHTML = presenters.join();
-            }
-            else {
+            } else {
                 presenter_col.innerHTML = presenters;
             }
             date_col.innerHTML = item.presenter;
             date_col.innerHTML = moment(item.start).format('ddd D MMM YYYY, HH:mm');
 
             // Get agent name
+            var agentsURL = "/mrtg/dashboard/cainfo.json";
             xhr({url: agentsURL, responseType: 'json'}, 
                 function(response) {
                     var venue = response[location];
                     venue_col.innerHTML = venue;
             });
-            status_col.innerHTML = status;
-            status_col.setAttribute('title', tooltip);
 
             tbl_row.appendChild(title_col);
             tbl_row.appendChild(presenter_col);
             tbl_row.appendChild(date_col);
             tbl_row.appendChild(venue_col);
-            tbl_row.appendChild(status_col);
             upcomingList.appendChild(tbl_row);
         })   
+    } catch(e) {
+        console.log(e);
     }
+}
 );
 })();
