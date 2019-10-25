@@ -2424,11 +2424,12 @@ function closeSeries() {
 }
 
 function blockLongTtEvents(starttime, endtime) {
-    var startTime = moment(starttime, "hh:mm");
-    var endTime = moment(endtime, "hh:mm");
-    var duration = moment.duration(endTime.diff(startTime)).asMilliseconds();
+    var maxTime = 18000000,      // 5 hours in milliseconds
+        startTime = moment(starttime, "hh:mm"),
+        endTime = moment(endtime, "hh:mm"),
+        duration = moment.duration(endTime.diff(startTime)).asMilliseconds();
 
-    if(duration > 18000000) {
+    if(duration > maxTime) {
         return "disabled";
     }
 }
