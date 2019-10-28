@@ -1,4 +1,4 @@
-const maxTime = 18000000;      // 5 hours in milliseconds
+const maxEventDuration = 18000000;      // 5 hours in milliseconds
 
 var OCManager = (function($) {
   function getURLParameter(name) {
