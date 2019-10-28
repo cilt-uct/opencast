@@ -1,3 +1,5 @@
+const maxEventDuration = 18000000;      // 5 hours in milliseconds
+
 var OCManager = (function($) {
   function getURLParameter(name) {
       return decodeURIComponent((new RegExp('[?|&]' + name + '=' + '([^&;]+?)(&|#|;|$)').exec(location.search)||[,""])[1].replace(/\+/g, '%20')) || '';
@@ -2421,6 +2423,16 @@ function closeSeries() {
             }
         }
     )
+}
+
+function blockLongTtEvents(starttime, endtime) {
+    var startTime = moment(starttime, "hh:mm"),
+        endTime = moment(endtime, "hh:mm"),
+        duration = moment.duration(endTime.diff(startTime)).asMilliseconds();
+
+    if(duration > maxTime) {
+        return "disabled";
+    }
 }
 
 var pollSession = setInterval(function() {

@@ -770,7 +770,22 @@
     <!-- setup o.term properly below, and DO NOT USE o.start_date as a substitute -->
     <script type="text/x-tmpl" id="tmpl-ttrow">
         <li class="{%= o.obj.ca_name ? '' : 'un' %}supported">
-        <span><i title="Scheduling Conflict" class="fa fa-exclamation-triangle" aria-hidden="true"></i><input id="{%= o.obj.course %},{%= moment(o.obj.start_date).format('YYYY') %}-{%= o.obj.activity_id %}-{%= o.num %}" value="{%= JSON.stringify(o.obj) %}" name="{%= o.obj.course %},{%= moment(o.obj.start_date).format('YYYY') %}-{%= o.obj.activity_id %}-{%= o.num %}" type="checkbox" /></span><span>{%= o.obj.class_section %}</span><span>{%= moment(o.obj.start_date).format('YYYY-MM-DD') %}</span><span>{%= moment(o.obj.end_date).format('YYYY-MM-DD') %}</span><span>{%= o.obj.start_time %}</span><span>{%= o.obj.end_time %}</span><ul class="activeDays">{% include('tmpl-ttdays', o.obj.days); %}</ul><span>{%= o.obj.venue || o.obj.sn_venue %}</span>
+            <span>
+                <i title="Scheduling Conflict" class="fa fa-exclamation-triangle" aria-hidden="true"></i>
+                <input id="{%= o.obj.course %},{%= moment(o.obj.start_date).format('YYYY') %}-{%= o.obj.activity_id %}-{%= o.num %}" 
+                       value="{%= JSON.stringify(o.obj) %}"
+                       name="{%= o.obj.course %},{%= moment(o.obj.start_date).format('YYYY') %}-{%= o.obj.activity_id %}-{%= o.num %}" 
+                       type="checkbox" 
+                       {%= blockLongTtEvents(o.obj.start_time, o.obj.end_time) %}
+                />
+            </span>
+            <span>{%= o.obj.class_section %}</span>
+            <span>{%= moment(o.obj.start_date).format('YYYY-MM-DD') %}</span>
+            <span>{%= moment(o.obj.end_date).format('YYYY-MM-DD') %}</span>
+            <span>{%= o.obj.start_time %}</span>
+            <span>{%= o.obj.end_time %}</span>
+            <ul class="activeDays">{% include('tmpl-ttdays', o.obj.days); %}</ul>
+            <span>{%= o.obj.venue || o.obj.sn_venue %}</span>
         </li>
     </script>
     <script type="text/x-tmpl" id="tmpl-ttdays">{% for (var key in o) { %}<li class="{%= o[key] ? 'activeDay' : '' %}"><a></a></li>{% } %}
