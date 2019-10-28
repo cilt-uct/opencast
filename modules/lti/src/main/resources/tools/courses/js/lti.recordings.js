@@ -638,4 +638,127 @@ var EventsTable = function() {
 
 var eTable = new EventsTable();
 
+function getStatus(details) {
+    var evStatus = 'Processing';
+    var isFuture = (new Date()).getTime() < (new Date(details.start)).getTime();
+
+    switch(details.status) {
+      case 'EVENTS.EVENTS.STATUS.SCHEDULED':
+        evStatus = isFuture ? 'Upcoming' : 'Expired';
+        break;
+      case 'EVENTS.EVENTS.STATUS.RECORDING':
+        evStatus ='Capturing';
+        break;
+      case 'EVENTS.EVENTS.STATUS.PROCESSING_FAILURE':
+      case 'EVENTS.EVENTS.STATUS.RECORDING_FAILURE':
+        evStatus ='Failed'; 
+        break;
+      case 'EVENTS.EVENTS.STATUS.INGESTING':
+      case 'EVENTS.EVENTS.STATUS.PROCESSING':
+      case 'EVENTS.EVENTS.STATUS.PENDING':
+        evStatus = 'Processing';
+        break;
+      case 'EVENTS.EVENTS.STATUS.PROCESSED':
+        if (isFuture) {
+            evStatus = 'Upcoming';
+        } else {
+            if (details.publications && details.publications.length > 0) {
+                evStatus = 'Published';
+            } else {
+                if (details.has_comments && !details.has_open_comments){
+                    evStatus = 'Unwanted';
+                } else {
+                    evStatus = 'Awaiting Review';
+                }
+            }
+        }
+        break;
+      }
+    return evStatus;
+}
+
+function getTooltip(details) {
+    var status = getStatus(details);
+
+    if (status == "Processing") {
+        return "Processing: please check back later";
+    }
+    else if (status == "Unwanted") {
+        return "No event, no consent provided, or recording was published and later retracted.";
+    }
+    else if(status == "Awaiting Review") {
+        return "Queued for editing, or waiting for consent to be provided (if requested)";
+    }
+    else if(status == "Failed") {
+        return "Technical failure: event not recorded successfully";
+    }
+    else {
+        return "";
+    }
+}
+
+// Get events that are scheduled for the next 7 days
+var today = new Date(),
+    startDate = today.toISOString().split('.')[0]+"Z",
+    seventhDate = new Date(today);
+
+seventhDate.setDate(seventhDate.getDate() + 7);
+seventhDate = seventhDate.toISOString().split('.')[0]+"Z";
+
+var recordingsURL = "/api/events?filter=start:" + startDate + "/" + seventhDate + ",series:"+ courseID + "&sort=start_date:ASC&limit=100&offset=0";
+
+xhr({url: recordingsURL, responseType: 'json'}, function(response) {
+    var upcoming_btn = document.getElementById("upcomingBtn"); 
+    upcoming_btn.append("Upcoming Recordings (" + response.length + ")");
+
+    if(response.length <= 0) {
+        $('#upcomingBtn').attr("disabled", "disabled");
+    } else {
+        $('#records_count').append("<b>For the next 7 days (" + response.length +")</b>");
+        upcoming_btn.setAttribute("data-toggle", "modal");
+        upcoming_btn.setAttribute("data-target", "#upcomingModal");
+    }
+
+    try{
+        _.forEach(response, function(item) {
+            var details = item,
+                status = getStatus(details), 
+                tooltip = getTooltip(details),
+                presenters = item.presenter,
+                location = item.location,
+                upcomingList = document.querySelector('#upcoming-grid-body'),
+                tbl_row = document.createElement('tr'),
+                title_col = document.createElement('td'),
+                presenter_col = document.createElement('td'),
+                date_col = document.createElement('td'),
+                venue_col = document.createElement('td');
+
+            title_col.innerHTML = item.title;
+            if(presenters && Array.isArray(presenters)) {
+                presenter_col.innerHTML = presenters.join();
+            } else {
+                presenter_col.innerHTML = presenters;
+            }
+            date_col.innerHTML = item.presenter;
+            date_col.innerHTML = moment(item.start).format('ddd D MMM YYYY, HH:mm');
+
+            // Get agent name
+            var agentsURL = "/mrtg/dashboard/cainfo.json";
+            xhr({url: agentsURL, responseType: 'json'}, 
+                function(response) {
+                    var venue = response[location];
+                    venue_col.innerHTML = venue;
+            });
+
+            tbl_row.appendChild(title_col);
+            tbl_row.appendChild(presenter_col);
+            tbl_row.appendChild(date_col);
+            tbl_row.appendChild(venue_col);
+            upcomingList.appendChild(tbl_row);
+        })   
+    } catch(e) {
+        console.log(e);
+    }
+}
+);
 })();
