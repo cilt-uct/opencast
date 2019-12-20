@@ -127,17 +127,15 @@ CaptureAgents.prototype = {
   setFromAdminUIAPI: function(agentResponse) {
     var agents = agentResponse.results;
     agents.forEach(function(agent) {
-      var inputs = agent.inputs.map(function(input) {
-                     return input.id;
-                   });
-      var flavors = agent.inputs.map(function(input) {
-                      return input.id == 'audio' ? 'presenter/audio' : input.id + '/source'
-                    });
-
-      this[agent.Name] = new CaptureAgent(agent.Name, {
-                            inputs: inputs,
-                           flavors: flavors
-                         });
+      if(agent.inputs) {
+        var inputs = agent.inputs.map(function(input) {return input.id;});
+        var flavors = agent.inputs.map(function(input) {
+                        return input.id == 'audio' ? 'presenter/audio' : input.id + '/source'
+                      });
+        this[agent.Name] = new CaptureAgent(agent.Name, {inputs: inputs, flavors: flavors});
+      } else {
+        this[agent.Name] = new CaptureAgent(agent.Name);
+      }
     }.bind(this));
   },
   fetchHumanReadableNames: function(url) {
