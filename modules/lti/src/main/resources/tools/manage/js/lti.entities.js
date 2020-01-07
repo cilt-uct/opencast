@@ -95,7 +95,7 @@ Organization.prototype = {
       this.properties['admin.event.new.start_time'] = this.properties['admin.event.new.start_time'] || '07:00';
       this.properties['admin.event.new.end_time'] = this.properties['admin.event.new.end_time'] || '23:00';
       this.properties['admin.event.new.max_duration'] = this.properties['admin.event.new.max_duration'] || '240';
-      this.properties['lti.manage.captureagent.url'] = this.properties['lti.manage.captureagent.url'] || '/admin-ng/capture-agents/agents.json';
+      this.properties['lti.manage.captureagent.url'] = this.properties['lti.manage.captureagent.url'] || '/admin-ng/capture-agents/agents.json?inputs=true';
       this.properties['lti.manage.captureagent.names'] = this.properties['lti.manage.captureagent.names'] || '/mrtg/dashboard/cainfo.json';
       this.properties['lti.manage.downloads'] = this.properties['lti.manage.downloads'] ? this.properties['lti.manage.downloads'] === 'true' : false;
       this.properties['lti.manage.workflow.schedule'] = this.properties['lti.manage.workflow.schedule'] || 'uct-process-for-editing';
