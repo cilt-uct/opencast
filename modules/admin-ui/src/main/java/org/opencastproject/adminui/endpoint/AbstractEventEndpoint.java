@@ -2071,7 +2071,6 @@ public abstract class AbstractEventEndpoint {
     } catch (IllegalArgumentException | UnsupportedAssetException e) {
       return RestUtil.R.badRequest(e.getMessage());
     } catch (Exception e) {
-      logger.error(e.getMessage());
       return RestUtil.R.serverError();
     }
   }

@@ -489,7 +489,7 @@ EventManager.prototype = {
   },
   checkConflictsViaAdmin: function(data, isOnTheFly, doReturnId) {
     return $.Deferred(function(d) {
-      if (data.hasOwnProperty('presenter') && data.presenter instanceof File) {
+      if (data.hasOwnProperty('presenter.0') && data.presenter instanceof File) {
         d.resolve();
         return;
       }
@@ -746,7 +746,7 @@ EventManager.prototype = {
             ajaxOpts.data = fd;
 
             if (isUpload) {
-              fd.append('presenter', data.presenter);
+              fd.append('presenter.0', data.presenter);
               ajaxOpts.xhr = this.uploadProgress.bind(this);
             }
             $.ajax(ajaxOpts)
