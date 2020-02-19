@@ -746,7 +746,7 @@ EventManager.prototype = {
             ajaxOpts.data = fd;
 
             if (isUpload) {
-              fd.append('presenter.0', data.presenter);
+              fd.append('track_presenter.0', data.presenter);
               ajaxOpts.xhr = this.uploadProgress.bind(this);
             }
             $.ajax(ajaxOpts)
