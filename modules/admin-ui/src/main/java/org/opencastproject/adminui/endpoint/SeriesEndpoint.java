@@ -949,6 +949,7 @@ public class SeriesEndpoint implements ManagedService {
 
     try {
       if (getAclService().applyAclToSeries(seriesId, accessControlList, override))
+        logger.info("Applied ACL to series {} with override {}", seriesId, override);
         return ok();
       else {
         logger.warn("Unable to find series '{}' to apply the ACL.", seriesId);

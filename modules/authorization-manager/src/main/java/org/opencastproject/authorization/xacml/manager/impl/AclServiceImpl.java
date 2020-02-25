@@ -130,6 +130,7 @@ public final class AclServiceImpl implements AclService {
       try {
         seriesService.updateAccessControl(seriesId, acl, override);
       } catch (NotFoundException e) {
+        logger.error("Not found attempting to apply ACL for series {}", seriesId);
         return false;
       }
       return true;

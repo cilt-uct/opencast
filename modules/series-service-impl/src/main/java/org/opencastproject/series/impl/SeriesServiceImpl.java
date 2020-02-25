@@ -276,8 +276,8 @@ public class SeriesServiceImpl extends AbstractIndexProducer implements SeriesSe
     if (accessControl == null) {
       throw new IllegalArgumentException("ACL parameter must not be null");
     }
-    if (needsUpdate(seriesId, accessControl)) {
-      logger.debug("Updating ACL of series {}", seriesId);
+    if (needsUpdate(seriesId, accessControl) || overrideEpisodeAcl) {
+      logger.info("Updating ACL of series {}", seriesId);
       boolean updated;
       // not found is thrown if it doesn't exist
       try {
@@ -291,12 +291,14 @@ public class SeriesServiceImpl extends AbstractIndexProducer implements SeriesSe
         updated = persistence.storeSeriesAccessControl(seriesId, accessControl);
         messageSender.sendObjectMessage(SeriesItem.SERIES_QUEUE, MessageSender.DestinationType.Queue,
                 SeriesItem.updateAcl(seriesId, accessControl, overrideEpisodeAcl));
+        logger.info("Sent update message for series {}", seriesId);
       } catch (SeriesServiceDatabaseException e) {
         logger.error("Could not update series {} with access control rules: {}", seriesId, e.getMessage());
         throw new SeriesException(e);
       }
       return updated;
     } else {
+      logger.warn("Series {} does not need update", seriesId);
       // todo not the right return code
       return true;
     }
