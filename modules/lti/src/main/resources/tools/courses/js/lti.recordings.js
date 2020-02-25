@@ -209,6 +209,10 @@ $(document).on("click", ".downloader", function () {
         day = (timestamp.getDate() < 10 ? '0' : '') + timestamp.getDate(),
         dateStamp = "" + timestamp.getFullYear() + month + day;
 
+    if( episodePresenter == undefined){
+        episodePresenter = "";
+    }
+   
     $('#titleHolder').html(episodeTitle);
     $('#presenterHolder').html(episodePresenter);
     $('#dateHolder').html(episodeDate);
