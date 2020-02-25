@@ -174,9 +174,6 @@ public class AssetManagerUpdatedEventHandler {
           try {
             if (seriesItem.getOverrideEpisodeAcl()) {
               authorizationService.removeAcl(mp, AclScope.Episode);
-
-              // TODO see if this is required
-              // authorizationService.setAcl(mp, AclScope.Episode, seriesItem.getAcl());
             }
             authorizationService.setAcl(mp, AclScope.Series, seriesItem.getAcl());
           } catch (MediaPackageException e) {
