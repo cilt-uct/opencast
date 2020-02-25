@@ -210,11 +210,11 @@ $(document).on("click", ".downloader", function () {
         dateStamp = "" + timestamp.getFullYear() + month + day;
    
     
-    if(typeof episodePresenter === 'undefined'){
-        $('#presenterHolder').html('');
-        console.log("print something");
+    if(typeof episodePresenter !== "undefined"){
+        $('#presenterHolder').html(episodePresenter); 
     }else{
-        $('#presenterHolder').html(episodePresenter);
+        $('#presenterHolder').html('print something');
+        console.log("print something");
     }
    
     $('#titleHolder').html(episodeTitle);
