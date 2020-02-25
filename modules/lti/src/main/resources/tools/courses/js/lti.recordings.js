@@ -212,8 +212,6 @@ $(document).on("click", ".downloader", function () {
     
     if(typeof episodePresenter !== "undefined"){
         $('#presenterHolder').html(episodePresenter); 
-    }else{
-        $('#presenterHolder').html('');
     }
    
     $('#titleHolder').html(episodeTitle);
