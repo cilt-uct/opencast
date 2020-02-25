@@ -199,7 +199,7 @@ $(document).on("click", ".downloader", function () {
     }
 
     var episodeTitle = $(this).data('title'),
-        episodePresenter = "print something"   //$(this).data('presenter'),
+        episodePresenter = $(this).data('presenter'),
         episodeDate = $(this).data('date'),
         mediaTrack  = $(this).data('package'),
         captions  = $(this).data('captions'),
@@ -210,12 +210,11 @@ $(document).on("click", ".downloader", function () {
         dateStamp = "" + timestamp.getFullYear() + month + day;
    
     
-    // if(typeof episodePresenter !== "undefined"){
-    //     $('#presenterHolder').html(episodePresenter); 
-    // }else{
-    //     $('#presenterHolder').html('print something');
-    //     console.log("print something");
-    // }
+    if(typeof episodePresenter !== "undefined"){
+        $('#presenterHolder').html(episodePresenter); 
+    }else{
+        $('#presenterHolder').html('');
+    }
    
     $('#titleHolder').html(episodeTitle);
     $('#dateHolder').html(episodeDate);
