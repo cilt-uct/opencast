@@ -208,13 +208,16 @@ $(document).on("click", ".downloader", function () {
         month = timestamp.getMonth() < 9 ? '0' + (timestamp.getMonth() + 1) : timestamp.getMonth() + 1,
         day = (timestamp.getDate() < 10 ? '0' : '') + timestamp.getDate(),
         dateStamp = "" + timestamp.getFullYear() + month + day;
-
+   
+    
     if(typeof episodePresenter === 'undefined'){
-        episodePresenter = "";
+        $('#presenterHolder').html('');
+        console.log("print something");
+    }else{
+        $('#presenterHolder').html(episodePresenter);
     }
    
     $('#titleHolder').html(episodeTitle);
-    $('#presenterHolder').html(episodePresenter);
     $('#dateHolder').html(episodeDate);
 
     if (!Array.isArray(mediaTrack)) {
