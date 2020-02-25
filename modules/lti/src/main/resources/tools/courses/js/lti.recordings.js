@@ -209,7 +209,7 @@ $(document).on("click", ".downloader", function () {
         day = (timestamp.getDate() < 10 ? '0' : '') + timestamp.getDate(),
         dateStamp = "" + timestamp.getFullYear() + month + day;
 
-    if( episodePresenter == undefined){
+    if(typeof episodePresenter === 'undefined'){
         episodePresenter = "";
     }
    
