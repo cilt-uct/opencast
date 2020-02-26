@@ -210,9 +210,10 @@ $(document).on("click", ".downloader", function () {
         dateStamp = "" + timestamp.getFullYear() + month + day;
    
     if(episodePresenter === "undefined"){
-      console.log("presenter is undefined");
+      $('#presenterHolder').html(" "); 
+      console.log(" ");
     }else{
-      console.log(episodePresenter);
+      $('#presenterHolder').html(episodePresenter); 
     }
     
     // if(typeof episodePresenter === "undefined" || episodePresenter === "null" || episodePresenter.length < 0){
