@@ -210,8 +210,10 @@ $(document).on("click", ".downloader", function () {
         dateStamp = "" + timestamp.getFullYear() + month + day;
    
     
-    if(typeof episodePresenter !== undefined || episodePresenter !== null || episodePresenter.length > 0){
-        $('#presenterHolder').html(episodePresenter); 
+    if(typeof episodePresenter === "undefined" || episodePresenter === "null" || episodePresenter.length < 0){
+        $('#presenterHolder').html("&nbsp;"); 
+    }else{
+      $('#presenterHolder').html(episodePresenter); 
     }
    
     $('#titleHolder').html(episodeTitle);
