@@ -209,8 +209,12 @@ $(document).on("click", ".downloader", function () {
         day = (timestamp.getDate() < 10 ? '0' : '') + timestamp.getDate(),
         dateStamp = "" + timestamp.getFullYear() + month + day;
    
-    console.log(episodePresenter);
-    console.log(episodePresenter.length);
+    if(episodePresenter === "undefined"){
+      console.log("presenter is undefined");
+    }else{
+      console.log(episodePresenter);
+    }
+    
     // if(typeof episodePresenter === "undefined" || episodePresenter === "null" || episodePresenter.length < 0){
     //     $('#presenterHolder').html("&nbsp;"); 
     // }else{
