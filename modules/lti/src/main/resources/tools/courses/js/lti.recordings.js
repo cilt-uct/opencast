@@ -209,12 +209,13 @@ $(document).on("click", ".downloader", function () {
         day = (timestamp.getDate() < 10 ? '0' : '') + timestamp.getDate(),
         dateStamp = "" + timestamp.getFullYear() + month + day;
    
-    
-    if(typeof episodePresenter === "undefined" || episodePresenter === "null" || episodePresenter.length < 0){
-        $('#presenterHolder').html("&nbsp;"); 
-    }else{
-      $('#presenterHolder').html(episodePresenter); 
-    }
+    console.log(episodePresenter);
+    console.log(episodePresenter.length);
+    // if(typeof episodePresenter === "undefined" || episodePresenter === "null" || episodePresenter.length < 0){
+    //     $('#presenterHolder').html("&nbsp;"); 
+    // }else{
+    //   $('#presenterHolder').html(episodePresenter); 
+    // }
    
     $('#titleHolder').html(episodeTitle);
     $('#dateHolder').html(episodeDate);
