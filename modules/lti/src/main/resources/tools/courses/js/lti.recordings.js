@@ -199,7 +199,7 @@ $(document).on("click", ".downloader", function () {
     }
 
     var episodeTitle = $(this).data('title'),
-        episodePresenter = $(this).data('presenter'),
+        episodePresenter = $(this).data('presenter') === "undefined" ? ' ' : $(this).data('presenter'),
         episodeDate = $(this).data('date'),
         mediaTrack  = $(this).data('package'),
         captions  = $(this).data('captions'),
@@ -209,13 +209,8 @@ $(document).on("click", ".downloader", function () {
         day = (timestamp.getDate() < 10 ? '0' : '') + timestamp.getDate(),
         dateStamp = "" + timestamp.getFullYear() + month + day;
    
-    if(episodePresenter === "undefined"){
-      $('#presenterHolder').html(" ");
-    }else{
-      $('#presenterHolder').html(episodePresenter); 
-    }
-   
     $('#titleHolder').html(episodeTitle);
+    $('#presenterHolder').html(episodePresenter); 
     $('#dateHolder').html(episodeDate);
 
     if (!Array.isArray(mediaTrack)) {
