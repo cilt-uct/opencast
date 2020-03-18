@@ -1045,7 +1045,7 @@ EventManager.prototype = {
         processing: this.getProcessing(data, isUpload),
             access: this.series.acl,
             source: isUpload ? {type: 'UPLOAD'} : this.captureAgents[data.location || data.ca_name].getSource(data),
-          metadata: this.setEventMetadata(data),
+          metadata: this.setEventMetadata(data, null, isUpload),
             assets: {}
       };
 
@@ -1068,7 +1068,7 @@ EventManager.prototype = {
     }
     return processing;
   },
-  setEventMetadata: function(data, event) {
+  setEventMetadata: function(data, event, isUpload) {
     var metadata = [{
       flavor: 'dublincore/episode',
        title: 'EVENTS.EVENTS.DETAILS.CATALOG.EPISODE',
@@ -1134,6 +1134,15 @@ EventManager.prototype = {
         label: 'EVENTS.EVENTS.DETAILS.METADATA.START_DATE',
         type: 'date'
       })
+    }
+
+    if (isUpload) {
+        metadata[0].fields.push({
+            id: "location",
+            value: "upload",
+            label: "EVENTS.EVENTS.DETAILS.METADATA.LOCATION",
+            type: "text",
+        })
     }
 
     if (!hasLicense) {
