@@ -87,6 +87,9 @@ var OCManager = (function($) {
         $('span[data-target="#scheduleModal"]').hide();
         $('span[data-target="#ttScheduleModal"]').hide();
       }
+
+      var recorderButton = document.getElementById('recorder');
+      recorderButton.href = "https://media.uct.ac.za/studio/index.html?upload.seriesId="+this.seriesId;
     },
   setTimetableInputs: function() {
                         if (Object.keys(ocManager.timeTable).length === 0) {
