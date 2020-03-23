@@ -191,47 +191,45 @@ define(["jquery", "underscore", "backbone", "engage/core"], function($, _, Backb
                     }
                 }
 
-                console.log(this.model);
+                var parts = [],
+                    request_url = "https://docs.google.com/forms/d/e/1FAIpQLSdyQfJgXopbM7ZOHF7a3ODucNgCejsUQW77DrwNsXUBJJS95g/viewform",
+                    tempVars = {
+                        search_str: translate("search_str", "Search"),
+                        search_placeholder_str: translate("search_placeholder_str", "Search terms (space separated)"),
+                        request_transcript_str: translate("request_transcript_str", "No captions or transcripts are available for this video. "),
+                        request_transcript_link_text_str: translate("request_transcript_link_text_str", "Request a transcript."),
+                        request_transcript_link_mail: "mailto:help@vula.uct.ac.za?Subject=Captions%20request",
+                        request_transcript_link_form: request_url,
+                        vttObjects: vttObjects,
+                        user: Engage.model.get("meInfo").get("user"),
+                        mediaPackage_title: Engage.model.get('mediaPackage').get('title'),
+                        mediaPackage_eventid: 'E['+Engage.model.get('mediaPackage').get('eventid')+']',
+                        mediaPackage_series: Engage.model.get('mediaPackage').get('series'),
+                        mediaPackage_seriesid: 'S['+Engage.model.get('mediaPackage').get('seriesid')+']',
+                        mediaPackage_date: Engage.model.get('mediaPackage').get('date')
+                    };
 
-                var request_url = "https://docs.google.com/forms/d/e/1FAIpQLSdyQfJgXopbM7ZOHF7a3ODucNgCejsUQW77DrwNsXUBJJS95g/viewform";
-                //
-                // https://docs.google.com/forms/d/e/1FAIpQLSeXmOzYY3rwuB3Plj27kMcI-8B7PpBHkZOo_zi8dd15Zv3u4Q/viewform?entry.508626498=01450343@uct.ac.za&amp;entry.277413167=coosthuizen&amp;entry.1631189828=Test_after_upgrade&amp;entry.1638000924=S%5B003bbccb-adf0-4bef-98f5-589669728ce2%5D"><span>Feedback</span></a>
-                // $('#feedbackBtn').on('click', function() {
-                //   var parts = [],
-                //       feedbackUrl = "https://docs.google.com/forms/d/e/1FAIpQLSeXmOzYY3rwuB3Plj27kMcI-8B7PpBHkZOo_zi8dd15Zv3u4Q/viewform";
-                //
-                //   var tempVars = {
-                //     user: user,
-                //     mediaPackage_series: seriesTitle,
-                //     mediaPackage_seriesid: 'S['+courseID+']'
-                //   };
-                //
-                //   if (tempVars.user['email']) {
-                //     parts.push('entry.508626498=' + tempVars.user.email);
-                //   }
-                //   if (tempVars.user['username']) {
-                //     parts.push('entry.277413167=' + tempVars.user.username);
-                //   }
-                //   if (tempVars.mediaPackage_series) {
-                //     parts.push('entry.1631189828=' + tempVars.mediaPackage_series);
-                //   }
-                //   if (tempVars.mediaPackage_seriesid) {
-                //     parts.push('entry.1638000924=' + tempVars.mediaPackage_seriesid);
-                //   }
-                //
-                //   $('#feedbackBtn').attr('href', encodeURI(feedbackUrl + (parts.length > 0 ? '?' + parts.join('&') : '')));
-                // });
+                if (tempVars.mediaPackage_title) {
+                    parts.push('entry.366340186=' + this.model.get('title'));
+                }
+                if (tempVars.user['email']) {
+                    parts.push('entry.1846851123=' + tempVars.user.email);
+                }
 
-                var tempVars = {
-                    search_str: translate("search_str", "Search"),
-                    search_placeholder_str: translate("search_placeholder_str", "Search terms (space separated)"),
-                    request_transcript_str: translate("request_transcript_str", "No captions or transcripts are available for this video. "),
-                    request_transcript_link_text_str: translate("request_transcript_link_text_str", "Request a transcript."),
-                    request_transcript_link_mail: "mailto:help@vula.uct.ac.za?Subject=Captions%20request",
-                    request_transcript_link_form: request_url
-                    vttObjects: vttObjects
-                };
+                if (tempVars.mediaPackage_eventid && tempVars.mediaPackage_seriesid) {
+                    parts.push('entry.1294912390=' + tempVars.mediaPackage_seriesid + tempVars.mediaPackage_eventid);
+                } else if (tempVars.mediaPackage_seriesid) {
+                    parts.push('entry.1294912390=' + tempVars.mediaPackage_seriesid);
+                }
 
+                if (tempVars.mediaPackage_date) {
+                    var dt = new Date(tempVars.mediaPackage_date)
+                    parts.push('entry.1807657233_year=' + dt.getFullYear());
+                    parts.push('entry.18076572336_month=' + (dt.getMonth()+1));
+                    parts.push('entry.1807657233_day=' + dt.getDate());
+                }
+
+                tempVars['request_transcript_link_form'] =  encodeURI(request_url + (parts.length > 0 ? '?' + parts.join('&') : ''));
                 var tpl = _.template(this.template);
                 this.$el.html(tpl(tempVars));
                 addListeners(vttText);
