@@ -1,3 +1,7 @@
+#engage_transcript_tab {
+    padding-top: 15px;
+}
+
 #engage_transcript_tab .highlight > p > span:hover {
     background-color: #24425C;
     color: #fff;

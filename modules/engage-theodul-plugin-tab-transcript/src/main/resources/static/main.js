@@ -108,7 +108,7 @@ define(["jquery", "underscore", "backbone", "engage/core"], function($, _, Backb
 
         Engage.log("Tab:Transcript: Choosing english translations");
         jsonstr += "language/en.json";
-        
+
         $.ajax({
             url: jsonstr,
             dataType: "json",
@@ -191,11 +191,44 @@ define(["jquery", "underscore", "backbone", "engage/core"], function($, _, Backb
                     }
                 }
 
+                console.log(this.model);
+
+                var request_url = "https://docs.google.com/forms/d/e/1FAIpQLSdyQfJgXopbM7ZOHF7a3ODucNgCejsUQW77DrwNsXUBJJS95g/viewform";
+                //
+                // https://docs.google.com/forms/d/e/1FAIpQLSeXmOzYY3rwuB3Plj27kMcI-8B7PpBHkZOo_zi8dd15Zv3u4Q/viewform?entry.508626498=01450343@uct.ac.za&amp;entry.277413167=coosthuizen&amp;entry.1631189828=Test_after_upgrade&amp;entry.1638000924=S%5B003bbccb-adf0-4bef-98f5-589669728ce2%5D"><span>Feedback</span></a>
+                // $('#feedbackBtn').on('click', function() {
+                //   var parts = [],
+                //       feedbackUrl = "https://docs.google.com/forms/d/e/1FAIpQLSeXmOzYY3rwuB3Plj27kMcI-8B7PpBHkZOo_zi8dd15Zv3u4Q/viewform";
+                //
+                //   var tempVars = {
+                //     user: user,
+                //     mediaPackage_series: seriesTitle,
+                //     mediaPackage_seriesid: 'S['+courseID+']'
+                //   };
+                //
+                //   if (tempVars.user['email']) {
+                //     parts.push('entry.508626498=' + tempVars.user.email);
+                //   }
+                //   if (tempVars.user['username']) {
+                //     parts.push('entry.277413167=' + tempVars.user.username);
+                //   }
+                //   if (tempVars.mediaPackage_series) {
+                //     parts.push('entry.1631189828=' + tempVars.mediaPackage_series);
+                //   }
+                //   if (tempVars.mediaPackage_seriesid) {
+                //     parts.push('entry.1638000924=' + tempVars.mediaPackage_seriesid);
+                //   }
+                //
+                //   $('#feedbackBtn').attr('href', encodeURI(feedbackUrl + (parts.length > 0 ? '?' + parts.join('&') : '')));
+                // });
+
                 var tempVars = {
                     search_str: translate("search_str", "Search"),
                     search_placeholder_str: translate("search_placeholder_str", "Search terms (space separated)"),
                     request_transcript_str: translate("request_transcript_str", "No captions or transcripts are available for this video. "),
                     request_transcript_link_text_str: translate("request_transcript_link_text_str", "Request a transcript."),
+                    request_transcript_link_mail: "mailto:help@vula.uct.ac.za?Subject=Captions%20request",
+                    request_transcript_link_form: request_url
                     vttObjects: vttObjects
                 };
 
@@ -209,7 +242,7 @@ define(["jquery", "underscore", "backbone", "engage/core"], function($, _, Backb
     function addListeners(vttText) {
         $( "#transcript_tab_search" ).keyup(filterText);
         $( "#clear_transcript_tab_search" ).click(filterText);
-        
+
         for (var i = 1; i < vttText.length; i++) {
             $( "#" + i ).click(updateVideo);
         }
@@ -221,14 +254,14 @@ define(["jquery", "underscore", "backbone", "engage/core"], function($, _, Backb
         if(searchTerms.length===1 && (searchTerms[0] === "" || this.id === "clear_transcript_tab_search")) {
             var nodes = document.getElementById('transcript').getElementsByTagName("span");
             for(var i=0; i<nodes.length; i++) {
-                nodes[i].classList.remove("greyout"); 
+                nodes[i].classList.remove("greyout");
             }
             return;
         }
 
         _.each(vttObjects, function (object, key) {
             var element = document.getElementById(key);
-            
+
             if (!checkIfContainsAnySearchTerms(key, searchTerms)) {
                 element.classList.add("greyout");
             }
@@ -264,12 +297,12 @@ define(["jquery", "underscore", "backbone", "engage/core"], function($, _, Backb
     function newLineRequired(line) {
         //new line is required after every 10 sentences.
         var sentenceEnd = (line.match(/[\.\?\!]/g) || []).length;
-        
+
         if(sentenceEnd === 0) {
             return false;
         } else {
             sentencesCount += sentenceEnd;
-            
+
             if(sentencesCount >= 10) {
                 sentencesCount = 0;
                 return true;
@@ -279,15 +312,15 @@ define(["jquery", "underscore", "backbone", "engage/core"], function($, _, Backb
         return false;
     }
 
-    function getIndexByTime(arr, time) { 
-        var index = -1; 
-        $.each(arr, function (i, el) { 
-            if ((el[startTime] <= time) && (time < el[endTime])) { 
+    function getIndexByTime(arr, time) {
+        var index = -1;
+        $.each(arr, function (i, el) {
+            if ((el[startTime] <= time) && (time < el[endTime])) {
                 index=i;
-                return; 
-            } 
-        }); 
-        return index; 
+                return;
+            }
+        });
+        return index;
     }
 
     function updateVideo() {
