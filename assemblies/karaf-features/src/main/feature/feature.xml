@@ -155,6 +155,7 @@
     <feature start-level="80">opencast-core</feature>
     <feature start-level="80">opencast-services-processing-heavy-load</feature>
     <feature start-level="80">opencast-services-processing-light-load</feature>
+    <feature start-level="80">opencast-services-processing-light-load-exec</feature>
 
     <bundle start-level="82">mvn:org.opencastproject/opencast-admin-ui/${project.version}</bundle>
     <bundle start-level="82">mvn:org.opencastproject/opencast-admin-ui-index/${project.version}</bundle>
@@ -586,8 +587,6 @@
     <bundle start-level="82">mvn:org.opencastproject/opencast-crop-ffmpeg/${project.version}</bundle>
     <bundle start-level="82">mvn:org.opencastproject/opencast-dictionary-api/${project.version}</bundle>
     <bundle start-level="82">mvn:org.opencastproject/opencast-dictionary-regexp/${project.version}</bundle>
-    <bundle start-level="82">mvn:org.opencastproject/opencast-execute-api/${project.version}</bundle>
-    <bundle start-level="82">mvn:org.opencastproject/opencast-execute-impl/${project.version}</bundle>
     <bundle start-level="82">mvn:org.opencastproject/opencast-ingest-download-service-api/${project.version}</bundle>
     <bundle start-level="82">mvn:org.opencastproject/opencast-ingest-download-service-impl/${project.version}</bundle>
     <bundle start-level="82">mvn:org.opencastproject/opencast-inspection-service-api/${project.version}</bundle>
@@ -612,11 +611,32 @@
     <bundle start-level="82">mvn:org.opencastproject/opencast-videosegmenter-ffmpeg/${project.version}</bundle>
   </feature>
 
+  <feature name="opencast-services-processing-light-load-exec" version="${project.version}">
+    <feature start-level="80">opencast-core</feature>
+
+    <bundle start-level="82">mvn:org.opencastproject/opencast-execute-api/${project.version}</bundle>
+    <bundle start-level="82">mvn:org.opencastproject/opencast-execute-impl/${project.version}</bundle>
+  </feature>
+
   <feature name="opencast-worker" version="${project.version}">
     <feature start-level="80">opencast-core</feature>
     <feature start-level="80">opencast-services-processing-heavy-load</feature>
     <feature start-level="80">opencast-services-processing-light-load</feature>
+    <feature start-level="80">opencast-services-processing-light-load-exec</feature>
 
+    <bundle start-level="82">mvn:org.opencastproject/opencast-publication-service-api/${project.version}</bundle>
+    <bundle start-level="82">mvn:org.opencastproject/opencast-publication-service-youtube-v3/${project.version}</bundle>
+    <bundle start-level="82">mvn:org.opencastproject/opencast-runtime-info-ui/${project.version}</bundle>
+    <bundle start-level="82">mvn:org.opencastproject/opencast-series-service-remote/${project.version}</bundle>
+    <bundle start-level="82">mvn:org.opencastproject/opencast-termination-state-aws/${project.version}</bundle>
+    <bundle start-level="82">mvn:org.opencastproject/opencast-workflow-service-remote/${project.version}</bundle>
+  </feature>
+
+  <feature name="opencast-workernoexec" version="${project.version}">
+    <feature start-level="80">opencast-core</feature>
+    <feature start-level="80">opencast-services-processing-heavy-load</feature>
+    <feature start-level="80">opencast-services-processing-light-load</feature>
+    
     <bundle start-level="82">mvn:org.opencastproject/opencast-publication-service-api/${project.version}</bundle>
     <bundle start-level="82">mvn:org.opencastproject/opencast-publication-service-youtube-v3/${project.version}</bundle>
     <bundle start-level="82">mvn:org.opencastproject/opencast-runtime-info-ui/${project.version}</bundle>

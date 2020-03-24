@@ -27,6 +27,7 @@
         <module>dist-adminpresentation</module>
         <module>dist-ingest</module>
         <module>dist-worker</module>
+        <module>dist-workernoexec</module>
       </modules>
     </profile>
     <profile>
