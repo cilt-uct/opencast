@@ -4,6 +4,7 @@
     "loginProvided": true
   },
   "upload": {
-    "workflowId": "studio-upload"
+    "workflowId": "studio-upload",
+    "acl": "false"
   }
 }
