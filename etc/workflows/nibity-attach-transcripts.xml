@@ -60,6 +60,15 @@
       </configurations>
     </operation>
 
+    <!-- Send notification to the media package creator -->
+
+    <operation id="include"
+      description="Send notification to the media package creator">
+      <configurations>
+        <configuration key="workflow-id">uct-send-nibity-transcript-notification</configuration>
+      </configurations>
+    </operation>
+
     <!-- Clean up work artifacts -->
 
     <operation
