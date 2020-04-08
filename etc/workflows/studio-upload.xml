@@ -383,7 +383,7 @@
       </configurations>
     </operation>
 
-    <operation
+    <!-- <operation
         id="publish-configure"
         if="${publishToApi}"
         exception-handler-workflow="partial-error"
@@ -396,7 +396,7 @@
         <configuration key="with-published-elements">false</configuration>
         <configuration key="check-availability">true</configuration>
       </configurations>
-    </operation>
+    </operation> -->
 
     <!-- Publish to OAI-PMH -->
 
