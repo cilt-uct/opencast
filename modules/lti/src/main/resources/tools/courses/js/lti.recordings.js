@@ -413,7 +413,7 @@ xhr({url: url, responseType: 'json'},
 
         try {
             if(courseYear.getFullYear() < currYear.getFullYear()) {
-                for(var x = results_count-1; x > 0; x--) {
+                for(var x = results_count-1; x >= 0; x--) {
                     episode = results[x];
                     episodeList.appendChild( listEpisode(episode) );
                     document.querySelector('.sorting').setAttribute('data-sort', 'asc');
