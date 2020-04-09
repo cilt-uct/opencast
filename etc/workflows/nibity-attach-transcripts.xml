@@ -65,7 +65,7 @@
     <operation id="include"
       description="Send notification to the media package creator">
       <configurations>
-        <configuration key="workflow-id">uct-send-nibity-transcript-notification</configuration>
+        <configuration key="workflow-id">uct-opencast-nibity-notification</configuration>
       </configurations>
     </operation>
 
