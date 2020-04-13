@@ -167,7 +167,7 @@ public class LtiServlet extends HttpServlet implements ManagedService {
       if (messageType.equals(BasicLTIConstants.LTI_MESSAGE_TYPE_CONTENTITEMSELECTIONREQUEST)) {
         toolUri = new URI(URLDecoder.decode(StringUtils.trimToEmpty(
                 req.getParameter(CUSTOM_DL_TOOL)), "UTF-8"));
-      } if (req.getRequestURI().startsWith("/lti/player/")) {
+      } else if (req.getRequestURI().startsWith("/lti/player/")) {
         String redirectUrl = req.getRequestURI().replace("/lti/player/", "/play/");
         logger.info("Received LTI content play request for {}: redirecting to {}", req.getRequestURI(), redirectUrl);
         resp.sendRedirect(redirectUrl);
