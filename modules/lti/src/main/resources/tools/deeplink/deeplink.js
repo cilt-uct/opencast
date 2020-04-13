@@ -234,7 +234,7 @@ function loadSeriesTab(page, q) {
   });
 }
 
-function populateData(title, image, created, tool) {
+function populateData(title, image, created, tool, mpID) {
   // pass required data back to the server
   const urlParams = new URLSearchParams(window.location.search);
   $('#content_item_return_url').val(urlParams.get('content_item_return_url'));
@@ -251,10 +251,12 @@ function populateData(title, image, created, tool) {
     '@context': 'http://purl.imsglobal.org/ctx/lti/v1/ContentItem',
     '@graph': [{
       '@type': 'LtiLinkItem',
+      '@id': mpID,
       mediaType: 'application/vnd.ims.lti.v1.ltilink',
       title: title,
       text: created,
       thumbnail: {'@id': image},
+      url: window.location.protocol + '//' + window.location.host +  '/lti/player/' + mpID,
       custom: {
         tool: tool
       }
