@@ -168,8 +168,9 @@ public class LtiServlet extends HttpServlet implements ManagedService {
         toolUri = new URI(URLDecoder.decode(StringUtils.trimToEmpty(
                 req.getParameter(CUSTOM_DL_TOOL)), "UTF-8"));
       } else if (req.getRequestURI().startsWith("/lti/player/")) {
-        String redirectUrl = req.getRequestURI().replace("/lti/player/", "/play/");
-        logger.info("Received LTI content play request for {}: redirecting to {}", req.getRequestURI(), redirectUrl);
+        String mpID = req.getRequestURI().replace("/lti/player/", "");
+        String redirectUrl = "/engage/theodul/ui/core.html?id=" + mpID + "&ltimode=true";
+        logger.debug("Received LTI content play request for {}: redirecting to {}", mpID, redirectUrl);
         resp.sendRedirect(redirectUrl);
         return;
       } else {
