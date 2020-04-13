@@ -97,9 +97,9 @@ LTI Deep Linking integration
 
 There is a specific tool to enable deep linking of Content Items into your LMS. To configure the LTI deep linking tool use :
 
-* To select the deep linking tool, use `dl_tool=ltitools/deeplinking/index.html`
-* To limit the shown videos to a specific series, use `dl_tool=ltitools/deeplinking/index.html?series=SERIESID`
-* Ommit the series parameter to add a search field prefilled with the LTI context_label variable, enabling you to search
+* To select the deep linking tool, use `dl_tool=ltitools/deeplink/index.html`
+* To limit the shown videos to a specific series, use `dl_tool=ltitools/deeplink/index.html?series=SERIESID`
+* Omit the series parameter to add a search field prefilled with the LTI context_label variable, enabling you to search
 for recordings and series.
 
 For more information on how to configure LTI deep linking, please check the documentation of your LMS.
