@@ -5,7 +5,7 @@ const fs = require('fs');
 
 let i18n = {},
     inpath = './src/i18n/',
-    outpath = './target/classes/tools/series/',
+    outpath = './target/classes/tools/',
     files = fs.readdirSync(inpath);
 
 files.forEach(file => {

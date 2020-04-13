@@ -16,6 +16,16 @@
   </properties>
   <dependencies>
     <dependency>
+      <groupId>org.opencastproject</groupId>
+      <artifactId>opencast-kernel</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.tsugi</groupId>
+      <artifactId>tsugi-util</artifactId>
+      <version>0.2.1</version>
+    </dependency>
+    <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
       <scope>provided</scope>
@@ -26,8 +36,13 @@
       <scope>provided</scope>
     </dependency>
     <dependency>
-      <groupId>com.googlecode.json-simple</groupId>
-      <artifactId>json-simple</artifactId>
+      <groupId>org.osgi</groupId>
+      <artifactId>org.osgi.compendium</artifactId>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.google.code.gson</groupId>
+      <artifactId>gson</artifactId>
     </dependency>
     <dependency>
       <groupId>org.apache.commons</groupId>
@@ -211,6 +226,11 @@
                     <include>mustache/mustache.min.js</include>
                     <include>paginationjs/dist/pagination.css</include>
                     <include>paginationjs/dist/pagination.min.js</include>
+                    <include>vue/dist/vue.js</include>
+                    <include>vue/dist/vue.min.js</include>
+                    <include>bootstrap/dist/css/bootstrap.min.css</include>
+                    <include>bootstrap/dist/js/bootstrap.min.js</include>
+                    <include>axios/dist/axios.min.js</include>
                   </includes>
                   <filtering>false</filtering>
                 </resource>
@@ -231,6 +251,9 @@
           <instructions>
             <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
             <Build-Number>${buildNumber}</Build-Number>
+            <Embed-Dependency>
+              tsugi-util;inline=true
+            </Embed-Dependency>
             <Import-Package>
               javax.ws.rs;version=2.0.1,
               javax.ws.rs.core;version=2.0.1,
