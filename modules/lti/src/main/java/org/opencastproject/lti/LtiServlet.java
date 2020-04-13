@@ -322,7 +322,7 @@ public class LtiServlet extends HttpServlet implements ManagedService {
   }
 
   public void activate(ComponentContext cc) {
-    logger.info("LTI Serviet started.");
+    logger.info("LTI Servlet started.");
   }
 
   @Override
