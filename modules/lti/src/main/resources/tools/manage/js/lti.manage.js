@@ -2379,7 +2379,7 @@ $(document).ready(function() {
     });
   });
   $('#uploadModal').on('shown.bs.modal', function(e) {
-    if (!$('uploadModal input[type=file]')) {
+    if (!$('#uploadModal input[type=file]')) {
       $('.fileContainer').attr('data-title', 'Choose video');
     }
     if (!$('#uploadModal input[name=start_date]').val()) {
