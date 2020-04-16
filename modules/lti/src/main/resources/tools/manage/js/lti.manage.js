@@ -2394,7 +2394,7 @@ $(document).ready(function() {
   });
   $('#uploadModal').on('hidden.bs.modal', function () {
     $('.fileContainer').attr('data-title', 'Choose video');
-    $('.videoPreview').find('img').removeAttr('src')
+    $('.videoPreview').find('img').removeAttr('src');
   });
 });
 
