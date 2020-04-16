@@ -2392,6 +2392,9 @@ $(document).ready(function() {
       );
     }
   });
+  $('#uploadModal').on('hidden.bs.modal', function () {
+    $('.fileContainer').attr('data-title', 'Choose video');
+  });
 });
 
 function removeModal(_modal, title) {
