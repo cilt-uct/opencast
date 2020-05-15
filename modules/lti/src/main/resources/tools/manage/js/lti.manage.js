@@ -782,7 +782,21 @@ var OCManager = (function($) {
         }.bind(this);
         runCheck(0);
       }.bind(this)).promise();
-    }
+  },
+  getCaptions: function(id) {
+    return $.Deferred(function(d) {
+      $.ajax({
+          url: '/admin-ng/event/' + id + '/asset/attachment/attachments.json',
+          type: 'GET'
+      }).done(function(res) {
+        d.resolve(res);
+        sortCaptions(res);
+      }).fail(function() {
+        d.reject(id);
+      });
+      d.resolve();
+    }).promise();
+  }
   }
 
   return Manager;
@@ -1091,10 +1105,12 @@ function eventEditable(id) {
 }
 
 function editPublishedControls(id) {
-  var str = '<button type="button" data-toggle="modal" data-event="' + id + '" data-target="#editPublishedModal">' +
+  var str = '<button type="button" id="btnDetails" data-toggle="modal" data-event="' + id + '" data-target="#editPublishedModal">' +
             '  <i class="fa fa-pencil"></i></button>' +
-            '<button type="button" data-toggle="modal" data-event="' + id + '"  data-target="#retractModal">' +
-            '  <i class="fa fa-times-circle"></i></button>';
+            '&nbsp;&nbsp;<button type="button" data-toggle="modal" data-event="' + id + '"  data-target="#retractModal">' +
+            '  <i class="fa fa-times-circle"></i></button>'+ 
+            '&nbsp;&nbsp;<button type="button" id="btnCaptions" data-toggle="modal" data-event="' + id + '" data-target="#editPublishedModal">' +
+            '  <i class="fa fa-cc"></i></button>';
   return str;
 }
 
@@ -1114,10 +1130,12 @@ function personalEventEditable(id, has_preview) {
                 '  <i class="fa fa-scissors"></i></a>'
     }
 
-    str += '<button type="button" data-toggle="modal" data-event="' + id + '" data-target="#editPublishedModal" title="Edit recording details">' +
+    str += '<button type="button" id="btnDetails" data-toggle="modal" data-event="' + id + '" data-target="#editPublishedModal" title="Edit recording details">' +
             '  <i class="fa fa-pencil"></i></button>';
-    str += '<button type="button" data-event="' + id + '"  data-target="#delModal" title="Remove recording">' +
+    str += '&nbsp;&nbsp;<button type="button" data-event="' + id + '"  data-target="#delModal" title="Remove recording">' +
             '  <i class="fa fa-times-circle"></i></button>';
+    str += '&nbsp;&nbsp;<button type="button" id="btnCaptions" data-toggle="modal" data-event="' + id + '" data-target="#editPublishedModal">' +
+           '  <i class="fa fa-cc"></i></button>';
     return '<div style="display:flex; justify-content: space-between;">'+ str + '</div>';
 }
 
@@ -1380,6 +1398,7 @@ $(document).ready(function() {
 
       if (target == '#editPublishedModal') {
         ocManager.eventMgr.checkActiveTransaction(event.id, {target: target});
+        ocManager.getCaptions(event.id);
         if (ocManager.isPersonalSeries) {
           var $seriesList = $(target).find('.seriesList .filterList');
           $seriesList.empty();
@@ -2396,6 +2415,16 @@ $(document).ready(function() {
     $('.fileContainer').attr('data-title', 'Choose video');
     $('.videoPreview').find('img').removeAttr('src');
   });
+  $('#editPublishedModal').on('show.bs.modal', function(e) {
+    var triggerElement = $(e.relatedTarget);
+
+    if(triggerElement[0].id === 'btnCaptions') {
+      $("#detailsLink").removeClass(' active');
+      $("#details").removeClass(' active');
+      $("#captions").addClass(' active');
+      $("#captionsLink").addClass(' active');
+    }
+  });
 });
 
 function removeModal(_modal, title) {
@@ -2443,6 +2472,43 @@ function blockLongTtEvents(starttime, endtime) {
     if(duration > maxEventDuration) {
         return "disabled";
     }
+}
+
+function sortCaptions(details) {
+  var captionsURL, btnTitle;
+  var multipleCaptions = [];
+
+  for(var i = 0; i < details.length; i++) {
+     if(details[i].type === 'captions/vtt' || details[i].type === 'captions/timedtext') {
+        multipleCaptions.push(details[i]);
+        captionsURL = details[i].url;
+
+        if(details[i].type === 'captions/timedtext') {
+            btnTitle = " Download Google Captions";
+        } else {
+            btnTitle = " Download Nibity Captions";
+        }          
+        $("#downloadCaptions").attr('href', captionsURL);
+        $("#dlCaptions").text(btnTitle);
+    }
+  }
+  if(multipleCaptions.length > 1) {
+   for(var i = 0; i < multipleCaptions.length; i++) {
+      captionsURL = multipleCaptions[i].url;
+ 
+      if(multipleCaptions[i].type === 'captions/vtt'){
+        btnTitle = " Download Nibity Captions";
+        $("#downloadCaptions").attr('href', captionsURL);
+        $("#dlCaptions").text(btnTitle);  
+      }
+      else if(multipleCaptions[i].type === 'captions/timedtext') {
+        btnTitle = " Download Google Captions";
+        $("#downloadCaptions2").attr('href', captionsURL);
+        $("#dlCaptions2").text(btnTitle);
+        $("#downloadCaptions2").show();
+      }
+   }
+ }
 }
 
 var pollSession = setInterval(function() {

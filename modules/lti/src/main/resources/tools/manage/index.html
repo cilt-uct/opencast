@@ -615,6 +615,12 @@
         </div>
         <div class="instruction" data-instruction="success">
         </div>
+        <ul class="nav nav-tabs" id="tabContent">
+          <li class="nav-item active" id="detailsLink"><a href="#details" class="nav-link" data-toggle="tab">Details</a></li>
+          <li class="nav-item" id="captionsLink"><a href="#captions" class="nav-link" data-toggle="tab">Captions</a></li>
+        </ul>
+        <div class="tab-content">
+        <div class="tab-pane active" id="details" style="padding:10px;">
         <ul class="infoList">
         <li data-field="title" data-fieldtype="text">
             <span>Title</span>
@@ -715,6 +721,12 @@
         </li>
         {% } %}
         </ul>
+        </div>
+        <div class="tab-pane" id="captions" style="padding:10px;">
+              <a href="" class="btn btn-default scheduler" id="downloadCaptions"><i class="fa fa-download" id="dlCaptions"></i></a>
+              <a href="" class="btn btn-default scheduler" id="downloadCaptions2" style="display:none;"><i class="fa fa-download" id="dlCaptions2"></i></a>
+        </div>
+        </div>
         {% if (o.target == '#bulkModal') { %}
             <div id="updateProgress">
             <h4></h4>
