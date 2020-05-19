@@ -2417,14 +2417,38 @@ $(document).ready(function() {
   });
   $('#editPublishedModal').on('show.bs.modal', function(e) {
     var triggerElement = $(e.relatedTarget);
-
+    var ev = ocManager.eventMgr.getEventDetails(triggerElement[0].dataset.event);
+    
     if(triggerElement[0].id === 'btnCaptions') {
       $("#detailsLink").removeClass(' active');
       $("#details").removeClass(' active');
       $("#captions").addClass(' active');
       $("#captionsLink").addClass(' active');
+      $("#editCaptions").attr('data-event', ev.id);
+      $("#editCaptions2").attr('data-event', ev.id);
     }
   });
+  $('#editCaptionsModal').on('show.bs.modal', function(e) {
+    var triggerElement = $(e.relatedTarget);
+    var eventId = triggerElement[0].dataset.event;
+    var ev = ocManager.eventMgr.getEventDetails(eventId);
+    var vttURL,vttType;
+    
+    if (!ev || (Array.isArray(ev) && ev.length === 0)) return;
+
+    $('#ecModal').html('<span style="color:#555">Edit:</span> ' + ((ev.title !== 'Multiple' ? ev.title : '') || 'event(s)'));
+
+    if(triggerElement[0].id === 'editCaptions') {
+        vttURL =  $('#edCaptions').attr('href');
+        vttType = $('#edCaptions').attr('type');
+    } else if (triggerElement[0].id === 'editCaptions2') {
+        vttURL =  $('#edCaptions2').attr('href');
+        vttType = $('#edCaptions2').attr('type');
+    }
+
+    $('#ecModalBody').html('<div class="form-group green-border-focus"><label for="vttTextarea" id="vttLabel"></label><textarea id="vttTextarea" rows="15" class="form-control rounded-0"></textarea></div>');
+    getVtt(vttURL, vttType);
+ });
 });
 
 function removeModal(_modal, title) {
@@ -2475,7 +2499,7 @@ function blockLongTtEvents(starttime, endtime) {
 }
 
 function sortCaptions(details) {
-  var captionsURL, btnTitle;
+  var captionsURL, btnTitle, editBtnTitle, vttType;
   var multipleCaptions = [];
 
   for(var i = 0; i < details.length; i++) {
@@ -2484,31 +2508,62 @@ function sortCaptions(details) {
         captionsURL = details[i].url;
 
         if(details[i].type === 'captions/timedtext') {
-            btnTitle = " Download Google Captions";
+            btnTitle = " Download Google VTT";
+            editBtnTitle = " Edit Google VTT";
+            vttType = "Google";
         } else {
-            btnTitle = " Download Nibity Captions";
+            btnTitle = " Download Nibity VTT";
+            editBtnTitle = " Edit Nibity VTT";
+            vttType = "Nibity";
         }          
         $("#downloadCaptions").attr('href', captionsURL);
         $("#dlCaptions").text(btnTitle);
+        $("#edCaptions").attr('href', captionsURL);
+        $("#edCaptions").attr('type', vttType);
+        $("#edCaptions").text(editBtnTitle);
     }
   }
   if(multipleCaptions.length > 1) {
-   for(var i = 0; i < multipleCaptions.length; i++) {
-      captionsURL = multipleCaptions[i].url;
- 
+   for(var i = 0; i < multipleCaptions.length; i++) {    
       if(multipleCaptions[i].type === 'captions/vtt'){
-        btnTitle = " Download Nibity Captions";
-        $("#downloadCaptions").attr('href', captionsURL);
+        btnTitle = " Download Nibity VTT";
+        editBtnTitle = " Edit Nibity VTT";
+        vttType = "Nibity";
+        
+        $("#downloadCaptions").attr('href', multipleCaptions[i].url);
         $("#dlCaptions").text(btnTitle);  
+        $("#edCaptions").attr('href', multipleCaptions[i].url);
+        $("#edCaptions").attr('type', vttType);
+        $("#edCaptions").text(editBtnTitle);
       }
       else if(multipleCaptions[i].type === 'captions/timedtext') {
-        btnTitle = " Download Google Captions";
-        $("#downloadCaptions2").attr('href', captionsURL);
+        btnTitle = " Download Google VTT";
+        editBtnTitle = " Edit Google VTT";
+        vttType = "Google";
+        
+        $("#downloadCaptions2").attr('href', multipleCaptions[i].url);
         $("#dlCaptions2").text(btnTitle);
         $("#downloadCaptions2").show();
+        $("#edCaptions2").attr('href', multipleCaptions[i].url);
+        $("#edCaptions2").attr('type', vttType);
+        $("#edCaptions2").text(editBtnTitle);
+        $("#editCaptions2").show();
       }
    }
  }
+}
+
+function getVtt(vttURL, vttType) {
+  $.ajax({
+      cache: false,
+      url : vttURL,
+      dataType: "text",
+      success : function (data) {
+         var label = "Edit " + vttType + " VTT";
+         $("#vttLabel").text(label);
+         $("#vttTextarea").text(data);
+      }
+  });
 }
 
 var pollSession = setInterval(function() {

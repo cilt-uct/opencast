@@ -522,6 +522,25 @@
         </form>
       </div>
     </div>
+    
+    <div class="modal fade" id="editCaptionsModal" data-backdrop="static" tabindex="-1" role="dialog" aria-labelledby="ecModal">
+      <div class="modal-dialog" role="document">
+        <form class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-label="close">
+              <span aria-hidden="true" title="Close Popup">&times;</span>
+            </button>
+            <h4 class="modal-title" id="ecModal"></h4>
+          </div>
+          <div class="modal-body" id="ecModalBody">
+          </div>
+          <div class="modal-footer">
+            <button type="reset" class="btn btn-default">Cancel</button>
+            <button class="btn btn-success"><span class="loader"><i class="fa fa-cog fa-spin"></i></span><span class="text"></span></button>
+          </div>
+        </form>
+      </div>
+    </div>
     <div id="suggestion">
     </div>
     <script type="text/x-tmpl" id="tmpl-body">{% for (var i=0; i < o.length; i++) { var item=o [i]; include( 'tmpl-row', o[i]); } %} </script>
@@ -723,8 +742,10 @@
         </ul>
         </div>
         <div class="tab-pane" id="captions" style="padding:10px;">
-              <a href="" class="btn btn-default scheduler" id="downloadCaptions"><i class="fa fa-download" id="dlCaptions"></i></a>
-              <a href="" class="btn btn-default scheduler" id="downloadCaptions2" style="display:none;"><i class="fa fa-download" id="dlCaptions2"></i></a>
+              <a class="btn btn-warning btn-lg" href="" role="button" id="downloadCaptions"><i class="fa fa-download fa-lg" id="dlCaptions"></i></a>
+              <a class="btn btn-danger btn-lg" href="" role="button" id="downloadCaptions2" style="display:none;"><i class="fa fa-download fa-lg" id="dlCaptions2"></i></a><br/><br/>
+              <a class="btn btn-primary btn-lg" href="" role="button" id="editCaptions" data-toggle="modal" data-target="#editCaptionsModal" ><i class="fa fa-pencil fa-lg" id="edCaptions"></i></a>
+              <a class="btn btn-info btn-lg" href="" role="button" id="editCaptions2" data-toggle="modal" data-target="#editCaptionsModal" style="display:none;"><i class="fa fa-pencil fa-lg" id="edCaptions2"></i></a>
         </div>
         </div>
         {% if (o.target == '#bulkModal') { %}
