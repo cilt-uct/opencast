@@ -45,6 +45,7 @@ function EventManager(params) {
               comment: '/admin-ng/event/%ID%/comment',
       addLectureNotes: '/admin-ng/event/%ID%/assets',
           addCaptions: '/admin-ng/event/%ID%/assets',
+       updateCaptions: '/admin-ng/event/%ID%/assets',
             seriesACL: '/admin-ng/series/%ID%/access.json',
              eventACL: '/admin-ng/event/%ID%/access'
     }
@@ -1422,6 +1423,44 @@ EventManager.prototype = {
           .always(function() {
             if (this.processingEvents.indexOf(id) === -1) {
               this.processingEvents.push(id);
+            }
+          }.bind(this));
+        }.bind(this))
+        .fail(function() {
+          d.reject();
+        });
+    }.bind(this)).promise();
+  },
+  updateCaptions: function(id, changes) {
+    var mType = changes['text/vtt'].type,
+        fType = mType.substring(0, mType.indexOf('/')),
+        fSubType = mType.substring(mType.lastIndexOf('/') + 1);
+    var payload = {"assets":{"options":[{"id":"attachment_captions_webvtt","type":"attachment","flavorType":fType,"flavorSubType":fSubType,"displayOrder":3,"title":"EVENTS.EVENTS.NEW.UPLOAD_ASSET.OPTION.CAPTIONS_WEBVTT"}]},"processing":{"workflow":"uct-publish-uploaded-assets","configuration":{"downloadSourceflavorsExist":"true","download-source-flavors":mType}}};
+  
+    return $.Deferred(function(d) {
+      this.updateEvent(id, changes, {delayPublish: true})
+        .then(function() {
+          var fd = new FormData();
+          fd.append('metadata', JSON.stringify(payload));
+          fd.append('attachment_captions_webvtt.0', changes['text/vtt']);
+
+          $.ajax({
+            url: this.endpoints.addCaptions.replace(/%ID%/g, id),
+            type: 'post',
+            data: fd,
+            processData: false,
+            contentType: false,
+                  cache: false,
+          })
+          .done(function() {
+            d.resolve();
+          }.bind(this))
+          .fail(function() {
+            d.reject();
+          })
+          .always(function() {
+            if (this.processingEvents.indexOf(id) === -1) {
+              this.processinigEvents.push(id);
             }
           }.bind(this));
         }.bind(this))

@@ -533,10 +533,17 @@
             <h4 class="modal-title" id="ecModal"></h4>
           </div>
           <div class="modal-body" id="ecModalBody">
+            <div class="form-group green-border-focus">
+              <input type="hidden" id="evId">
+              <input type="hidden" id="vttURL">
+              <input type="hidden" id="vttMediaType">
+              <label class="vttLabel" for="attachment_captions_webvtt" id="vttLabel"></label>
+              <textarea id="attachment_captions_webvtt" name="text/vtt" rows="15" class="form-control rounded-0 newVtt"></textarea>
+            </div>
           </div>
           <div class="modal-footer">
             <button type="reset" class="btn btn-default">Cancel</button>
-            <button class="btn btn-success"><span class="loader"><i class="fa fa-cog fa-spin"></i></span><span class="text"></span></button>
+            <button type="button" class="btn btn-success updateCaptions" style="float:right;">Submit</button>
           </div>
         </form>
       </div>
