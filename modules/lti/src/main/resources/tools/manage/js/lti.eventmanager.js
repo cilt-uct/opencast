@@ -1460,7 +1460,7 @@ EventManager.prototype = {
           })
           .always(function() {
             if (this.processingEvents.indexOf(id) === -1) {
-              this.processinigEvents.push(id);
+              this.processingEvents.push(id);
             }
           }.bind(this));
         }.bind(this))

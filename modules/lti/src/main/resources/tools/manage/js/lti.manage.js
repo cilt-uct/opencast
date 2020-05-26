@@ -782,20 +782,6 @@ var OCManager = (function($) {
         }.bind(this);
         runCheck(0);
       }.bind(this)).promise();
-  },
-  getCaptions: function(id) {
-    return $.Deferred(function(d) {
-      $.ajax({
-          url: '/admin-ng/event/' + id + '/asset/attachment/attachments.json',
-          type: 'GET'
-      }).done(function(res) {
-        d.resolve(res);
-        sortCaptions(res);
-      }).fail(function() {
-        d.reject(id);
-      });
-      d.resolve();
-    }).promise();
   }
   }
 
@@ -1109,8 +1095,9 @@ function editPublishedControls(id) {
             '  <i class="fa fa-pencil"></i></button>' +
             '&nbsp;&nbsp;<button type="button" data-toggle="modal" data-event="' + id + '"  data-target="#retractModal">' +
             '  <i class="fa fa-times-circle"></i></button>'+ 
-            '&nbsp;&nbsp;<button type="button" id="btnCaptions" data-toggle="modal" data-event="' + id + '" data-target="#editPublishedModal">' +
+            '&nbsp;&nbsp;<button type="button" id="btnCaptions_' + id + '"  style="display:none;" data-toggle="modal" data-event="' + id + '" data-target="#editPublishedModal">' +
             '  <i class="fa fa-cc"></i></button>';
+  getCaptions(id);
   return str;
 }
 
@@ -1134,7 +1121,7 @@ function personalEventEditable(id, has_preview) {
             '  <i class="fa fa-pencil"></i></button>';
     str += '&nbsp;&nbsp;<button type="button" data-event="' + id + '"  data-target="#delModal" title="Remove recording">' +
             '  <i class="fa fa-times-circle"></i></button>';
-    str += '&nbsp;&nbsp;<button type="button" id="btnCaptions" data-toggle="modal" data-event="' + id + '" data-target="#editPublishedModal">' +
+    str += '&nbsp;&nbsp;<button type="button" id="btnCaptions_' + id + '" style="display:none;" data-toggle="modal" data-event="' + id + '" data-target="#editPublishedModal">' +
            '  <i class="fa fa-cc"></i></button>';
     return '<div style="display:flex; justify-content: space-between;">'+ str + '</div>';
 }
@@ -1398,7 +1385,7 @@ $(document).ready(function() {
 
       if (target == '#editPublishedModal') {
         ocManager.eventMgr.checkActiveTransaction(event.id, {target: target});
-        ocManager.getCaptions(event.id);
+        getCaptions(event.id);
         if (ocManager.isPersonalSeries) {
           var $seriesList = $(target).find('.seriesList .filterList');
           $seriesList.empty();
@@ -2431,14 +2418,11 @@ $(document).ready(function() {
     var triggerElement = $(e.relatedTarget);
     var ev = ocManager.eventMgr.getEventDetails(triggerElement[0].dataset.event);
     
-    if(triggerElement[0].id === 'btnCaptions') {
+    if(triggerElement[0].id === 'btnCaptions_'+ ev.id) {
       $('#editPublished').hide();
-      $("#detailsLink").removeClass(' active');
-      $("#details").removeClass(' active');
-      $("#captions").addClass(' active');
-      $("#captionsLink").addClass(' active');
-      $("#editCaptions").attr('data-event', ev.id);
-      $("#editCaptions2").attr('data-event', ev.id);
+      $("#detailsLink, #details").removeClass('active');
+      $("#captions, #captionsLink").addClass('active');
+      $("#editGoogleCaptions, #editNibityCaptions, #editTextCaptions, #btnUploadCaptions").attr('data-event', ev.id);
     }else{
       $('#editPublished').show();
     }
@@ -2457,25 +2441,18 @@ $(document).ready(function() {
     var triggerElement = $(e.relatedTarget);
     var eventId = triggerElement[0].dataset.event;
     var ev = ocManager.eventMgr.getEventDetails(eventId);
-    var vttURL,vttType;
+    var vttType = triggerElement[0].dataset.provider;
+    var vttURL = triggerElement.attr('data-url');
     var mediaType = triggerElement.attr('data-mediatype');
-    
+    var label = "Edit " + vttType + " VTT";  
+  
     if (!ev || (Array.isArray(ev) && ev.length === 0)) return;
 
     $('#ecModal').html('<span style="color:#555">Edit:</span> ' + ((ev.title !== 'Multiple' ? ev.title : '') || 'event(s)'));
-
-    if(triggerElement[0].id === 'editCaptions') {
-        vttURL =  $('#edCaptions').attr('href');
-        vttType = $('#edCaptions').attr('type');
-    } else if (triggerElement[0].id === 'editCaptions2') {
-        vttURL =  $('#edCaptions2').attr('href');
-        vttType = $('#edCaptions2').attr('type');
-    } 
-
-    var label = "Edit " + vttType + " VTT";
-    $('#evId').attr('data-title', eventId);
-    $('#vttURL').attr('data-title', vttURL);
-    $('#vttMediaType').attr('data-mediaType',mediaType); 
+    
+    $('#vttInfo').attr('data-event', eventId);
+    $('#vttInfo').attr('data-url', vttURL);
+    $('#vttInfo').attr('data-mediaType',mediaType); 
     $("#vttLabel").text(label);
     $(".newVtt").load(vttURL);
   });
@@ -2484,7 +2461,7 @@ $(document).ready(function() {
       e.preventDefault();
 
       $('.uploadCaptions').addClass('uploading');
-      var eventId = $('#editCaptions').attr('data-event'),
+      var eventId = $('.uploadCaptions').attr('data-event'),
          _modal = $(this).parents('.modal'),
          changes = ocManager.getInputs(_modal),
          success = true;
@@ -2511,12 +2488,12 @@ $(document).ready(function() {
       e.preventDefault();
 
       $('.updateCaptions').addClass('uploading');
-      var eventId = $('#evId').attr('data-title'),
-          vttURL = $('#vttURL').attr('data-title'),
+      var eventId = $('#vttInfo').attr('data-event'),
+          vttURL = $('#vttInfo').attr('data-url'),
           _modal = $(this).parents('.modal'),
-          mediaType = $('#vttMediaType').attr('data-mediaType'),
+          mediaType = $('#vttInfo').attr('data-mediaType'),
           success = true,
-          change = $('#editCaptionsModal #attachment_captions_webvtt').val(),
+          change = $('#vttText').val(),
           fileName = vttURL.substring(vttURL.lastIndexOf('/') + 1);
 
       var parts = new Blob([change], {type:"text/plain"}),
@@ -2554,6 +2531,46 @@ function removeModal(_modal, title) {
   }, 15000);
 }
 
+function getCaptions(id) {
+  var url = "/admin-ng/event/" + id + "/asset/attachment/attachments.json";
+
+  $.get({url: url},
+    function(response) {
+        for(var i = 0; i < response.length; i++) {
+            if(response[i].mimetype === "text/vtt") {
+              $('#btnCaptions_' + id).show();
+               
+              if(response[i].type == "captions/timedtext") {
+                  $("#downloadGoogleCaptions").show();
+                  $("#editGoogleCaptions").show();
+                  $("#downloadGoogleCaptions").attr('href', response[i].url);
+                  $("#editGoogleCaptions").attr('data-url', response[i].url);
+                  $("#editGoogleCaptions").attr('data-mediatype', response[i].type);
+                  $("#editGoogleCaptions").attr('data-event', id);
+                  $("#editGoogleCaptions").attr('data-provider', "Google");
+              } else if(response[i].type == "captions/vtt") {
+                  $("#downloadNibityCaptions").show();
+                  $("#editNibityCaptions").show();
+                  $("#editNibityCaptions").attr('data-provider', "Nibity");
+                  $("#downloadNibityCaptions").attr('href', response[i].url);
+                  $("#editNibityCaptions").attr('data-url', response[i].url);
+                  $("#editNibityCaptions").attr('data-mediatype', response[i].type);
+                  $("#editNibityCaptions").attr('data-event', id);
+              } else if(response[i].type == "text/vtt") {
+                  $("#downloadTextCaptions").show();
+                  $("#editTextCaptions").show();
+                  $("#editTextCaptions").attr('data-provider', "Text");
+                  $("#downloadTextCaptions").attr('href', response[i].url);
+                  $("#editTextCaptions").attr('data-url', response[i].url);
+                  $("#editTextCaptions").attr('data-mediatype', response[i].type);
+                  $("#editTextCaptions").attr('data-event', id);
+              }
+            }      
+        }
+     }
+  )
+}
+
 function closeSeries() {
     var urlParams = new URLSearchParams(window.location.search),
         seriesID = urlParams.get('sid'),
@@ -2588,61 +2605,6 @@ function blockLongTtEvents(starttime, endtime) {
     }
 }
 
-function sortCaptions(details) {
-  var captionsURL, btnTitle, editBtnTitle, vttType;
-  var multipleCaptions = [];
-
-  for(var i = 0; i < details.length; i++) {
-     if(details[i].type === 'captions/vtt' || details[i].type === 'captions/timedtext') {
-        multipleCaptions.push(details[i]);
-        captionsURL = details[i].url;
-
-        if(details[i].type === 'captions/timedtext') {
-            btnTitle = " Download Google VTT";
-            editBtnTitle = " Edit Google VTT";
-            vttType = "Google";
-        } else {
-            btnTitle = " Download Nibity VTT";
-            editBtnTitle = " Edit Nibity VTT";
-            vttType = "Nibity";
-        }          
-        $("#downloadCaptions").attr('href', captionsURL);
-        $("#dlCaptions").text(btnTitle);
-        $("#edCaptions").attr('href', captionsURL);
-        $("#edCaptions").attr('type', vttType);
-        $("#edCaptions").text(editBtnTitle);
-    }
-  }
-  if(multipleCaptions.length > 1) {
-   for(var i = 0; i < multipleCaptions.length; i++) {    
-      if(multipleCaptions[i].type === 'captions/vtt'){
-        btnTitle = " Download Nibity VTT";
-        editBtnTitle = " Edit Nibity VTT";
-        vttType = "Nibity";
-        
-        $("#downloadCaptions").attr('href', multipleCaptions[i].url);
-        $("#dlCaptions").text(btnTitle);  
-        $("#edCaptions").attr('href', multipleCaptions[i].url);
-        $("#edCaptions").attr('type', vttType);
-        $("#edCaptions").text(editBtnTitle);
-      }
-      else if(multipleCaptions[i].type === 'captions/timedtext') {
-        btnTitle = " Download Google VTT";
-        editBtnTitle = " Edit Google VTT";
-        vttType = "Google";
-        
-        $("#downloadCaptions2").attr('href', multipleCaptions[i].url);
-        $("#dlCaptions2").text(btnTitle);
-        $("#downloadCaptions2").show();
-        $("#edCaptions2").attr('href', multipleCaptions[i].url);
-        $("#edCaptions2").attr('type', vttType);
-        $("#edCaptions2").text(editBtnTitle);
-        $("#editCaptions2").show();
-      }
-   }
- }
-}
-
 var pollSession = setInterval(function() {
   $.ajax({
     url: '/lti'
@@ -2650,4 +2612,4 @@ var pollSession = setInterval(function() {
     clearInterval(pollSession);
     $('#refreshModal').modal('show');
   });
-}, 30000);
+}, 30000)
