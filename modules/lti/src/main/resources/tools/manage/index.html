@@ -747,34 +747,40 @@
         </ul>
         </div>
         <div class="tab-pane" id="captions" style="padding:10px;">
-          <table class="table table-bordered">
+          <table style="border:1px solid white;">
             <tr>
-               <td><span>Download captions: </span></td>
-               <td>
+              <td><span>Download captions: </span></td>
+              <td>
+                <p>
                   <a class="btn btn-primary" href="" role="button" id="downloadNibityCaptions" style="display:none;"><i class="fa fa-download" id="dlNibityCaptions"></i> Download Nibity Captions</a>
                   <a class="btn btn-primary"  href="" role="button" id="downloadGoogleCaptions" style="display:none;"><i class="fa fa-download" id="dlGoogleCaptions"></i> Download Google Captions</a>
                   <a class="btn btn-primary"  href="" role="button" id="downloadTextCaptions" style="display:none;"><i class="fa fa-download" id="dlTextCaptions"></i> Download Text Captions</a>
-               </td>
+                </p>
+              </td>
             </tr>
             <tr>
-               <td><span>Edit captions: </span></td>
-               <td>
-                  <a class="btn btn-primary" role="button" id="editNibityCaptions" style="display:none;" data-toggle="modal" data-target="#editCaptionsModal" ><i class="fa fa-pencil" id="edNibityCaptions"> Edit Nibity Captions</i></a>
+              <td><span>Edit captions: </span></td>
+              <td>
+                <p style="padding-top:10px;">
+                  <a class="btn btn-primary" role="button" id="editNibityCaptions" style="display:none;" data-toggle="modal" data-target="#editCaptionsModal"><i class="fa fa-pencil" id="edNibityCaptions"></i> Edit Nibity Captions</a>
                   <a class="btn btn-primary" role="button" id="editGoogleCaptions" style="display:none;" data-toggle="modal" data-target="#editCaptionsModal"><i class="fa fa-pencil" id="edGoogleCaptions"></i> Edit Google Captions</a>
                   <a class="btn btn-primary" role="button" id="editTextCaptions" style="display:none;" data-toggle="modal" data-target="#editCaptionsModal"><i class="fa fa-pencil" id="edTextCaptions"></i> Edit Text Captions</a>
-                </td>
+                </p>
+              </td>
             </tr>
             <tr>
-               <td><span>Upload new captions: </span></td>
-               <td>
-                  <input autocomplete="off" type="checkbox" id="populatedPresVtt" class="filePopulated" />
+              <td><span>Upload new captions: </span></td>
+              <td>
+                <input autocomplete="off" type="checkbox" id="populatedPresVtt" class="filePopulated" />
+                <p style="padding-top:20px;">
                   <span class="fileContainer form-control" data-mediatype="vtt" data-title="Choose vtt" >
                     <input autocomplete="off" type="file" name="text/vtt" id="attachment_captions_webvtt" data-mediatype="vtt" accept=".vtt"/>
                     <progress min="0" value=0 max="100"></progress>
                   </span>
                   <br/><a href="" id="btnUploadCaptions" style="float:right;" class="btn btn-success uploadCaptions">Add Captions</a>
                   <span class="errors"></span>
-                </td>
+                </p>
+              </td>
             </tr>
          </table>
         </div>
