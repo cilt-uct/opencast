@@ -2164,10 +2164,11 @@ $(document).ready(function() {
     var mediaType = $(this).data('mediatype');
     var file = this.files[0];
     if (file) {
+      $('.uploadCaptions').show();
       var fileName = file.name;
       var fileNameExt = fileName.substr(fileName.lastIndexOf('.') +1);
       if (fileNameExt != mediaType) {
-          $(this).parent().attr('data-title', 'Please provide a file of ' + mediaType + ' type');
+          $(this).parent().attr('data-title', 'Please provide a file of *.vtt type');
           $(this).val('');
           $(this).parent().prev()[0].checked = false;
           return;
@@ -2420,22 +2421,33 @@ $(document).ready(function() {
     
     if(triggerElement[0].id === 'btnCaptions_'+ ev.id) {
       $('#editPublished').hide();
+      $('#editPublishedCancel').text("Close");
       $("#detailsLink, #details").removeClass('active');
       $("#captions, #captionsLink").addClass('active');
       $("#editGoogleCaptions, #editNibityCaptions, #editTextCaptions, #btnUploadCaptions").attr('data-event', ev.id);
     }else{
       $('#editPublished').show();
+      $('#editPublishedCancel').text("Cancel");
     }
   });
   $('#editPublishedModal').on('click', '.detailsLink', function(){
       $('#editPublished').show();
+      $('#editPublishedCancel').text("Cancel");
   });
   $('#editPublishedModal').on('click', '.captionsLink', function(){
       $('#editPublished').hide();
+      $('#editPublishedCancel').text("Close");
   })
   $('#editPublishedModal').on('hidden.bs.modal', function () {
     $('#uploadModal .fileContainer').attr('data-title', 'Choose video');
-    $('#editPublishedModal .fileContainer').attr('data-title', 'Choose vtt');
+    $('#editPublishedModal .fileContainer').attr('data-title', 'Choose *.vtt...');
+    $('#editNibityCaptions, #editGoogleCaptions, #editTextCaptions').text('');
+    $('#editNibityCaptions, #editGoogleCaptions, #editTextCaptions').attr('data-url', '');
+    $('#downloadNibityCaptions, #downloadGoogleCaptions, #downloadTextCaptions').text('');
+    $('#editNibityCaptions, #editGoogleCaptions, #editTextCaptions').attr('data-event', '');
+    $('#editNibityCaptions, #editGoogleCaptions, #editTextCaptions').attr('data-provider', '');
+    $('#downloadNibityCaptions, #downloadGoogleCaptions, #downloadTextCaptions').attr('href', '');
+    $('#btnUploadCaptions').attr('data-event', '');
   });
   $('#editCaptionsModal').on('show.bs.modal', function(e) {
     var triggerElement = $(e.relatedTarget);
@@ -2474,9 +2486,9 @@ $(document).ready(function() {
         })
         .always(function() {
           $('.uploadCaptions').removeClass('uploading');
-          /*if (success) {
-            $(this).find('button[type=reset].btn-default')[0].click();
-          }*/
+          if (success) {
+            $(_modal).find('button[type=reset].btn-default')[0].click();
+          }
         }.bind(this));
 
     } catch(err) {
@@ -2515,6 +2527,12 @@ $(document).ready(function() {
   } catch(err) {
     console.log(err);
   }
+  });
+  $('#editCaptionsModal').on('hidden.bs.modal', function () {
+    $('.newVtt').empty();
+    $('#ecModal, #vttLabel').text('');
+    $('#vttInfo').attr('data-url','');
+    $('#vttInfo').attr('data-event','');
   });
 });
 
@@ -2559,7 +2577,7 @@ function getCaptions(id) {
               } else if(response[i].type == "text/vtt") {
                   $("#downloadTextCaptions").show();
                   $("#editTextCaptions").show();
-                  $("#editTextCaptions").attr('data-provider', "Text");
+                  $("#editTextCaptions").attr('data-provider', "Uploaded");
                   $("#downloadTextCaptions").attr('href', response[i].url);
                   $("#editTextCaptions").attr('data-url', response[i].url);
                   $("#editTextCaptions").attr('data-mediatype', response[i].type);

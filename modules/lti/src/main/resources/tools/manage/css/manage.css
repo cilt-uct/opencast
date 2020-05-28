@@ -3160,3 +3160,9 @@ input:focus, textarea:focus {
   border: 1px solid #09f !important;
   box-shadow: 0 0 3px #8cf !important;
 }
+#tblCaptions tr:hover td {
+  background-color: inherit !important;
+}
+#tblCaptions {
+  border:1px solid white;
+}
