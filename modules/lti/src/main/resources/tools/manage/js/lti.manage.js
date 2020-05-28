@@ -2098,7 +2098,7 @@ $(document).ready(function() {
     }
 
     var file = this.files[0];
-    if (file.type.indexOf("video") === -1 || file.type.indexOf("audio") === -1) {
+    if (file.type.indexOf("video") === -1 && file.type.indexOf("audio") === -1) {
       $(this).parent().attr('data-title', 'Please provide a file of video or audio type');
       $(this).val('');
       $(this).parent().prev()[0].checked = false;
