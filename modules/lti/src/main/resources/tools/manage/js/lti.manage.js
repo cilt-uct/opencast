@@ -2171,6 +2171,7 @@ $(document).ready(function() {
           $(this).parent().attr('data-title', 'Please provide a file of *.vtt type');
           $(this).val('');
           $(this).parent().prev()[0].checked = false;
+          $('.uploadCaptions').hide();
           return;
       }
       $(this).parent().prev()[0].checked = true;

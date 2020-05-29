@@ -3166,3 +3166,16 @@ input:focus, textarea:focus {
 #tblCaptions {
   border:1px solid white;
 }
+#tblCaptions tr:hover a:hover {
+  text-decoration: none !important;
+  background-color: white;
+  border: 1px solid blue;
+  box-shadow: 0.3s;
+  color: blue;
+}
+.uploadCaptions:hover {
+  background-color: green;
+  border: 1px solid green;
+  box-shadow: 0.3s;
+  color: white;
+}
