@@ -1445,7 +1445,7 @@ EventManager.prototype = {
           fd.append('attachment_captions_webvtt.0', changes['text/vtt']);
 
           $.ajax({
-            url: this.endpoints.addCaptions.replace(/%ID%/g, id),
+            url: this.endpoints.updateCaptions.replace(/%ID%/g, id),
             type: 'post',
             data: fd,
             processData: false,

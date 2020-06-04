@@ -1097,7 +1097,7 @@ function editPublishedControls(id) {
             '  <i class="fa fa-times-circle"></i></button>'+ 
             '&nbsp;&nbsp;<button type="button" id="btnCaptions_' + id + '"  style="display:none;" data-toggle="modal" data-event="' + id + '" data-target="#editPublishedModal">' +
             '  <i class="fa fa-cc"></i></button>';
-  getCaptions(id);
+  checkCaptions(id);
   return str;
 }
 
@@ -1385,7 +1385,6 @@ $(document).ready(function() {
 
       if (target == '#editPublishedModal') {
         ocManager.eventMgr.checkActiveTransaction(event.id, {target: target});
-        getCaptions(event.id);
         if (ocManager.isPersonalSeries) {
           var $seriesList = $(target).find('.seriesList .filterList');
           $seriesList.empty();
@@ -1401,6 +1400,8 @@ $(document).ready(function() {
             $seriesList.append($seriesItem);
           });
         }
+        $('#hiddenEvent').attr('data-event', event.id);
+        $('#hiddenEvent').attr('data-title', event.title);
         return ocManager.eventMgr.getEventAssets(event.id, {target: target});
       }
 
@@ -2161,10 +2162,12 @@ $(document).ready(function() {
     }
   });
   $('#editPublishedModal').on('change', 'input[type=file]', function(e) {
-    var mediaType = $(this).data('mediatype');
-    var file = this.files[0];
+    $('#editPublishedModal #errorLi').html('');
+    var mediaType = $(this).data('mediatype'),
+        file = this.files[0],
+        fileContents = "";
+    
     if (file) {
-      $('.uploadCaptions').show();
       var fileName = file.name;
       var fileNameExt = fileName.substr(fileName.lastIndexOf('.') +1);
       if (fileNameExt != mediaType) {
@@ -2173,10 +2176,18 @@ $(document).ready(function() {
           $(this).parent().prev()[0].checked = false;
           $('.uploadCaptions').hide();
           return;
+      } else {
+         var reader = new FileReader();
+         reader.readAsText(file, "UTF-8");
+         reader.onload = function (evt) {
+            $('#uploadedVttText').val(evt.target.result);
+            fileContents = $('#uploadedVttText').val();
+            validateVTT(fileName, fileContents);
+         }
+         reader.onerror = function (evt) {
+            console.log("error reading file");
+         } 
       }
-      $(this).parent().prev()[0].checked = true;
-      $(this).parent().prev().text(fileName).attr('title', fileName);
-      $('.fileContainer').attr('data-title', fileName);
     }
   });
 
@@ -2417,15 +2428,17 @@ $(document).ready(function() {
     $('.videoPreview').find('img').removeAttr('src');
   });
   $('#editPublishedModal').on('show.bs.modal', function(e) {
-    var triggerElement = $(e.relatedTarget);
-    var ev = ocManager.eventMgr.getEventDetails(triggerElement[0].dataset.event);
-    
-    if(triggerElement[0].id === 'btnCaptions_'+ ev.id) {
+    var triggerElement = $(e.relatedTarget),
+        id = $('#hiddenEvent').attr('data-event');
+
+    if(triggerElement[0].id === 'btnCaptions_'+ id) {
+      getCaptions(id);
       $('#editPublished').hide();
       $('#editPublishedCancel').text("Close");
-      $("#detailsLink, #details").removeClass('active');
-      $("#captions, #captionsLink").addClass('active');
-      $("#editGoogleCaptions, #editNibityCaptions, #editTextCaptions, #btnUploadCaptions").attr('data-event', ev.id);
+      $('#detailsLink, #details').removeClass('active');
+      $('#captions, #captionsLink').addClass('active');
+      $('#editCaptions, #downloadNibityCaptions, #downloadGoogleCaptions',
+        '#downloadUploadedCaptions, .uploadCaptions').attr('data-event', id);
     }else{
       $('#editPublished').show();
       $('#editPublishedCancel').text("Cancel");
@@ -2440,100 +2453,131 @@ $(document).ready(function() {
       $('#editPublishedCancel').text("Close");
   })
   $('#editPublishedModal').on('hidden.bs.modal', function () {
-    $('#uploadModal .fileContainer').attr('data-title', 'Choose video');
-    $('#editPublishedModal .fileContainer').attr('data-title', 'Choose *.vtt...');
-    $('#editNibityCaptions, #editGoogleCaptions, #editTextCaptions').text('');
-    $('#editNibityCaptions, #editGoogleCaptions, #editTextCaptions').attr('data-url', '');
-    $('#downloadNibityCaptions, #downloadGoogleCaptions, #downloadTextCaptions').text('');
-    $('#editNibityCaptions, #editGoogleCaptions, #editTextCaptions').attr('data-event', '');
-    $('#editNibityCaptions, #editGoogleCaptions, #editTextCaptions').attr('data-provider', '');
-    $('#downloadNibityCaptions, #downloadGoogleCaptions, #downloadTextCaptions').attr('href', '');
-    $('#btnUploadCaptions').attr('data-event', '');
+      $('#uploadModal .fileContainer').attr('data-title', 'Choose video');
+      $('#editPublishedModal .fileContainer').attr('data-title', 'Choose *.vtt...');
+      $('#editPublishedModal #errorLi').html('');
+      $('#btnUploadCaptions').attr('data-event', '');
+      $('#editCaptions, #downloadNibityCaptions, #downloadGoogleCaptions', 
+        '#downloadUploadedCaptions').attr('data-provider','');
+      $('#editCaptions, #downloadNibityCaptions, #downloadGoogleCaptions',
+        '#downloadUploadedCaptions').attr('data-url','');
+      $('#editCaptions, #downloadNibityCaptions, #downloadGoogleCaptions', 
+        '#downloadUploadedCaptions').attr('href','');
+      $('#editCaptions').text('');
   });
   $('#editCaptionsModal').on('show.bs.modal', function(e) {
-    var triggerElement = $(e.relatedTarget);
-    var eventId = triggerElement[0].dataset.event;
-    var ev = ocManager.eventMgr.getEventDetails(eventId);
-    var vttType = triggerElement[0].dataset.provider;
-    var vttURL = triggerElement.attr('data-url');
-    var mediaType = triggerElement.attr('data-mediatype');
-    var label = "Edit " + vttType + " VTT";  
+      var title = $('#hiddenEvent').attr('data-title'),
+          id = $('#hiddenEvent').attr('data-event'),
+          vttProvider =$('#hiddenEvent').attr('data-provider'),
+          vttURL = $('#hiddenEvent').attr('data-url'),
+          mediaType = $('#hiddenEvent').attr('data-mediatype'),
+          label = "Edit " + vttProvider + " VTT";
   
-    if (!ev || (Array.isArray(ev) && ev.length === 0)) return;
-
-    $('#ecModal').html('<span style="color:#555">Edit:</span> ' + ((ev.title !== 'Multiple' ? ev.title : '') || 'event(s)'));
-    
-    $('#vttInfo').attr('data-event', eventId);
-    $('#vttInfo').attr('data-url', vttURL);
-    $('#vttInfo').attr('data-mediaType',mediaType); 
-    $("#vttLabel").text(label);
-    $(".newVtt").load(vttURL);
+      $('#ecModal').html('<span style="color:#555">Edit:</span> ' + title);   
+      $('#vttInfo').attr('data-event', id);
+      $('#vttInfo').attr('data-url', vttURL);
+      $('#vttInfo').attr('data-mediaType',mediaType); 
+      $('#vttLabel').text(label);
+      $('.newVtt').load(vttURL);
   });
   $('#editPublishedModal').on('click', '.uploadCaptions', function(e) {
-     try {
-      e.preventDefault();
+      try {
+        e.preventDefault();
 
-      $('.uploadCaptions').addClass('uploading');
-      var eventId = $('.uploadCaptions').attr('data-event'),
-         _modal = $(this).parents('.modal'),
-         changes = ocManager.getInputs(_modal),
-         success = true;
-
-      ocManager.eventMgr.addCaptions(eventId, changes)
-        .fail(function(err) {
-          console.log("Failed to upload captions");
-          $('#editPublishedModal').find('span.errors').text(err.error);
-          success = false;
-        })
-        .always(function() {
-          $('.uploadCaptions').removeClass('uploading');
-          if (success) {
-            $(_modal).find('button[type=reset].btn-default')[0].click();
+        $('.uploadCaptions').addClass('uploading');
+        var eventId = $('.uploadCaptions').attr('data-event'),
+            mediaType = $('#editPublishedModal .fileContainer').attr('data-mediatype'),
+            fileName = $('#editPublishedModal .fileContainer').attr('data-title'),
+            newFile = $('#uploadedVttText').val(),
+            success = true;
+        
+        if(newFile) {
+            var parts = new Blob([newFile], {type:"text/plain"}),
+                f = new File([parts], fileName, {type: mediaType, lastModified: new Date()});
+                  
+            var changes = {"text/vtt":f};
+            ocManager.eventMgr.addCaptions(eventId, changes)
+            .fail(function(err) {
+                console.log("Failed to upload captions");
+                $('#editPublishedModal').find('span.errors').text(err);
+                success = false;
+            })
+            .always(function() {
+                $('.uploadCaptions').removeClass('uploading');
+                if (success) {
+                    $('#editPublishedModal').find('button[type=reset].btn-default')[0].click();
+                }
+            }.bind(this));
           }
-        }.bind(this));
-
-    } catch(err) {
-      console.log(err);
-    }   
+      } catch(err) {
+        console.log(err);
+      }   
   });
   $('#editCaptionsModal').on('click', '.updateCaptions', function(e) {
-    try {
-      e.preventDefault();
+      try {
+        e.preventDefault();
 
-      $('.updateCaptions').addClass('uploading');
-      var eventId = $('#vttInfo').attr('data-event'),
-          vttURL = $('#vttInfo').attr('data-url'),
-          _modal = $(this).parents('.modal'),
-          mediaType = $('#vttInfo').attr('data-mediaType'),
-          success = true,
-          change = $('#vttText').val(),
-          fileName = vttURL.substring(vttURL.lastIndexOf('/') + 1);
+        $(this).addClass('uploading');
+        var eventId = $('#vttInfo').attr('data-event'),
+            vttURL = $('#vttInfo').attr('data-url'),
+            mediaType = $('#vttInfo').attr('data-mediaType'),
+            fileName = vttURL.substring(vttURL.lastIndexOf('/') + 1),
+            change = $('#vttText').val(),
+            success = true;
 
-      var parts = new Blob([change], {type:"text/plain"}),
-          f = new File([parts], fileName, {type: mediaType, lastModified: new Date()}),
-          changes = {"text/vtt":f};
-
-      ocManager.eventMgr.updateCaptions(eventId, changes)
-      .fail(function(err) {
-        console.log("Failed to upload edited captions");
-        $('#editCaptionsModal').find('span.errors').text(err.error);
-        success = false;
-      })
-      .always(function() {
-        $('.updateCaptions').removeClass('uploading');
-        if (success) {
-          $(_modal).find('button[type=reset].btn-default')[0].click();
-        }
-      }.bind(this));
-  } catch(err) {
-    console.log(err);
-  }
+        var parts = new Blob([change], {type:"text/plain"}),
+            f = new File([parts], fileName, {type: mediaType, lastModified: new Date()});
+                
+        var changes = {"text/vtt":f};
+        ocManager.eventMgr.updateCaptions(eventId, changes)
+        .fail(function(err) {
+            console.log("Failed to upload edited captions");
+            $('#editCaptionsModal').find('span.errors').text(err.error);
+            success = false;
+        })
+        .always(function() {
+            $('.updateCaptions').removeClass('uploading');
+            if (success) {
+                $('#editCaptionsModal').find('button[type=reset].btn-default')[0].click();
+            }
+        }.bind(this));
+      } catch(err) {
+        console.log(err);
+      }
   });
   $('#editCaptionsModal').on('hidden.bs.modal', function () {
     $('.newVtt').empty();
     $('#ecModal, #vttLabel').text('');
     $('#vttInfo').attr('data-url','');
     $('#vttInfo').attr('data-event','');
+    $('#editCaptionsModal #errorLi').html('');
+    $('#editCaptionsModal .note').show();
+    $('.updateCaptions').hide();
+  });
+  $('#vttText').on('change keyup paste', function(e) {
+    var changes = $(this)[0].value;
+    var Parser = new WebVTTParser();
+    var vttText = Parser.parse(changes, 'subtitles/captions/descriptions');
+    var ol = $('#editCaptionsModal #errorLi')[0];
+    ol.textContent = "";
+                             
+    if(vttText.errors.length > 0) {
+      $('#editCaptionsModal #errorLi').show();
+      for(var i = 0; i < vttText.errors.length; i++) {
+          var error = vttText.errors[i],
+              message = "Line " + error.line,
+              li = document.createElement("li");
+            
+          li.textContent = message + ": " + error.message;
+          ol.appendChild(li);
+          $('#editCaptionsError').show();        
+          $('#editCaptionsModal .updateCaptions').hide();
+        }
+    } else {  
+        $('#editCaptionsModal .updateCaptions').show();
+    }
+     var s = new WebVTTSerializer()
+     console.log(s.serialize(vttText.cues));
   });
 });
 
@@ -2550,43 +2594,99 @@ function removeModal(_modal, title) {
   }, 15000);
 }
 
+function validateVTT(fileName, fileContents) {
+  var Parser = new WebVTTParser(),
+      vttText = Parser.parse(fileContents, 'subtitles/captions/descriptions'),
+      ol = $('#editPublishedModal #errorLi')[0];
+
+  ol.textContent = "";
+  console.log(vttText);
+
+  if(vttText.errors.length > 0) {
+
+    for(var i = 0; i < vttText.errors.length; i++) {
+        var error = vttText.errors[i],
+            message = "Line " + error.line,
+            li = document.createElement("li");
+
+        li.textContent = message + ": " + error.message;
+        ol.appendChild(li);
+        $('#editPublishedModal .errors').show();
+    }
+  } else {
+      $('#btnUploadCaptions').show();
+      $('#editPublishedModal .errors').hide();
+      $('#editPublishedModal #populatedPresVtt').checked = true;
+      $('#editPublishedModal #populatedPresVtt').text(fileName).attr('title', fileName);
+      $('#editPublishedModal .fileContainer').attr('data-title', fileName);
+  }
+  var s = new WebVTTSerializer()
+  console.log(s.serialize(vttText.cues));
+}
+
+function checkCaptions(id) {
+  var url = "/admin-ng/event/" + id + "/asset/attachment/attachments.json";
+  $.get({url: url},
+    function(response) {
+        for(var i = 0; i < response.length; i++) {
+            if(response[i].mimetype === "text/vtt") {
+              if($('#btnCaptions_' + id).hide()) {
+                 $('#btnCaptions_' + id).show();
+              }
+            } 
+        }
+   })
+}
+
 function getCaptions(id) {
   var url = "/admin-ng/event/" + id + "/asset/attachment/attachments.json";
+  var provider, mediaType, vttURL;
+  var providerArray = [];
 
   $.get({url: url},
     function(response) {
         for(var i = 0; i < response.length; i++) {
             if(response[i].mimetype === "text/vtt") {
-              $('#btnCaptions_' + id).show();
-               
               if(response[i].type == "captions/timedtext") {
-                  $("#downloadGoogleCaptions").show();
-                  $("#editGoogleCaptions").show();
-                  $("#downloadGoogleCaptions").attr('href', response[i].url);
-                  $("#editGoogleCaptions").attr('data-url', response[i].url);
-                  $("#editGoogleCaptions").attr('data-mediatype', response[i].type);
-                  $("#editGoogleCaptions").attr('data-event', id);
-                  $("#editGoogleCaptions").attr('data-provider', "Google");
-              } else if(response[i].type == "captions/vtt") {
-                  $("#downloadNibityCaptions").show();
-                  $("#editNibityCaptions").show();
-                  $("#editNibityCaptions").attr('data-provider', "Nibity");
-                  $("#downloadNibityCaptions").attr('href', response[i].url);
-                  $("#editNibityCaptions").attr('data-url', response[i].url);
-                  $("#editNibityCaptions").attr('data-mediatype', response[i].type);
-                  $("#editNibityCaptions").attr('data-event', id);
-              } else if(response[i].type == "text/vtt") {
-                  $("#downloadTextCaptions").show();
-                  $("#editTextCaptions").show();
-                  $("#editTextCaptions").attr('data-provider', "Uploaded");
-                  $("#downloadTextCaptions").attr('href', response[i].url);
-                  $("#editTextCaptions").attr('data-url', response[i].url);
-                  $("#editTextCaptions").attr('data-mediatype', response[i].type);
-                  $("#editTextCaptions").attr('data-event', id);
+                  providerArray.push({"id" : id, "mediatype" : response[i].type, "url" : response[i].url});
+                  $('#downloadGoogleCaptions').attr('href', response[i].url);
+                  $('#downloadGoogleCaptions').attr('data-mediatype', response[i].type);
+                  $('#downloadGoogleCaptions').show();
+              }else if(response[i].type == "captions/vtt") {
+                  providerArray.push({"id" : id, "mediatype" : response[i].type, "url" : response[i].url});
+                  $('#downloadNibityCaptions').attr('href', response[i].url);
+                  $('#downloadNibityCaptions').attr('data-mediatype', response[i].type);
+                  $('#downloadNibityCaptions').show();
+              }else if(response[i].type == "text/vtt") {
+                  providerArray.push({"id" : id, "mediatype" : response[i].type, "url" : response[i].url}); 
+                  $('#downloadUploadedCaptions').attr('href', response[i].url);
+                  $('#downloadUploadedCaptions').attr('data-mediatype', response[i].type);
+                  $('#downloadUploadedCaptions').show();
               }
-            }      
+           }
         }
-     }
+        for(var i=0;i<providerArray.length;i++) {
+            if(providerArray[i].mediatype == "text/vtt") {
+              provider = "Human Transcribed";
+              vttURL = providerArray[i].url;
+              mediaType = providerArray[i].mediatype;
+            } else if(providerArray[i].mediatype == "captions/vtt" || providerArray[i].mediatype == "captions/timedtext") {
+              if(providerArray[i].mediatype == "captions/vtt") {
+                provider = "Way with Words";
+                vttURL = providerArray[i].url;
+                mediaType = providerArray[i].mediatype;
+              } else {
+                provider = "Automated";
+                vttURL = providerArray[i].url;
+                mediaType = providerArray[i].mediatype;
+              }
+            }
+          }
+      $("#editCaptions").html("<i class='fa fa-pencil' id='edCaptions'></i>  Edit <b>" + provider + "</b> Captions");
+      $("#editCaptions, #hiddenEvent").attr('data-url', vttURL);
+      $("#editCaptions, #hiddenEvent").attr('data-provider', provider);
+      $("#editCaptions, #hiddenEvent").attr('data-mediatype', mediaType);
+    }
   )
 }
 
