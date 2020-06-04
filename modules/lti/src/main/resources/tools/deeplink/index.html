@@ -16,7 +16,7 @@
 <body>
   <ul class="nav nav-tabs">
     <li class="nav-item active" id="episodes-tab"><a class="nav-link" data-toggle="tab" href="#episodes" aria-controls="episodes" aria-selected="true">Episodes</a></li>
-    <li class="nav-item" id="series-tab"><a class="nav-link" data-toggle="tab" href="#series" aria-controls="series" aria-selected="false">Series</a></li>
+<!--    <li class="nav-item" id="series-tab"><a class="nav-link" data-toggle="tab" href="#series" aria-controls="series" aria-selected="false">Series</a></li>-->
   </ul>
 
 <div class="tab-content">
@@ -26,12 +26,12 @@
     <div class=clearfix></div>
     <div id=episodes-pager></div>
   </div>
-<!--  <div id=series role="tabpanel" aria-labelledby="series-tab" class="tab-pane fade">-->
-<!--    <div id=series-searchfield class="searchfield"></div>-->
-<!--    <div id=series-results class="container-fluid"></div>-->
-<!--    <div class=clearfix></div>-->
-<!--    <div id=series-pager></div>-->
-<!--  </div>-->
+  <div id=series role="tabpanel" aria-labelledby="series-tab" class="tab-pane fade">
+    <div id=series-searchfield class="searchfield"></div>
+    <div id=series-results class="container-fluid"></div>
+    <div class=clearfix></div>
+    <div id=series-pager></div>
+  </div>
 </div>
 <form id=select method=post action=/lti/ci>
   <input type=hidden name=content_items id=content_items>
@@ -51,7 +51,7 @@
       <h4 class="title">{{title}}</h4>
       <div class="row">
         <div class="col-6">
-          <img class="thumbnail img-fluid img-thumbnail" alt=Preview src={{image}} />
+          <img id="opencast-thumbnail" class="thumbnail img-fluid img-thumbnail" alt=Preview src={{image}} />
         </div>
         <div class="col-6">
           <div class="creator row">

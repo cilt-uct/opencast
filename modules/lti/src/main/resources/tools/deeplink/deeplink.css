@@ -35,6 +35,6 @@ div.loading {
   border: 1px solid gray;
 }
 
-.tile img {
-    width: 100%;
+.tile #opencast-thumbnail {
+    width: 100% !important;
 }
