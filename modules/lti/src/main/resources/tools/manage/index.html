@@ -536,12 +536,16 @@
             <div class="form-group green-border-focus">
               <input type="hidden" id="vttInfo">
               <label class="vttLabel" for="vttText" id="vttLabel"></label>
+              <h6 style="color:orange;" class="note">
+                <b>PLEASE NOTE: </b> Your changes will only be published when you click the <b><i>SAVE</i></b> button. 
+             <h6><br/>
+             <span id="editCaptionsError" class="errors" style="display:none;color:red;"><ol id="errorLi"></ol><br/></span>
               <textarea id="vttText" name="text/vtt" rows="15" class="form-control rounded-0 newVtt"></textarea>
             </div>
           </div>
           <div class="modal-footer">
             <button type="reset" class="btn btn-default">Cancel</button>
-            <button type="button" class="btn btn-success updateCaptions" style="float:right;">Submit</button>
+            <button type="button" class="btn btn-success updateCaptions" style="float:right;display:none;">Submit</button>
           </div>
         </form>
       </div>
@@ -747,40 +751,59 @@
         </ul>
         </div>
         <div class="tab-pane" id="captions" style="padding:10px;">
-          <table id="tblCaptions">
-            <tr>
-              <td><span>Download captions: </span></td>
-              <td>
-                <p>
-                  <a class="btn btn-primary" href="" role="button" id="downloadNibityCaptions" style="display:none;"><i class="fa fa-download" id="dlNibityCaptions"></i> Nibity VTT</a>
-                  <a class="btn btn-primary"  href="" role="button" id="downloadGoogleCaptions" style="display:none;"><i class="fa fa-download" id="dlGoogleCaptions"></i> Google VTT</a>
-                  <a class="btn btn-primary"  href="" role="button" id="downloadTextCaptions" style="display:none;"><i class="fa fa-download" id="dlTextCaptions"></i> Uploaded VTT</a>
-                </p>
-              </td>
-            </tr>
-            <tr>
-              <td><span>Edit captions: </span></td>
-              <td>
-                <p style="padding-top:10px;">
-                  <a class="btn btn-primary" role="button" id="editNibityCaptions" style="display:none;" data-toggle="modal" data-target="#editCaptionsModal"><i class="fa fa-pencil" id="edNibityCaptions"></i> Nibity VTT</a>
-                  <a class="btn btn-primary" role="button" id="editGoogleCaptions" style="display:none;" data-toggle="modal" data-target="#editCaptionsModal"><i class="fa fa-pencil" id="edGoogleCaptions"></i> Google VTT</a>
-                  <a class="btn btn-primary" role="button" id="editTextCaptions" style="display:none;" data-toggle="modal" data-target="#editCaptionsModal"><i class="fa fa-pencil" id="edTextCaptions"></i> Uploaded VTT</a>
-                </p>
-              </td>
-            </tr>
-            <tr>
-              <td><span>Upload new captions: </span></td>
-              <td style="padding-top:25px;">
-                <input autocomplete="off" type="checkbox" id="populatedPresVtt" class="filePopulated" />
-                  <span class="fileContainer" data-mediatype="vtt" data-title="Choose *.vtt ..." style="display:inline-block;">
-                    <input autocomplete="off" type="file" name="text/vtt" id="attachment_captions_webvtt" data-mediatype="vtt" accept=".vtt"/>
+          <input type="hidden" id="hiddenEvent" name="hiddenEvent"/>
+           <div class="panel-group">
+             <div class="panel panel-info">
+              <div class="panel-heading">
+                <a href="#downloadPanel" data-toggle="collapse" class="panel-title">
+                  <i class="fa fa-download"></i> Download Captions 
+                </a>
+              </div>
+              <div id="downloadPanel" class="panel-collapse collapse" style="padding-top:10px;">
+                 <div class="panel-body list-group">
+                       <a href="#" class="list-group-item list-group-item-action" title="Nibity Captions" id="downloadNibityCaptions" style="display:none;"><i class="fa fa-download"></i> Way with Words Captions</a>
+                       <a href="#" class="list-group-item list-group-item-action" title="Google Captions" id="downloadGoogleCaptions" style="display:none;"><i class="fa fa-download"></i> Automated Captions</a>
+                        <a href="#" class="list-group-item list-group-item-action" title="Uploaded Captions" id="downloadUploadedCaptions" style="display:none;"><i class="fa fa-download"></i> Human Transcribed Captions</a>
+                 </div>
+              </div>
+             </div>
+          </div>
+           <div class="panel-group">
+             <div class="panel panel-warning">
+              <div class="panel-heading">
+                <a href="#editPanel" data-toggle="collapse" class="panel-title">
+                  <i class="fa fa-pencil"></i> Edit Captions
+                </a>
+              </div>
+              <div id="editPanel" class="panel-collapse collapse" style="padding-top:10px;">
+               <div class="panel-body list-group">
+              <a type="button" class="list-group-item list-group-item-action" id="editCaptions" data-toggle="modal" data-target="#editCaptionsModal">
+              </a>
+              </div>
+             </div>
+          </div>
+          </div>
+          <div class="panel-group">
+             <div class="panel panel-success">
+              <div class="panel-heading">
+                <a href="#uploadPanel" data-toggle="collapse" class="panel-title">
+                  <i class="fa fa-upload"></i> Upload New Captions
+                </a>
+              </div>
+              <div id="uploadPanel" class="panel-collapse collapse" style="padding-top:10px;">
+               <div class="panel-body">
+               <input autocomplete="off" type="checkbox" id="populatedPresVtt" class="filePopulated" />
+               <span class="fileContainer form-control" data-mediatype="text/vtt" data-title="Choose *.vtt ..." style="display:inline-block;">
+               <input autocomplete="off" type="file" name="text/vtt" id="attachment_captions_webvtt" data-mediatype="vtt" accept=".vtt"/>
                     <progress min="0" value=0 max="100"></progress>
-                  </span>
-                  <a href="" id="btnUploadCaptions" class="btn btn-success uploadCaptions" style="display:none;">Upload VTT</a>
-                  <span class="errors"></span>
-              </td>
-            </tr>
-         </table>
+               </span>
+               <a href="" id="btnUploadCaptions" class="btn btn-success uploadCaptions" style="display:none;">Upload VTT</a>
+               <textarea style="display:none;" rows="10" cols="50" name="text/vtt"  id="uploadedVttText"></textarea>
+               <span class="errors" style="color:red;display:none;"><small>The file has the following errors. Please correct them and upload the file again or upload a different file: <br/><ol id="errorLi"></ol></small></span>
+               </div>
+             </div>
+            </div>
+          </div>
         </div>
         </div>
         {% if (o.target == '#bulkModal') { %}

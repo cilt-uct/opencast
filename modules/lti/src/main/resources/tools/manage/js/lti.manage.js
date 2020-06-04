@@ -2437,8 +2437,7 @@ $(document).ready(function() {
       $('#editPublishedCancel').text("Close");
       $('#detailsLink, #details').removeClass('active');
       $('#captions, #captionsLink').addClass('active');
-      $('#editCaptions, #downloadNibityCaptions, #downloadGoogleCaptions',
-        '#downloadUploadedCaptions, .uploadCaptions').attr('data-event', id);
+      $('#editCaptions, #downloadNibityCaptions, #downloadGoogleCaptions, #downloadUploadedCaptions, .uploadCaptions').attr('data-event', id);
     }else{
       $('#editPublished').show();
       $('#editPublishedCancel').text("Cancel");
@@ -2457,12 +2456,9 @@ $(document).ready(function() {
       $('#editPublishedModal .fileContainer').attr('data-title', 'Choose *.vtt...');
       $('#editPublishedModal #errorLi').html('');
       $('#btnUploadCaptions').attr('data-event', '');
-      $('#editCaptions, #downloadNibityCaptions, #downloadGoogleCaptions', 
-        '#downloadUploadedCaptions').attr('data-provider','');
-      $('#editCaptions, #downloadNibityCaptions, #downloadGoogleCaptions',
-        '#downloadUploadedCaptions').attr('data-url','');
-      $('#editCaptions, #downloadNibityCaptions, #downloadGoogleCaptions', 
-        '#downloadUploadedCaptions').attr('href','');
+      $('#editCaptions, #downloadNibityCaptions, #downloadGoogleCaptions, #downloadUploadedCaptions').attr('data-provider','');
+      $('#editCaptions, #downloadNibityCaptions, #downloadGoogleCaptions, #downloadUploadedCaptions').attr('data-url','');
+      $('#editCaptions, #downloadNibityCaptions, #downloadGoogleCaptions, #downloadUploadedCaptions').attr('href','');
       $('#editCaptions').text('');
   });
   $('#editCaptionsModal').on('show.bs.modal', function(e) {
