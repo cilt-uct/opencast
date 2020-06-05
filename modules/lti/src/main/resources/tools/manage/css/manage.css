@@ -3179,3 +3179,15 @@ input:focus, textarea:focus {
   box-shadow: 0.3s;
   color: white;
 }
+.btn-default.btn-red {
+  background-color: #712d2d !important;
+  color: white !important;
+}
+.borderless {
+  border: none !important;
+}
+.borderless:hover {
+   color: #333;
+   background-color: #e6e6e6;
+   border-color: #adadad;
+}
