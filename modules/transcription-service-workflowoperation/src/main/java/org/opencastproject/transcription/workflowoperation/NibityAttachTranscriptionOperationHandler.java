@@ -148,7 +148,7 @@ public class NibityAttachTranscriptionOperationHandler extends AbstractWorkflowO
         MediaPackageElementBuilder builder = MediaPackageElementBuilderFactory.newInstance().newElementBuilder();
         MediaPackageElement transcriptElement = builder.newElement(Attachment.TYPE, new MediaPackageElementFlavor("captions", zippedFileType));
         transcriptElement.setIdentifier(UUID.randomUUID().toString());
-        transcriptElement.setMimeType(MimeType.mimeType(zippedFileMimeType.substring(0, zippedFileMimeType.indexOf("/"))), zippedFileMimeType.substring(zippedFileMimeType.indexOf("/") +1)));
+        transcriptElement.setMimeType(MimeType.mimeType(zippedFileMimeType.substring(0, zippedFileMimeType.indexOf("/")), zippedFileMimeType.substring(zippedFileMimeType.indexOf("/") +1)));
         URI transcriptURI = workspace.put(mediaPackage.getIdentifier().toString(), transcriptElement.getIdentifier(), zippedFileIdentifier, zis);
         transcriptElement.setURI(transcriptURI);
         mediaPackage.add(transcriptElement);
