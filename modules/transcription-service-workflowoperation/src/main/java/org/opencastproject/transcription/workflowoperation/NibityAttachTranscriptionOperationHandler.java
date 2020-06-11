@@ -119,37 +119,41 @@ public class NibityAttachTranscriptionOperationHandler extends AbstractWorkflowO
 
     try {
       // Get transcription result zip file from the service
-      MediaPackageElement transcription = service.getGeneratedTranscription(mediaPackage.getIdentifier().compact(), jobId);
+      MediaPackageElement transcription = service.getGeneratedTranscription(mediaPackage.getIdentifier().compact(),
+              jobId);
 
       // Extract the transcript vtt and docx
-      String captions, zippedFileType, zippedFileMimeType, zippedFileIdentifier = null;
+      String zippedFileType, zippedFileMimeType, zippedFileIdentifier = null;
       String captionsVttZipName = mediaPackage + ".vtt";
       String captionsDocxZipName = mediaPackage + ".docx";
       ZipFile zipFile = new ZipFile(workspace.get(transcription.getURI()));
       ZipEntry zippedVtt = zipFile.getEntry(captionsVttZipName);
       ZipEntry zippedDocx = zipFile.getEntry(captionsDocxZipName);
 
-      if(zippedVtt != null || zippedDocx != null) {
-        if (zippedVtt != null) {        
+      if (zippedVtt != null || zippedDocx != null) {
+        if (zippedVtt != null) {
           InputStream zis = zipFile.getInputStream(zippedVtt);
           captionsZipName = captionsVttZipName;
           zippedFileType = "vtt";
           zippedFileMimeType = "text/vtt";
           zippedFileIdentifier = "captions.vtt";
         }
-        if(zippedDocx != null) {
+        if (zippedDocx != null) {
           InputStream zis = zipFile.getInputStream(zippedDocx);
           captionsZipName = captionsDocxZipName;
           zippedFileType = "docx";
           zippedFileMimeType = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
           zippedFileIdentifier = "captions.docx";
         }
-        
         MediaPackageElementBuilder builder = MediaPackageElementBuilderFactory.newInstance().newElementBuilder();
-        MediaPackageElement transcriptElement = builder.newElement(Attachment.TYPE, new MediaPackageElementFlavor("captions", zippedFileType));
+        MediaPackageElement transcriptElement = builder.newElement(Attachment.TYPE,
+                new MediaPackageElementFlavor("captions", zippedFileType));
         transcriptElement.setIdentifier(UUID.randomUUID().toString());
-        transcriptElement.setMimeType(MimeType.mimeType(zippedFileMimeType.substring(0, zippedFileMimeType.indexOf("/")), zippedFileMimeType.substring(zippedFileMimeType.indexOf("/") +1)));
-        URI transcriptURI = workspace.put(mediaPackage.getIdentifier().toString(), transcriptElement.getIdentifier(), zippedFileIdentifier, zis);
+        transcriptElement
+                .setMimeType(MimeType.mimeType(zippedFileMimeType.substring(0, zippedFileMimeType.indexOf("/")),
+                        zippedFileMimeType.substring(zippedFileMimeType.indexOf("/") + 1)));
+        URI transcriptURI = workspace.put(mediaPackage.getIdentifier().toString(), transcriptElement.getIdentifier(),
+                zippedFileIdentifier, zis);
         transcriptElement.setURI(transcriptURI);
         mediaPackage.add(transcriptElement);
 
@@ -169,37 +173,25 @@ public class NibityAttachTranscriptionOperationHandler extends AbstractWorkflowO
       }
 
       // Extract the transcript vtt
-    /*  String captionsVtt = null;
-      ZipFile zipFile = new ZipFile(workspace.get(transcription.getURI()));
-      String captionsZipName = mediaPackage + ".vtt";
-      ZipEntry zippedVtt = zipFile.getEntry(captionsZipName);
+      /**
+       * String captionsVtt = null; ZipFile zipFile = new ZipFile(workspace.get(transcription.getURI())); String
+       * captionsZipName = mediaPackage + ".vtt"; ZipEntry zippedVtt = zipFile.getEntry(captionsZipName);
+       * 
+       * if (zippedVtt != null) { InputStream zis = zipFile.getInputStream(zippedVtt); MediaPackageElementBuilder
+       * builder = MediaPackageElementBuilderFactory.newInstance().newElementBuilder(); MediaPackageElement vttElement =
+       * builder.newElement(Attachment.TYPE, new MediaPackageElementFlavor("captions", "vtt"));
+       * vttElement.setIdentifier(UUID.randomUUID().toString()); vttElement.setMimeType(MimeType.mimeType("text",
+       * "vtt")); URI vttURI = workspace.put(mediaPackage.getIdentifier().toString(), vttElement.getIdentifier(),
+       * "captions.vtt", zis); vttElement.setURI(vttURI); mediaPackage.add(vttElement);
+       * 
+       * // Set the target flavor if informed if (flavor != null) vttElement.setFlavor(flavor);
+       * 
+       * // Add tags if (targetTagOption != null) { for (String tag : asList(targetTagOption)) { if
+       * (StringUtils.trimToNull(tag) != null) vttElement.addTag(tag); } } } else { logger.debug("No entry named {}
+       * found in results zip file {}", captionsZipName, transcription.getURI()); }
+       */
 
-      if (zippedVtt != null) {
-        InputStream zis = zipFile.getInputStream(zippedVtt);
-        MediaPackageElementBuilder builder = MediaPackageElementBuilderFactory.newInstance().newElementBuilder();
-        MediaPackageElement vttElement = builder.newElement(Attachment.TYPE, new MediaPackageElementFlavor("captions", "vtt"));
-        vttElement.setIdentifier(UUID.randomUUID().toString());
-        vttElement.setMimeType(MimeType.mimeType("text", "vtt"));
-        URI vttURI = workspace.put(mediaPackage.getIdentifier().toString(), vttElement.getIdentifier(), "captions.vtt", zis);
-        vttElement.setURI(vttURI);
-        mediaPackage.add(vttElement);
-
-        // Set the target flavor if informed
-        if (flavor != null)
-          vttElement.setFlavor(flavor);
-
-        // Add tags
-        if (targetTagOption != null) {
-          for (String tag : asList(targetTagOption)) {
-            if (StringUtils.trimToNull(tag) != null)
-              vttElement.addTag(tag);
-          }
-        }
-      } else {
-        logger.debug("No entry named {} found in results zip file {}", captionsZipName, transcription.getURI());
-      }*/
-
-      // Add the zip file to the  media package
+      // Add the zip file to the media package
       transcription.setIdentifier("nibity-transcript-" + jobId);
       transcription.setURI(workspace.moveTo(transcription.getURI(), mediaPackage.getIdentifier().toString(),
               transcription.getIdentifier(), "nibity-" + jobId + ".zip"));
