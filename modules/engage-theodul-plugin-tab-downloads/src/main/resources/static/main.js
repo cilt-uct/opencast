@@ -217,7 +217,7 @@ define(["jquery", "underscore", "backbone", "engage/core"], function($, _, Backb
         var list = [];
         _.each(model.get('attachments'), function(item) {
            // type: "captions/timedtext", mimetype: "text/vtt"
-          if (item.type.indexOf('captions') >= 0 || item.mimetype == 'text/vtt') {
+          if (item.type.indexOf('captions') >= 0 || item.mimetype == 'text/vtt' || item.mimetype == 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
               item.url = window.location.protocol + item.url.substring(item.url.indexOf('/'));
               list.push(item);
           }

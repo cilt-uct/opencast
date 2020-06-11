@@ -361,7 +361,7 @@ function listEpisode(info) {
                 img.src = info.mediapackage.attachments.attachment[i].url.replace('http:', 'https:'); //TODO: proper check to stop mixed-mode
                 break;
             }
-        } else if (attachments[i].type.indexOf('captions') >= 0 || attachments[i].mimetype == 'text/vtt') {
+        } else if (attachments[i].type.indexOf('captions') >= 0 || attachments[i].mimetype == 'text/vtt' || attachments[i].mimetype == 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
             captions.push(attachments[i]);
         }
     }
