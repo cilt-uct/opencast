@@ -123,7 +123,9 @@ public class NibityAttachTranscriptionOperationHandler extends AbstractWorkflowO
               jobId);
 
       // Extract the transcript vtt and docx
-      String zippedFileType, zippedFileMimeType, zippedFileIdentifier = null;
+      String zippedFileType = null;
+      String zippedFileMimeType = null;
+      String zippedFileIdentifier = null;
       String captionsVttZipName = mediaPackage + ".vtt";
       String captionsDocxZipName = mediaPackage + ".docx";
       ZipFile zipFile = new ZipFile(workspace.get(transcription.getURI()));
