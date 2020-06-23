@@ -170,7 +170,7 @@ public class NibityAttachTranscriptionOperationHandler extends AbstractWorkflowO
     this.workspace = service;
   }
 
-  public MediaPackage addTranscriptToMediaPackage(InputStream zis, String captionMimeType, String captionIdentifier, MediaPackage mediaPackage, MediaPackageElementFlavor flavor, String targetTagOption) {
+  public MediaPackage addTranscriptToMediaPackage(InputStream zis, String captionMimeType, String captionIdentifier, MediaPackage mediaPackage, MediaPackageElementFlavor flavor, String targetTagOption) throws WorkflowOperationException{
     try {
       MediaPackageElementBuilder builder = MediaPackageElementBuilderFactory.newInstance().newElementBuilder();
       MediaPackageElement transcriptElement = builder.newElement(Attachment.TYPE,
