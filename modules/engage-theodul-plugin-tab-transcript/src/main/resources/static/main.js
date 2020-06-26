@@ -192,7 +192,7 @@ define(["jquery", "underscore", "backbone", "engage/core"], function($, _, Backb
                 }
 
                 var parts = [],
-                    request_url = "https://docs.google.com/forms/d/e/1FAIpQLSdyQfJgXopbM7ZOHF7a3ODucNgCejsUQW77DrwNsXUBJJS95g/viewform",
+                    request_url = "requestTranscriptWorkflow()",
                     tempVars = {
                         search_str: translate("search_str", "Search"),
                         search_placeholder_str: translate("search_placeholder_str", "Search terms (space separated)"),
@@ -209,33 +209,37 @@ define(["jquery", "underscore", "backbone", "engage/core"], function($, _, Backb
                         mediaPackage_date: Engage.model.get('mediaPackage').get('date')
                     };
 
-                if (tempVars.mediaPackage_title) {
-                    parts.push('entry.366340186=' + this.model.get('title'));
-                }
-                if (tempVars.user['email']) {
-                    parts.push('entry.1846851123=' + tempVars.user.email);
-                }
-
-                if (tempVars.mediaPackage_eventid && tempVars.mediaPackage_seriesid) {
-                    parts.push('entry.1294912390=' + tempVars.mediaPackage_seriesid + tempVars.mediaPackage_eventid);
-                } else if (tempVars.mediaPackage_seriesid) {
-                    parts.push('entry.1294912390=' + tempVars.mediaPackage_seriesid);
-                }
-
-                if (tempVars.mediaPackage_date) {
-                    var dt = new Date(tempVars.mediaPackage_date)
-                    parts.push('entry.1807657233_year=' + dt.getFullYear());
-                    parts.push('entry.18076572336_month=' + (dt.getMonth()+1));
-                    parts.push('entry.1807657233_day=' + dt.getDate());
-                }
-
-                tempVars['request_transcript_link_form'] =  encodeURI(request_url + (parts.length > 0 ? '?' + parts.join('&') : ''));
+//                if (tempVars.mediaPackage_title) {
+//                    parts.push('entry.366340186=' + this.model.get('title'));
+//                }
+//                if (tempVars.user['email']) {
+//                    parts.push('entry.1846851123=' + tempVars.user.email);
+//                }
+//
+//                if (tempVars.mediaPackage_eventid && tempVars.mediaPackage_seriesid) {
+//                    parts.push('entry.1294912390=' + tempVars.mediaPackage_seriesid + tempVars.mediaPackage_eventid);
+//                } else if (tempVars.mediaPackage_seriesid) {
+//                    parts.push('entry.1294912390=' + tempVars.mediaPackage_seriesid);
+//                }
+//
+//                if (tempVars.mediaPackage_date) {
+//                    var dt = new Date(tempVars.mediaPackage_date)
+//                    parts.push('entry.1807657233_year=' + dt.getFullYear());
+//                    parts.push('entry.18076572336_month=' + (dt.getMonth()+1));
+//                    parts.push('entry.1807657233_day=' + dt.getDate());
+//                }
+//
+//                tempVars['request_transcript_link_form'] =  encodeURI(request_url + (parts.length > 0 ? '?' + parts.join('&') : ''));
                 var tpl = _.template(this.template);
                 this.$el.html(tpl(tempVars));
                 addListeners(vttText);
             }
         }
     });
+
+    function requestTranscriptWorkflow() {
+        console.log("request transcript");
+    }
 
     function addListeners(vttText) {
         $( "#transcript_tab_search" ).keyup(filterText);
