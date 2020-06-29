@@ -175,6 +175,9 @@ define(["jquery", "underscore", "backbone", "engage/core"], function($, _, Backb
             // listen for changes of the model and bind the render function to this
             this.model.bind("change", this.render);
         },
+        requestTranscriptWorkflow: function {} {
+            console.log("request transcript");
+        },
         render: function () {
             if (!mediapackageError) {
                 var vttText = [];
@@ -236,10 +239,6 @@ define(["jquery", "underscore", "backbone", "engage/core"], function($, _, Backb
             }
         }
     });
-
-    function requestTranscriptWorkflow() {
-        console.log("request transcript");
-    }
 
     function addListeners(vttText) {
         $( "#transcript_tab_search" ).keyup(filterText);
