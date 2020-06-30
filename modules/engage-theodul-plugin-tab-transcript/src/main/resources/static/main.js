@@ -209,27 +209,6 @@ define(["jquery", "underscore", "backbone", "engage/core"], function($, _, Backb
                         mediaPackage_date: Engage.model.get('mediaPackage').get('date')
                     };
 
-//                if (tempVars.mediaPackage_title) {
-//                    parts.push('entry.366340186=' + this.model.get('title'));
-//                }
-//                if (tempVars.user['email']) {
-//                    parts.push('entry.1846851123=' + tempVars.user.email);
-//                }
-//
-//                if (tempVars.mediaPackage_eventid && tempVars.mediaPackage_seriesid) {
-//                    parts.push('entry.1294912390=' + tempVars.mediaPackage_seriesid + tempVars.mediaPackage_eventid);
-//                } else if (tempVars.mediaPackage_seriesid) {
-//                    parts.push('entry.1294912390=' + tempVars.mediaPackage_seriesid);
-//                }
-//
-//                if (tempVars.mediaPackage_date) {
-//                    var dt = new Date(tempVars.mediaPackage_date)
-//                    parts.push('entry.1807657233_year=' + dt.getFullYear());
-//                    parts.push('entry.18076572336_month=' + (dt.getMonth()+1));
-//                    parts.push('entry.1807657233_day=' + dt.getDate());
-//                }
-//
-//                tempVars['request_transcript_link_form'] =  encodeURI(request_url + (parts.length > 0 ? '?' + parts.join('&') : ''));
                 var tpl = _.template(this.template);
                 this.$el.html(tpl(tempVars));
                 addListeners(vttText);
@@ -239,6 +218,22 @@ define(["jquery", "underscore", "backbone", "engage/core"], function($, _, Backb
 
     function requestTranscriptWorkflow() {
         console.log("make call");
+        $.ajax({
+            url:"/api/workflows/",
+            method:"POST",
+            data:{
+                event_identifier: Engage.model.get('mediaPackage').get('eventid'),
+                workflow_definition_identifier: "uct-request-transcript",
+                withoperations: false,
+                withconfiguration: false,
+            },
+        }).done(function(response) {
+            var res = JSON.parse(response);
+            alert(res.description);
+        }).fail(function( jqXHR, textStatus ) {
+            console.log(textStatus);
+        });
+        console.log("call made");
     }
 
     function addListeners(vttText) {
