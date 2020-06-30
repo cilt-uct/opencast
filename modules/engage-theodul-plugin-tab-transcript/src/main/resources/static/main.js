@@ -237,9 +237,14 @@ define(["jquery", "underscore", "backbone", "engage/core"], function($, _, Backb
         }
     });
 
+    function requestTranscriptWorkflow() {
+        console.log("make call");
+    }
+
     function addListeners(vttText) {
         $( "#transcript_tab_search" ).keyup(filterText);
         $( "#clear_transcript_tab_search" ).click(filterText);
+        $( "#requestTranscript" ).click(requestTranscriptWorkflow);
 
         for (var i = 1; i < vttText.length; i++) {
             $( "#" + i ).click(updateVideo);
