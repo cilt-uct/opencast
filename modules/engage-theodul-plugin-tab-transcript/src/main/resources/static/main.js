@@ -217,7 +217,6 @@ define(["jquery", "underscore", "backbone", "engage/core"], function($, _, Backb
     });
 
     function requestTranscriptWorkflow() {
-        console.log("make call");
         $.ajax({
             url:"/api/workflows/",
             method:"POST",
@@ -233,7 +232,6 @@ define(["jquery", "underscore", "backbone", "engage/core"], function($, _, Backb
         }).fail(function( jqXHR, textStatus ) {
             console.log(textStatus);
         });
-        console.log("call made");
     }
 
     function addListeners(vttText) {
