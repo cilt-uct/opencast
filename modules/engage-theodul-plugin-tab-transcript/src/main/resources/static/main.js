@@ -227,8 +227,7 @@ define(["jquery", "underscore", "backbone", "engage/core"], function($, _, Backb
                 withconfiguration: false,
             },
         }).done(function(response) {
-            var res = JSON.parse(response);
-            alert(res.description);
+            alert(response.description);
         }).fail(function( jqXHR, textStatus ) {
             console.log(textStatus);
         });
