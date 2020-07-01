@@ -192,14 +192,12 @@ define(["jquery", "underscore", "backbone", "engage/core"], function($, _, Backb
                 }
 
                 var parts = [],
-                    request_url = "requestTranscriptWorkflow()",
                     tempVars = {
                         search_str: translate("search_str", "Search"),
                         search_placeholder_str: translate("search_placeholder_str", "Search terms (space separated)"),
                         request_transcript_str: translate("request_transcript_str", "No captions or transcripts are available for this video. "),
                         request_transcript_link_text_str: translate("request_transcript_link_text_str", "Request a transcript."),
                         request_transcript_link_mail: "mailto:help@vula.uct.ac.za?Subject=Captions%20request",
-                        request_transcript_link_form: request_url,
                         vttObjects: vttObjects,
                         user: Engage.model.get("meInfo").get("user"),
                         mediaPackage_title: Engage.model.get('mediaPackage').get('title'),
