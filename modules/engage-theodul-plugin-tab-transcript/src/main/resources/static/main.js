@@ -225,14 +225,12 @@ define(["jquery", "underscore", "backbone", "engage/core"], function($, _, Backb
                 withconfiguration: false,
             },
         }).done(function(response) {
-            document.getElementById("requestTranscript").style.display = "block";
             var paragraph = document.getElementById("transcriptRequested")
             var text = document.createTextNode("Transcript has been requested and will be available in 8 to 24 hours.");
             paragraph.appendChild(text);
             paragraph.style.color = 'green'
             console.log(response.description);
         }).fail(function( jqXHR, textStatus ) {
-            document.getElementById("requestTranscript").style.display = "block";
             var paragraph = document.getElementById("transcriptFailed")
             var text = document.createTextNode("Transcript could not be requested, please contact vula help.");
             paragraph.appendChild(text);
