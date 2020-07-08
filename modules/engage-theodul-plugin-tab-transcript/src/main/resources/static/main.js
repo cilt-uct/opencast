@@ -216,7 +216,7 @@ define(["jquery", "underscore", "backbone", "engage/core"], function($, _, Backb
 
     function requestTranscriptWorkflow() {
         $.ajax({
-            url:"/api/workflows/",
+            url:"/api/workflows",
             method:"POST",
             data:{
                 event_identifier: Engage.model.get('mediaPackage').get('eventid'),
@@ -225,8 +225,16 @@ define(["jquery", "underscore", "backbone", "engage/core"], function($, _, Backb
                 withconfiguration: false,
             },
         }).done(function(response) {
-            alert(response.description);
+            var paragraph = document.getElementById("transcriptRequested")
+            var text = document.createTextNode("Transcript has been requested and will be available in 8 to 24 hours.");
+            paragraph.appendChild(text);
+            paragraph.style.color = 'green'
+            console.log(response.description);
         }).fail(function( jqXHR, textStatus ) {
+            var paragraph = document.getElementById("transcriptFailed")
+            var text = document.createTextNode("Transcript could not be requested, please contact vula help.");
+            paragraph.appendChild(text);
+            paragraph.style.color = 'red'
             console.log(textStatus);
         });
     }
