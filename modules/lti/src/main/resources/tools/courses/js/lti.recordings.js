@@ -294,11 +294,13 @@ $(document).on("click", ".downloader", function () {
                     tCaptionCol2 = document.createElement('td'),
                     tCaptionCol3 = document.createElement('td'),
                     tCaptionCol4 = document.createElement('td'),
-                    captionDownloadURL = item.url.replace('http:', 'https:') + '/download/';
+                    captionsType = item.type.split('/'),
+                    captionsMimeType = captionsType[1].split('.');
+                    captionDownloadURL = item.url.replace('http:', 'https:') + '/download/' + episodeTitle + '_' + dateStamp + '_' + captionsType[1].replace(/^./, captionsType[1][0].toUpperCase());
 
                 tBody.appendChild(tCaptionRow);
                 tCaptionCol1.innerHTML = "Caption";
-                tCaptionCol2.innerHTML = item.mimetype;
+                tCaptionCol2.innerHTML = captionsMimeType[0] + '/' + captionsMimeType[1];
                 tCaptionCol3.innerHTML = "";
                 tCaptionCol4.className = "text-center";
                 tCaptionCol4.innerHTML = "<a class='btn btn-default btn-sm dlCaption' data-episode-id='" + episodeID + "' role='button' href='" + captionDownloadURL + "'><i class='glyphicon glyphicon-download'></i></a>";

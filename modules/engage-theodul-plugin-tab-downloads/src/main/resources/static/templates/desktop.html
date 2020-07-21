@@ -85,15 +85,16 @@
 		<% }); %>
 	<% } %>
     <% if(captions && Array.isArray(captions)) { %>
-		<% _.each(captions, function(item) { %>
+		<% _.each(captions, function(item) {
+                  var captionsType = item.type.split('/');
+                  var captionsMimeType = captionsType[1].split('.'); %>
 			<tr>
                 <td>Caption</td>
-				<td><%= item.mimetype %></td>
+				<td><%= captionsMimeType[0] + '/' + captionsMimeType[1] %></td>
 		        <td>&nbsp;</td>
 		        <td>
                     <a class="btn btn-default" href="<%= item.url.replace('http://media', 'https://media') +
-        				downloadURL + caption_type + "." +
-        				item.mimetype.substring(item.mimetype.lastIndexOf("/")+1, item.mimetype.length).replace('mpeg', 'mp3') %>"
+        				downloadURL + '_' + captionsType[1].replace(/^./, captionsType[1][0].toUpperCase()) %>"
                         role="button" download="<%= item.id %>">
 					    <span class="glyphicon glyphicon-download" aria-hidden="true"></span>
 				    </a>
