@@ -89,8 +89,8 @@
                   var captionsType = item.type.split('/');
                   var captionsMimeType = captionsType[1].split('.'); %>
 			<tr>
-                <td>Caption</td>
-				<td><%= captionsMimeType[0] + '/' + captionsMimeType[1] %></td>
+                <td>Captions</td>
+				<td><%= "text/" + captionsMimeType[1] %></td>
 		        <td>&nbsp;</td>
 		        <td>
                     <a class="btn btn-default" href="<%= item.url.replace('http://media', 'https://media') +

@@ -299,8 +299,8 @@ $(document).on("click", ".downloader", function () {
                     captionDownloadURL = item.url.replace('http:', 'https:') + '/download/' + episodeTitle + '_' + dateStamp + '_' + captionsType[1].replace(/^./, captionsType[1][0].toUpperCase());
 
                 tBody.appendChild(tCaptionRow);
-                tCaptionCol1.innerHTML = "Caption";
-                tCaptionCol2.innerHTML = captionsMimeType[0] + '/' + captionsMimeType[1];
+                tCaptionCol1.innerHTML = "Captions";
+                tCaptionCol2.innerHTML = "text/" + captionsMimeType[1];
                 tCaptionCol3.innerHTML = "";
                 tCaptionCol4.className = "text-center";
                 tCaptionCol4.innerHTML = "<a class='btn btn-default btn-sm dlCaption' data-episode-id='" + episodeID + "' role='button' href='" + captionDownloadURL + "'><i class='glyphicon glyphicon-download'></i></a>";
