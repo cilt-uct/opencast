@@ -94,7 +94,7 @@
 		        <td>&nbsp;</td>
 		        <td>
                     <a class="btn btn-default" href="<%= item.url.replace('http://media', 'https://media') +
-        				downloadURL + '_' + captionsType[1].replace(/^./, captionsType[1][0].toUpperCase()) %>"
+        				downloadURL + '_' + captionsType[0].replace(/^./, captionsType[0][0].toUpperCase()) + '.' + captionsMimeType[1] %>"
                         role="button" download="<%= item.id %>">
 					    <span class="glyphicon glyphicon-download" aria-hidden="true"></span>
 				    </a>

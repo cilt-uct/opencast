@@ -296,7 +296,7 @@ $(document).on("click", ".downloader", function () {
                     tCaptionCol4 = document.createElement('td'),
                     captionsType = item.type.split('/'),
                     captionsMimeType = captionsType[1].split('.');
-                    captionDownloadURL = item.url.replace('http:', 'https:') + '/download/' + episodeTitle + '_' + dateStamp + '_' + captionsType[1].replace(/^./, captionsType[1][0].toUpperCase());
+                captionDownloadURL = item.url.replace('http:', 'https:') + '/download/' + episodeTitle + '_' + dateStamp + '_' + captionsType[0].replace(/^./, captionsType[0][0].toUpperCase()) + '.' + captionsMimeType[1];
 
                 tBody.appendChild(tCaptionRow);
                 tCaptionCol1.innerHTML = "Captions";
