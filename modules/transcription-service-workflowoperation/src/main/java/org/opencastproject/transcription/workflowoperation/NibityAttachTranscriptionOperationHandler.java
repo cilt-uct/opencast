@@ -136,7 +136,8 @@ public class NibityAttachTranscriptionOperationHandler extends AbstractWorkflowO
           InputStream zis = zipFile.getInputStream(zippedVtt);
           String captionMimeType = "text/vtt";
           String captionIdentifier = "captions.vtt";
-          mediaPackage = addTranscriptToMediaPackage(zis, captionMimeType, captionIdentifier, mediaPackage, flavor, targetTagOption);
+          String captionFileType = "vtt";
+          mediaPackage = addTranscriptToMediaPackage(zis, captionMimeType, captionIdentifier, captionFileType, mediaPackage, flavor, targetTagOption);
         }
 
         // Extract the transcript docx
@@ -144,7 +145,8 @@ public class NibityAttachTranscriptionOperationHandler extends AbstractWorkflowO
           InputStream zis = zipFile.getInputStream(zippedDocx);
           String transcriptMimeType = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
           String transcriptIdentifier = "captions.docx";
-          mediaPackage = addTranscriptToMediaPackage(zis, transcriptMimeType, transcriptIdentifier, mediaPackage, flavor, targetTagOption);
+          String transcriptFileType = "docx";
+          mediaPackage = addTranscriptToMediaPackage(zis, transcriptMimeType, transcriptIdentifier, transcriptFileType, mediaPackage, flavor, targetTagOption);
         }
 
         // Add the zip file to the media package
@@ -170,11 +172,11 @@ public class NibityAttachTranscriptionOperationHandler extends AbstractWorkflowO
     this.workspace = service;
   }
 
-  public MediaPackage addTranscriptToMediaPackage(InputStream zis, String captionMimeType, String captionIdentifier, MediaPackage mediaPackage, MediaPackageElementFlavor flavor, String targetTagOption) throws WorkflowOperationException {
+  public MediaPackage addTranscriptToMediaPackage(InputStream zis, String captionMimeType, String captionIdentifier, String captionFileType, MediaPackage mediaPackage, MediaPackageElementFlavor flavor, String targetTagOption) throws WorkflowOperationException {
     try {
       MediaPackageElementBuilder builder = MediaPackageElementBuilderFactory.newInstance().newElementBuilder();
       MediaPackageElement transcriptElement = builder.newElement(Attachment.TYPE,
-              new MediaPackageElementFlavor(captionIdentifier.substring(0, captionIdentifier.indexOf(".")), captionIdentifier.substring(captionIdentifier.indexOf("/") + 1)));
+              new MediaPackageElementFlavor("captions", captionFileType));
       transcriptElement.setIdentifier(UUID.randomUUID().toString());
       transcriptElement.setMimeType(
               MimeType.mimeType(captionMimeType.substring(0, captionMimeType.indexOf("/")),

@@ -86,15 +86,14 @@
 	<% } %>
     <% if(captions && Array.isArray(captions)) { %>
 		<% _.each(captions, function(item) {
-                  var captionsType = item.type.split('/');
-                  var captionsMimeType = captionsType[1].split('.'); %>
+                  var captionsType = item.type.split('/'); %>
 			<tr>
                 <td>Captions</td>
-				<td><%= "text/" + captionsMimeType[1] %></td>
+				<td><%= "text/" + captionsType[1] %></td>
 		        <td>&nbsp;</td>
 		        <td>
                     <a class="btn btn-default" href="<%= item.url.replace('http://media', 'https://media') +
-        				downloadURL + '_' + captionsType[0].replace(/^./, captionsType[0][0].toUpperCase()) + '.' + captionsMimeType[1] %>"
+        				downloadURL + '_' + captionsType[0].replace(/^./, captionsType[0][0].toUpperCase()) + '.' + captionsType[1] %>"
                         role="button" download="<%= item.id %>">
 					    <span class="glyphicon glyphicon-download" aria-hidden="true"></span>
 				    </a>
