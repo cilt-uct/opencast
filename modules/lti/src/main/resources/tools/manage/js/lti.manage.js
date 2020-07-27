@@ -2437,7 +2437,7 @@ $(document).ready(function() {
       $('#editPublishedCancel').text("Close");
       $('#detailsLink, #details').removeClass('active');
       $('#captions, #captionsLink').addClass('active');
-      $('#editCaptions, #dlNibityCaptions, #dlGoogleCaptions, #dlUploadedCaptions, .uploadCaptions').attr('data-event', id);
+      $('#editCaptions, #dlNibityCaptions, #dlGoogleCaptions, #dlUploadedCaptions, .uploadCaptions, #rmNibityCaptions, #rmGoogleCaptions, #rmUploadedCaptions').attr('data-event', id);
     }else{
       $('#editPublished').show();
       $('#editPublishedCancel').text("Cancel");
@@ -2456,9 +2456,9 @@ $(document).ready(function() {
       $('#editPublishedModal .fileContainer').attr('data-title', 'Choose *.vtt...');
       $('#editPublishedModal #errorLi').html('');
       $('#btnUploadCaptions').attr('data-event', '');
-      $('#editCaptions, #dlNibityCaptions, #dlGoogleCaptions, #dlUploadedCaptions').attr('data-provider','');
-      $('#editCaptions, #dlNibityCaptions, #dlGoogleCaptions, #dlUploadedCaptions').attr('data-url','');
-      $('#editCaptions, #dlNibityCaptions, #dlGoogleCaptions, #dlUploadedCaptions').attr('href','');
+      $('#editCaptions, #dlNibityCaptions, #dlGoogleCaptions, #dlUploadedCaptions, #rmNibityCaptions, #rmGoogleCaptions, #rmUploadedCaptions').attr('data-provider','');
+      $('#editCaptions, #dlNibityCaptions, #dlGoogleCaptions, #dlUploadedCaptions, #rmNibityCaptions, #rmGoogleCaptions, #rmUploadedCaptions').attr('data-url','');
+      $('#editCaptions, #dlNibityCaptions, #dlGoogleCaptions, #dlUploadedCaptions, #rmNibityCaptions, #rmGoogleCaptions, #rmUploadedCaptions').attr('href','');
       $('#editCaptions').text('');
   });
   $('#editCaptionsModal').on('show.bs.modal', function(e) {
@@ -2575,6 +2575,23 @@ $(document).ready(function() {
      var s = new WebVTTSerializer()
      s.serialize(vttText.cues);
   });
+   $('#editPublishedModal').on('click', '#rmGoogleCaptions, #rmNibityCaptions, #rmUploadedCaptions', function(e) {
+        var config = {"id" : $(this).attr('data-provider')};
+        $.ajax({
+            url:"/api/workflows",
+            method:"POST",
+            data:{
+              event_identifier: $(this).attr('data-event'),
+              workflow_definition_identifier: "uct-remove-transcripts",
+              configuration: config,
+              withconfiguration: false,
+            },
+            }).done(function(response) {
+            console.log(response.description);
+            }).fail(function( jqXHR, textStatus ) {
+            console.log(textStatus);
+        });
+   });
 });
 
 function removeModal(_modal, title) {
@@ -2635,18 +2652,21 @@ function getCaptions(id) {
               if(response[i].type == "captions/timedtext") {
                   providerArray.push({"id" : id, "mediatype" : response[i].type, "url" : response[i].url});
                   $('#dlGoogleCaptions').attr('href', response[i].url);
+                  $('#rmGoogleCaptions').attr('data-provider', "googleTranscript");
                   $('#dlGoogleCaptions').attr('data-mediatype', response[i].type);
-                  $('#downloadGoogleCaptions').show();
+                  $('#downloadGoogleCaptions, #removeGoogleCaptions').show();
               }else if(response[i].type == "captions/vtt") {
                   providerArray.push({"id" : id, "mediatype" : response[i].type, "url" : response[i].url});
                   $('#dlNibityCaptions').attr('href', response[i].url);
+                  $('#rmNibityCaptions').attr('data-provider',"nibityTranscript");
                   $('#dlNibityCaptions').attr('data-mediatype', response[i].type);
-                  $('#downloadNibityCaptions').show();
+                  $('#downloadNibityCaptions, #removeNibityCaptions').show();
               }else if(response[i].type == "text/vtt") {
                   providerArray.push({"id" : id, "mediatype" : response[i].type, "url" : response[i].url}); 
                   $('#dlUploadedCaptions').attr('href', response[i].url);
+                  $('#rmUploadedCaptions').attr('data-provider', "uploadedTranscript");
                   $('#dlUploadedCaptions').attr('data-mediatype', response[i].type);
-                  $('#downloadUploadedCaptions').show();
+                  $('#downloadUploadedCaptions, #removeUploadedCaptions').show();
               }
            }
         }
