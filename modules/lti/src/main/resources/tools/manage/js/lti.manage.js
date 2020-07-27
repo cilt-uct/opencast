@@ -2576,19 +2576,28 @@ $(document).ready(function() {
      s.serialize(vttText.cues);
   });
    $('#editPublishedModal').on('click', '#rmGoogleCaptions, #rmNibityCaptions, #rmUploadedCaptions', function(e) {
-        var config = {"id" : $(this).attr('data-provider')};
+        var fd = new FormData(),
+            payload = {},
+            workflow = "uct-remove-transcripts",
+            eventId = $(this).attr('data-event'),
+            captionsProvider = $(this).attr('data-provider');
+
+        payload[captionsProvider] = "true";
+
+        fd.append('workflow_definition_identifier', workflow);
+        fd.append('event_identifier', eventId);
+        fd.append('configuration', JSON.stringify(payload));
+
         $.ajax({
-            url:"/api/workflows",
-            method:"POST",
-            data:{
-              event_identifier: $(this).attr('data-event'),
-              workflow_definition_identifier: "uct-remove-transcripts",
-              configuration: config,
-              withconfiguration: false,
-            },
-            }).done(function(response) {
+            url: '/api/workflows',
+            type: 'post',
+            data: fd,
+            processData: false,
+            contentType: false,
+            cache: false
+        }).done(function(response) {
             console.log(response.description);
-            }).fail(function( jqXHR, textStatus ) {
+        }).fail(function( jqXHR, textStatus ) {
             console.log(textStatus);
         });
    });
