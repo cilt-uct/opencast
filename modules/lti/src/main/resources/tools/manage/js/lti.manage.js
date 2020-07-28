@@ -2583,7 +2583,6 @@ $(document).ready(function() {
             captionsProvider = $(this).attr('data-provider');
 
         payload[captionsProvider] = "true";
-
         fd.append('workflow_definition_identifier', workflow);
         fd.append('event_identifier', eventId);
         fd.append('configuration', JSON.stringify(payload));
