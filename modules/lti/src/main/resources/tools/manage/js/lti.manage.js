@@ -2575,6 +2575,22 @@ $(document).ready(function() {
      var s = new WebVTTSerializer()
      s.serialize(vttText.cues);
   });
+   $('#editPublishedModal').on('click', '#rqCaptions', function(e) {
+     $.ajax({
+         url:"/api/workflows",
+         method:"POST",
+         data:{
+             event_identifier: $(this).attr('data-event'),
+             workflow_definition_identifier: "uct-request-transcript",
+             withoperations: false,
+             withconfiguration: false,
+          },
+     }).done(function(response) {
+         console.log(response.description);
+     }).fail(function( jqXHR, textStatus ) {
+         console.log(textStatus);
+     });
+   });
    $('#editPublishedModal').on('click', '#rmGoogleCaptions, #rmNibityCaptions, #rmUploadedCaptions', function(e) {
         var eventId = $(this).attr('data-event'),
             captionsProvider = $(this).attr('data-provider');
@@ -2705,6 +2721,7 @@ function getCaptions(id) {
       $("#editCaptions, #hiddenEvent").attr('data-url', vttURL);
       $("#editCaptions, #hiddenEvent").attr('data-provider', provider);
       $("#editCaptions, #hiddenEvent").attr('data-mediatype', mediaType);
+      $("#rqCaptions").attr('data-event',id);
     }
   )
 }
