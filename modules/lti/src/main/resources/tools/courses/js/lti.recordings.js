@@ -299,7 +299,7 @@ $(document).on("click", ".downloader", function () {
 
                 tBody.appendChild(tCaptionRow);
                 tCaptionCol1.innerHTML = "Captions";
-                tCaptionCol2.innerHTML = "text/" + captionsType[1];
+                tCaptionCol2.innerHTML = "captions/" + captionsType[1];
                 tCaptionCol3.innerHTML = "";
                 tCaptionCol4.className = "text-center";
                 tCaptionCol4.innerHTML = "<a class='btn btn-default btn-sm dlCaption' data-episode-id='" + episodeID + "' role='button' href='" + captionDownloadURL + "'><i class='glyphicon glyphicon-download'></i></a>";
