@@ -2590,6 +2590,7 @@ $(document).ready(function() {
      }).fail(function( jqXHR, textStatus ) {
          console.log(textStatus);
      });
+   });
    $('#editPublishedModal').on('click', '#rmGoogleCaptions, #rmNibityCaptions, #rmUploadedCaptions', function(e) {
         var eventId = $(this).attr('data-event'),
             captionsProvider = $(this).attr('data-provider');
