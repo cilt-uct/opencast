@@ -2576,31 +2576,36 @@ $(document).ready(function() {
      s.serialize(vttText.cues);
   });
    $('#editPublishedModal').on('click', '#rmGoogleCaptions, #rmNibityCaptions, #rmUploadedCaptions', function(e) {
-        var fd = new FormData(),
-            payload = {},
-            workflow = "uct-remove-transcripts",
-            eventId = $(this).attr('data-event'),
+        var eventId = $(this).attr('data-event'),
             captionsProvider = $(this).attr('data-provider');
 
-        payload[captionsProvider] = "true";
-        fd.append('workflow_definition_identifier', workflow);
-        fd.append('event_identifier', eventId);
-        fd.append('configuration', JSON.stringify(payload));
-
-        $.ajax({
-            url: '/api/workflows',
-            type: 'post',
-            data: fd,
-            processData: false,
-            contentType: false,
-            cache: false
-        }).done(function(response) {
-            console.log(response.description);
-        }).fail(function( jqXHR, textStatus ) {
-            console.log(textStatus);
-        });
+        removeCaptions(eventId, captionsProvider);
    });
 });
+
+function removeCaptions(eventId, captionsProvider) {
+    var fd = new FormData(),
+        payload = {},
+        workflow = "uct-remove-transcripts";
+
+    payload[captionsProvider] = "true";
+    fd.append('workflow_definition_identifier', workflow);
+    fd.append('event_identifier', eventId);
+    fd.append('configuration', JSON.stringify(payload));
+
+    $.ajax({
+        url: '/api/workflows',
+        type: 'post',
+        data: fd,
+        processData: false,
+        contentType: false,
+        cache: false
+    }).done(function(response) {
+        console.log(response.description);
+    }).fail(function( jqXHR, textStatus ) {
+        console.log(textStatus);
+    });
+}
 
 function removeModal(_modal, title) {
   $(_modal).removeClass('committing')
