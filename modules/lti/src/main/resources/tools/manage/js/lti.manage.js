@@ -2433,6 +2433,7 @@ $(document).ready(function() {
 
     if(triggerElement[0].id === 'btnCaptions_'+ id) {
       getCaptions(id);
+      getPublishedCaptions(id);
       $('#editPublished').hide();
       $('#editPublishedCancel').text("Close");
       $('#detailsLink, #details').removeClass('active');
@@ -2607,9 +2608,32 @@ $(document).ready(function() {
     }
 
     $('#removeCaptionsModal #removeCaptionsText').text(captionsText);
+    $(this).hide();
     removeCaptions(eventId, captionsProvider);
    });
 });
+
+function getPublishedCaptions(id) {
+   var url = '/search/episode.json?limit1&id=' + id;
+
+    $.get({url: url, responseType: 'json'},
+        function(response) {
+         var attachments = response["search-results"]["result"]["mediapackage"]["attachments"]["attachment"];
+         for(var i = 0; i <attachments.length; i ++) {
+            if(attachments[i].mimetype === "text/vtt" || attachments[i].mimetype === "application/vnd.openxmlformats-officedocument.wordprocessingml.document") {
+             if(attachments[i].type === "captions/timedtext") {
+                 $("#removeGoogleCaptions").show();
+             }
+            if(attachments[i].type === "captions/vtt") {
+                 $("#removeGoogleCaptions").show();
+             }
+            if(attachments[i].type === "text/vtt") {
+                 $("#removeGoogleCaptions").show();
+             }
+            }
+         }
+     });
+}
 
 function removeCaptions(eventId, captionsProvider) {
     var fd = new FormData(),
