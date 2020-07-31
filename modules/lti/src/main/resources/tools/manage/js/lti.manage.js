@@ -2592,10 +2592,22 @@ $(document).ready(function() {
      });
    });
    $('#editPublishedModal').on('click', '#rmGoogleCaptions, #rmNibityCaptions, #rmUploadedCaptions', function(e) {
-        var eventId = $(this).attr('data-event'),
-            captionsProvider = $(this).attr('data-provider');
+    var eventId = $(this).attr('data-event'),
+        captionsText = "",
+        captionsProvider = $(this).attr('data-provider');
 
-        removeCaptions(eventId, captionsProvider);
+    if(captionsProvider === "googleTranscript") {
+       captionsText = "Automated Google captions are removed from this video.";
+    }
+    if(captionsProvider === "nibityTranscript") {
+       captionsText = "Way with Words captions are removed from this video.";
+    }
+    if(captionsProvider === "uploadedTranscript") {
+       captionsText = "Uploaded captions are removed from this video.";
+    }
+
+    $('#removeCaptionsModal #removeCaptionsText').text(captionsText);
+    removeCaptions(eventId, captionsProvider);
    });
 });
 
