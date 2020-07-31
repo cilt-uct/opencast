@@ -2719,19 +2719,19 @@ function getCaptions(id) {
                   $('#dlGoogleCaptions').attr('href', response[i].url);
                   $('#rmGoogleCaptions').attr('data-provider', "googleTranscript");
                   $('#dlGoogleCaptions').attr('data-mediatype', response[i].type);
-                  $('#downloadGoogleCaptions, #removeGoogleCaptions').show();
+                  $('#downloadGoogleCaptions').show();
               }else if(response[i].type == "captions/vtt") {
                   providerArray.push({"id" : id, "mediatype" : response[i].type, "url" : response[i].url});
                   $('#dlNibityCaptions').attr('href', response[i].url);
                   $('#rmNibityCaptions').attr('data-provider',"nibityTranscript");
                   $('#dlNibityCaptions').attr('data-mediatype', response[i].type);
-                  $('#downloadNibityCaptions, #removeNibityCaptions').show();
+                  $('#downloadNibityCaptions').show();
               }else if(response[i].type == "text/vtt") {
                   providerArray.push({"id" : id, "mediatype" : response[i].type, "url" : response[i].url}); 
                   $('#dlUploadedCaptions').attr('href', response[i].url);
                   $('#rmUploadedCaptions').attr('data-provider', "uploadedTranscript");
                   $('#dlUploadedCaptions').attr('data-mediatype', response[i].type);
-                  $('#downloadUploadedCaptions, #removeUploadedCaptions').show();
+                  $('#downloadUploadedCaptions').show();
               }
            }
         }
