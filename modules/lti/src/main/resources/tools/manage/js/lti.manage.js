@@ -2597,13 +2597,13 @@ $(document).ready(function() {
         captionsProvider = $(this).attr('data-provider');
 
     if(captionsProvider === "googleTranscript") {
-       captionsText = "Automated Google captions are successfully removed from this video.";
+       captionsText = "Automated Google captions will be removed from this video.";
     }
     if(captionsProvider === "nibityTranscript") {
-       captionsText = "Way with Words captions are successfully removed from this video.";
+       captionsText = "Way with Words captions will be removed from this video.";
     }
     if(captionsProvider === "uploadedTranscript") {
-       captionsText = "Uploaded captions are successfully removed from this video.";
+       captionsText = "Uploaded captions will be removed from this video.";
     }
 
     $('#removeCaptionsModal #removeCaptionsText').text(captionsText);
