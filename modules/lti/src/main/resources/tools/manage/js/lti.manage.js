@@ -2433,6 +2433,7 @@ $(document).ready(function() {
 
     if(triggerElement[0].id === 'btnCaptions_'+ id) {
       getCaptions(id);
+      getPublishedCaptions(id);
       $('#editPublished').hide();
       $('#editPublishedCancel').text("Close");
       $('#detailsLink, #details').removeClass('active');
@@ -2592,12 +2593,50 @@ $(document).ready(function() {
      });
    });
    $('#editPublishedModal').on('click', '#rmGoogleCaptions, #rmNibityCaptions, #rmUploadedCaptions', function(e) {
-        var eventId = $(this).attr('data-event'),
-            captionsProvider = $(this).attr('data-provider');
+    var eventId = $(this).attr('data-event'),
+        captionsText = "",
+        captionsProvider = $(this).attr('data-provider');
 
-        removeCaptions(eventId, captionsProvider);
+    if(captionsProvider === "googleTranscript") {
+       captionsText = "Automated Google captions will be removed from this video.";
+    }
+    if(captionsProvider === "nibityTranscript") {
+       captionsText = "Way with Words captions will be removed from this video.";
+    }
+    if(captionsProvider === "uploadedTranscript") {
+       captionsText = "Uploaded captions will be removed from this video.";
+    }
+
+    $('#removeCaptionsModal #removeCaptionsText').text(captionsText);
+    $(this).hide();
+    removeCaptions(eventId, captionsProvider);
    });
 });
+
+function getPublishedCaptions(id) {
+   var url = '/search/episode.json?limit1&id=' + id;
+
+    $.get({url: url, responseType: 'json'},
+        function(response) {
+         var attachments = response["search-results"]["result"]["mediapackage"]["attachments"]["attachment"];
+         for(var i = 0; i <attachments.length; i ++) {
+            if(attachments[i].mimetype === "text/vtt" || attachments[i].mimetype === "application/vnd.openxmlformats-officedocument.wordprocessingml.document") {
+             if(attachments[i].type === "captions/timedtext") {
+                 $("#removeGoogleCaptions").show();
+                 $("#removeCaptionsList").show();
+             }
+            if(attachments[i].type === "captions/vtt") {
+                 $("#removeGoogleCaptions").show();
+                 $("#removeCaptionsList").show();
+             }
+            if(attachments[i].type === "text/vtt") {
+                 $("#removeGoogleCaptions").show();
+                 $("#removeCaptionsList").show();
+             }
+            }
+         }
+     });
+}
 
 function removeCaptions(eventId, captionsProvider) {
     var fd = new FormData(),
@@ -2683,19 +2722,19 @@ function getCaptions(id) {
                   $('#dlGoogleCaptions').attr('href', response[i].url);
                   $('#rmGoogleCaptions').attr('data-provider', "googleTranscript");
                   $('#dlGoogleCaptions').attr('data-mediatype', response[i].type);
-                  $('#downloadGoogleCaptions, #removeGoogleCaptions').show();
+                  $('#downloadGoogleCaptions').show();
               }else if(response[i].type == "captions/vtt") {
                   providerArray.push({"id" : id, "mediatype" : response[i].type, "url" : response[i].url});
                   $('#dlNibityCaptions').attr('href', response[i].url);
                   $('#rmNibityCaptions').attr('data-provider',"nibityTranscript");
                   $('#dlNibityCaptions').attr('data-mediatype', response[i].type);
-                  $('#downloadNibityCaptions, #removeNibityCaptions').show();
+                  $('#downloadNibityCaptions').show();
               }else if(response[i].type == "text/vtt") {
                   providerArray.push({"id" : id, "mediatype" : response[i].type, "url" : response[i].url}); 
                   $('#dlUploadedCaptions').attr('href', response[i].url);
                   $('#rmUploadedCaptions').attr('data-provider', "uploadedTranscript");
                   $('#dlUploadedCaptions').attr('data-mediatype', response[i].type);
-                  $('#downloadUploadedCaptions, #removeUploadedCaptions').show();
+                  $('#downloadUploadedCaptions').show();
               }
            }
         }
