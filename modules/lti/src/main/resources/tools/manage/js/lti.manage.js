@@ -2623,12 +2623,15 @@ function getPublishedCaptions(id) {
             if(attachments[i].mimetype === "text/vtt" || attachments[i].mimetype === "application/vnd.openxmlformats-officedocument.wordprocessingml.document") {
              if(attachments[i].type === "captions/timedtext") {
                  $("#removeGoogleCaptions").show();
+                 $("#removeCaptionsList").show();
              }
             if(attachments[i].type === "captions/vtt") {
                  $("#removeGoogleCaptions").show();
+                 $("#removeCaptionsList").show();
              }
             if(attachments[i].type === "text/vtt") {
                  $("#removeGoogleCaptions").show();
+                 $("#removeCaptionsList").show();
              }
             }
          }
