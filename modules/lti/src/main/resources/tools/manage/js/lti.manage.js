@@ -2493,7 +2493,7 @@ $(document).ready(function() {
                 f = new File([parts], fileName, {type: mediaType, lastModified: new Date()});
                   
             var changes = {"text/vtt":f};
-            ocManager.eventMgr.addCaptions(eventId, changes);
+            ocManager.eventMgr.addCaptions(eventId, changes)
             .fail(function(err) {
                 console.log("Failed to upload captions");
                 $('#editPublishedModal').find('span.errors').text(err);
