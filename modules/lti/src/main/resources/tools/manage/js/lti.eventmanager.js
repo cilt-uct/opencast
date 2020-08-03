@@ -1397,7 +1397,7 @@ EventManager.prototype = {
     }.bind(this)).promise();
   },
   addCaptions: function(id, changes, opts) {
-    var payload = {"assets":{"options":[{"id":"attachment_captions_webvtt","type":"attachment","flavorType":"text","flavorSubType":"vtt","displayOrder":3,"title":"EVENTS.EVENTS.NEW.UPLOAD_ASSET.OPTION.CAPTIONS_WEBVTT"}]},"processing":{"workflow":"uct-publish-uploaded-assets","configuration":{"downloadSourceflavorsExist":"true","download-source-flavors":"text/vtt"}}};
+    var payload = {"assets":{"options":[{"id":"attachment_captions_webvtt","type":"attachment","flavorType":"text","flavorSubType":"vtt","displayOrder":3,"title":"EVENTS.EVENTS.NEW.UPLOAD_ASSET.OPTION.CAPTIONS_WEBVTT"}]},"processing":{"workflow":"publish-uploaded-assets","configuration":{"downloadSourceflavorsExist":"true","download-source-flavors":"text/vtt"}}};
 
     return $.Deferred(function(d) {
       this.updateEvent(id, changes, {delayPublish: true})
