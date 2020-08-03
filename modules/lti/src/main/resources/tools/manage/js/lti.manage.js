@@ -2626,11 +2626,11 @@ function getPublishedCaptions(id) {
                  $("#removeCaptionsList").show();
              }
             if(attachments[i].type === "captions/vtt") {
-                 $("#removeGoogleCaptions").show();
+                 $("#removeNibityCaptions").show();
                  $("#removeCaptionsList").show();
              }
             if(attachments[i].type === "text/vtt") {
-                 $("#removeGoogleCaptions").show();
+                 $("#removeUploadedCaptions").show();
                  $("#removeCaptionsList").show();
              }
             }
