@@ -2610,6 +2610,10 @@ $(document).ready(function() {
     $('#removeCaptionsModal #removeCaptionsText').text(captionsText);
     removeCaptions(eventId, captionsProvider);
    });
+   $('#removeCaptionsModal').on('click', '#closeRemoveCaptionsModal', function(e) {
+        $('#removeCaptionsModal').modal('hide');
+        $('#editPublishedModal').modal('hide');
+   });
 });
 
 function getPublishedCaptions(id) {
