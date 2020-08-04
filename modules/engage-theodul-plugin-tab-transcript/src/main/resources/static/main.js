@@ -226,7 +226,7 @@ define(["jquery", "underscore", "backbone", "engage/core"], function($, _, Backb
             },
         }).done(function(response) {
             var paragraph = document.getElementById("transcriptRequested")
-            var text = document.createTextNode("Transcript has been requested and will be available in 8 to 24 hours.");
+            var text = document.createTextNode("Transcript has been requested and will be available in 2 to 3 days.");
             paragraph.appendChild(text);
             paragraph.style.color = 'green'
             console.log(response.description);

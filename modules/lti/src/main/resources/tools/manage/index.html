@@ -550,17 +550,21 @@
         </form>
       </div>
     </div>
-    <div class="modal fade" id="removeCaptionsModal" data-backdrop="static" tabindex="-1" role="dialog" aria-labelledby="rcModal">
+    <div class="modal fade" id="requestTranscriptModal" data-backdrop="static" tabindex="-1" role="dialog" aria-labelledby="rtModal">
         <div class="modal-dialog" role="document">
             <form class="modal-content">
                 <div class="modal-header">
                     <button type="button" class="close" data-dismiss="modal" aria-label="close">
                         <span aria-hidden="true" title="Close Popup">&times;</span>
                     </button>
-                    <h4 class="modal-title" id="rcModal">Remove Captions</h4>
+                    <h4 class="modal-title" id="rtModal">Transcript Request</h4>
                 </div>
-                <div class="modal-body" id="rcModalBody">
-                    <p id="removeCaptionsText"></p>
+                <div class="modal-body" id="rtModalBody">
+                    <p>A transcript request has been sent to Way With Words.</p>
+                    <br/>
+                    <p>Transcription usually takes 2 - 5 working days after submission.</p>
+                    <br/>
+                    <p>You will receive an email notification when transcripts and captions are available on your video.</p>
                 </div>
                 <div class="modal-footer">
                     <button type="reset" class="btn btn-default btn-red">Close</button>
@@ -815,8 +819,8 @@
                 <h5 class="list-group-item-heading"><b>Request a Transcript</b></h5>
                 <ul class="list-group">
                     <li class="list-group-item list-group-item-action borderless" id="requestBetterCaptions">
-                      <a href="#" class="list-group-item-action" title="Way with Words Transcription" id="rqCaptions">
-                        <i class="fa fa-paper-plane"></i> Request better captions
+                      <a href="#" onclick="$('#editPublishedModal').modal('hide')" class="list-group-item-action" title="Way with Words Transcription" id="rqCaptions" data-toggle="modal" data-target="#requestTranscriptModal">
+                          <i class="fa fa-paper-plane"></i> Request better captions
                       </a>
                     </li>
                 </ul>
