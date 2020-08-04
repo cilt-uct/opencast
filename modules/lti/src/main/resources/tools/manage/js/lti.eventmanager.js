@@ -1435,14 +1435,14 @@ EventManager.prototype = {
     var mType = changes['text/vtt'].type,
         fType = mType.substring(0, mType.indexOf('/')),
         fSubType = mType.substring(mType.lastIndexOf('/') + 1);
-    var payload = {"assets":{"options":[{"id":"attachment_captions_webvtt","type":"attachment","flavorType":fType,"flavorSubType":fSubType,"displayOrder":3,"title":"EVENTS.EVENTS.NEW.UPLOAD_ASSET.OPTION.CAPTIONS_WEBVTT"}]},"processing":{"workflow":"publish-uploaded-captions","configuration":{"downloadSourceflavorsExist":"true","download-source-flavors":mType}}};
+    var payload = {"assets":{"options":[{"id":"attachment_captions_webvtt","type":"attachment","flavorType":fType,"flavorSubType":fSubType,"displayOrder":3,"title":"EVENTS.EVENTS.NEW.UPLOAD_ASSET.OPTION.CAPTIONS_WEBVTT"}]},"processing":{"workflow":"publish-uploaded-assets","configuration":{"downloadSourceflavorsExist":"true","download-source-flavors":mType}}};
   
     return $.Deferred(function(d) {
       this.updateEvent(id, changes, {delayPublish: true})
         .then(function() {
           var fd = new FormData();
           fd.append('metadata', JSON.stringify(payload));
-          fd.append(mType, changes['text/vtt']);
+          fd.append('attachment_captions_webvtt.0', changes['text/vtt']);
 
           $.ajax({
             url: this.endpoints.updateCaptions.replace(/%ID%/g, id),
