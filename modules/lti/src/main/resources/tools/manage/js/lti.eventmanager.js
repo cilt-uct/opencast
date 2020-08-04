@@ -1442,7 +1442,7 @@ EventManager.prototype = {
         .then(function() {
           var fd = new FormData();
           fd.append('metadata', JSON.stringify(payload));
-          fd.append('attachment_captions_webvtt.0', changes['text/vtt']);
+          fd.append(mType, changes['text/vtt']);
 
           $.ajax({
             url: this.endpoints.updateCaptions.replace(/%ID%/g, id),
