@@ -950,7 +950,25 @@ h2 + .btn.scheduler {
 }
 
 #grid tr td:last-child {
-  text-align: center;
+  /*text-align: center;*/
+}
+
+#captions .list-group {
+   margin-bottom: 0px;
+}
+
+#captions .list-group li a {
+  display:block;
+  padding: 10px;
+  border-radius: 0.25rem;
+}
+
+#captions .list-group li i {
+  margin-right: 5px;
+}
+
+#captions .list-group li {
+  padding:0px;
 }
 
 #grid-body.personal tr td:last-child {

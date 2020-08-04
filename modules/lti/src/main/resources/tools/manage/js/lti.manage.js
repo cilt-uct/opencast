@@ -2433,7 +2433,6 @@ $(document).ready(function() {
 
     if(triggerElement[0].id === 'btnCaptions_'+ id) {
       getCaptions(id);
-      getPublishedCaptions(id);
       $('#editPublished').hide();
       $('#editPublishedCancel').text("Close");
       $('#detailsLink, #details').removeClass('active');
@@ -2441,6 +2440,9 @@ $(document).ready(function() {
       $('#editCaptions, #dlNibityCaptions, #dlGoogleCaptions, #dlUploadedCaptions, .uploadCaptions, #rmNibityCaptions, #rmGoogleCaptions, #rmUploadedCaptions').attr('data-event', id);
     }else{
       $('#editPublished').show();
+      $('#editCaptionsGroup').hide();
+      $('#downloadCaptionsGroup').hide();
+      $('#removeCaptionsGroup').hide();
       $('#editPublishedCancel').text("Cancel");
     }
   });
@@ -2613,31 +2615,6 @@ $(document).ready(function() {
    });
 });
 
-function getPublishedCaptions(id) {
-   var url = '/search/episode.json?limit1&id=' + id;
-
-    $.get({url: url, responseType: 'json'},
-        function(response) {
-         var attachments = response["search-results"]["result"]["mediapackage"]["attachments"]["attachment"];
-         for(var i = 0; i <attachments.length; i ++) {
-            if(attachments[i].mimetype === "text/vtt" || attachments[i].mimetype === "application/vnd.openxmlformats-officedocument.wordprocessingml.document") {
-             if(attachments[i].type === "captions/timedtext") {
-                 $("#removeGoogleCaptions").show();
-                 $("#removeCaptionsList").show();
-             }
-            if(attachments[i].type === "captions/vtt") {
-                 $("#removeGoogleCaptions").show();
-                 $("#removeCaptionsList").show();
-             }
-            if(attachments[i].type === "text/vtt") {
-                 $("#removeGoogleCaptions").show();
-                 $("#removeCaptionsList").show();
-             }
-            }
-         }
-     });
-}
-
 function removeCaptions(eventId, captionsProvider) {
     var fd = new FormData(),
         payload = {},
@@ -2725,18 +2702,24 @@ function getCaptions(id) {
                   $('#rmGoogleCaptions').attr('data-provider', "googleTranscript");
                   $('#dlGoogleCaptions').attr('data-mediatype', attachments[i].type);
                   $('#downloadGoogleCaptions').show();
+                  $("#removeGoogleCaptions").show();
+                  $("#removeCaptionsList").show();
               }else if(attachments[i].type == "captions/vtt") {
                   providerArray.push({"id" : id, "mediatype" : attachments[i].type, "url" : attachments[i].url});
                   $('#dlNibityCaptions').attr('href', attachments[i].url);
                   $('#rmNibityCaptions').attr('data-provider',"nibityTranscript");
                   $('#dlNibityCaptions').attr('data-mediatype', attachments[i].type);
                   $('#downloadNibityCaptions').show();
+                  $("#removeNibityCaptions").show();
+                  $("#removeCaptionsList").show();
               }else if(attachments[i].type == "text/vtt") {
                   providerArray.push({"id" : id, "mediatype" : attachments[i].type, "url" : attachments[i].url});
                   $('#dlUploadedCaptions').attr('href', attachments[i].url);
                   $('#rmUploadedCaptions').attr('data-provider', "uploadedTranscript");
                   $('#dlUploadedCaptions').attr('data-mediatype', attachments[i].type);
                   $('#downloadUploadedCaptions').show();
+                  $("#removeUploadedCaptions").show();
+                  $("#removeCaptionsList").show();
               }
            }
         }
@@ -2757,7 +2740,7 @@ function getCaptions(id) {
               }
             }
           }
-      $("#editCaptions").html("<i class='fa fa-pencil' id='edCaptions'></i>  Edit Captions");
+      $("#editCaptions").html("<i class='fa fa-pencil' id='edCaptions'></i>Edit Captions");
       $("#editCaptions").attr('title', provider + ' Captions');
       $("#editCaptions, #hiddenEvent").attr('data-url', vttURL);
       $("#editCaptions, #hiddenEvent").attr('data-provider', provider);
