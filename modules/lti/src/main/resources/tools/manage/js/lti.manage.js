@@ -2593,7 +2593,6 @@ $(document).ready(function() {
      });
    });
    $('#editPublishedModal').on('click', '#rmGoogleCaptions, #rmNibityCaptions, #rmUploadedCaptions', function(e) {
-    $(this).attr('disabled', 'disabled');
     var eventId = $(this).attr('data-event'),
         captionsText = "",
         captionsProvider = $(this).attr('data-provider');
