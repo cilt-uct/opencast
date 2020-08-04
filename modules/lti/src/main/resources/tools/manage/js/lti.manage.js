@@ -2593,6 +2593,7 @@ $(document).ready(function() {
      });
    });
    $('#editPublishedModal').on('click', '#rmGoogleCaptions, #rmNibityCaptions, #rmUploadedCaptions', function(e) {
+    $(this).attr('disabled', 'disabled');
     var eventId = $(this).attr('data-event'),
         captionsText = "",
         captionsProvider = $(this).attr('data-provider');
@@ -2608,7 +2609,6 @@ $(document).ready(function() {
     }
 
     $('#removeCaptionsModal #removeCaptionsText').text(captionsText);
-    $(this).hide();
     removeCaptions(eventId, captionsProvider);
    });
 });
@@ -2620,20 +2620,18 @@ function getPublishedCaptions(id) {
         function(response) {
          var attachments = response["search-results"]["result"]["mediapackage"]["attachments"]["attachment"];
          for(var i = 0; i <attachments.length; i ++) {
-            if(attachments[i].mimetype === "text/vtt" || attachments[i].mimetype === "application/vnd.openxmlformats-officedocument.wordprocessingml.document") {
-             if(attachments[i].type === "captions/timedtext") {
+            if(attachments[i].type === "captions/timedtext") {
                  $("#removeGoogleCaptions").show();
                  $("#removeCaptionsList").show();
              }
             if(attachments[i].type === "captions/vtt") {
-                 $("#removeGoogleCaptions").show();
+                 $("#removeNibityCaptions").show();
                  $("#removeCaptionsList").show();
              }
             if(attachments[i].type === "text/vtt") {
-                 $("#removeGoogleCaptions").show();
+                 $("#removeUploadedCaptions").show();
                  $("#removeCaptionsList").show();
              }
-            }
          }
      });
 }

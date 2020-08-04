@@ -572,6 +572,24 @@
             </form>
         </div>
     </div>
+    <div class="modal fade" id="removeCaptionsModal" data-backdrop="static" tabindex="-1" role="dialog" aria-labelledby="rcModal">
+      <div class="modal-dialog" role="document">
+          <form class="modal-content">
+              <div class="modal-header">
+                  <button type="button" class="close" data-dismiss="modal" aria-label="close">
+                      <span aria-hidden="true" title="Close Popup">&times;</span>
+                  </button>
+                  <h4 class="modal-title" id="rcModal">Remove Captions</h4>
+              </div>
+              <div class="modal-body" id="rcModalBody">
+                  <p id="removeCaptionsText"></p>
+              </div>
+              <div class="modal-footer">
+                  <button type="reset" class="btn btn-default btn-red">Close</button>
+              </div>
+          </form>
+      </div>
+    </div>
     <div id="suggestion">
     </div>
     <script type="text/x-tmpl" id="tmpl-body">{% for (var i=0; i < o.length; i++) { var item=o [i]; include( 'tmpl-row', o[i]); } %} </script>
