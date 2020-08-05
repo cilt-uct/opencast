@@ -1362,7 +1362,7 @@ EventManager.prototype = {
     }.bind(this)).promise();
   },
   addLectureNotes: function(id, changes, opts) {
-    var payload = {"assets":{"options":[{"id":"attachment_class_handout_notes","type":"attachment","flavorType":"attachment","flavorSubType":"notes","title":"EVENTS.EVENTS.NEW.UPLOAD_ASSET.OPTION.CLASS_HANDOUT_NOTES"}]},"processing":{"workflow":"uct-publish-uploaded-assets","configuration":{"downloadSourceflavorsExist":"true","download-source-flavors":"attachment/notes"}}};
+    var payload = {"assets":{"options":[{"id":"attachment_class_handout_notes","type":"attachment","flavorType":"attachment","flavorSubType":"notes","title":"EVENTS.EVENTS.NEW.UPLOAD_ASSET.OPTION.CLASS_HANDOUT_NOTES"}]},"processing":{"workflow":"publish-uploaded-assets","configuration":{"downloadSourceflavorsExist":"true","download-source-flavors":"attachment/notes"}}};
 
     return $.Deferred(function(d) {
       this.updateEvent(id, changes, {delayPublish: true})
@@ -1435,7 +1435,7 @@ EventManager.prototype = {
     var mType = changes['text/vtt'].type,
         fType = mType.substring(0, mType.indexOf('/')),
         fSubType = mType.substring(mType.lastIndexOf('/') + 1);
-    var payload = {"assets":{"options":[{"id":"attachment_captions_webvtt","type":"attachment","flavorType":fType,"flavorSubType":fSubType,"displayOrder":3,"title":"EVENTS.EVENTS.NEW.UPLOAD_ASSET.OPTION.CAPTIONS_WEBVTT"}]},"processing":{"workflow":"uct-publish-uploaded-assets","configuration":{"downloadSourceflavorsExist":"true","download-source-flavors":mType}}};
+    var payload = {"assets":{"options":[{"id":"attachment_captions_webvtt","type":"attachment","flavorType":fType,"flavorSubType":fSubType,"displayOrder":3,"title":"EVENTS.EVENTS.NEW.UPLOAD_ASSET.OPTION.CAPTIONS_WEBVTT"}]},"processing":{"workflow":"publish-uploaded-assets","configuration":{"downloadSourceflavorsExist":"true","download-source-flavors":mType}}};
   
     return $.Deferred(function(d) {
       this.updateEvent(id, changes, {delayPublish: true})
