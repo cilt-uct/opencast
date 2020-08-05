@@ -2603,7 +2603,7 @@ $(document).ready(function() {
     $('#removeCaptionsModal #eventDetails').attr('data-provider', captionsProvider);
 
     if(captionsProvider === "googleTranscript") {
-       modalTitle = "Remove Google captions";
+       modalTitle = "Remove Automated captions";
     }
     if(captionsProvider === "nibityTranscript") {
        modalTitle = "Remove Way with words captions";
