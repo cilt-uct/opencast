@@ -1397,7 +1397,7 @@ EventManager.prototype = {
     }.bind(this)).promise();
   },
   addCaptions: function(id, changes, opts) {
-    var payload = {"assets":{"options":[{"id":"attachment_captions_webvtt","type":"attachment","flavorType":"text","flavorSubType":"vtt","displayOrder":3,"title":"EVENTS.EVENTS.NEW.UPLOAD_ASSET.OPTION.CAPTIONS_WEBVTT"}]},"processing":{"workflow":"uct-publish-uploaded-assets","configuration":{"downloadSourceflavorsExist":"true","download-source-flavors":"text/vtt"}}};
+    var payload = {"assets":{"options":[{"id":"attachment_captions_webvtt","type":"attachment","flavorType":"text","flavorSubType":"vtt","displayOrder":3,"title":"EVENTS.EVENTS.NEW.UPLOAD_ASSET.OPTION.CAPTIONS_WEBVTT"}]},"processing":{"workflow":"uct-publish-updated-transcripts","configuration":{"downloadSourceflavorsExist":"true","download-source-flavors":"text/vtt"}}};
 
     return $.Deferred(function(d) {
       this.updateEvent(id, changes, {delayPublish: true})
@@ -1435,7 +1435,7 @@ EventManager.prototype = {
     var mType = changes['text/vtt'].type,
         fType = mType.substring(0, mType.indexOf('/')),
         fSubType = mType.substring(mType.lastIndexOf('/') + 1);
-    var payload = {"assets":{"options":[{"id":"attachment_captions_webvtt","type":"attachment","flavorType":fType,"flavorSubType":fSubType,"displayOrder":3,"title":"EVENTS.EVENTS.NEW.UPLOAD_ASSET.OPTION.CAPTIONS_WEBVTT"}]},"processing":{"workflow":"uct-publish-uploaded-assets","configuration":{"downloadSourceflavorsExist":"true","download-source-flavors":mType}}};
+    var payload = {"assets":{"options":[{"id":"attachment_captions_webvtt","type":"attachment","flavorType":fType,"flavorSubType":fSubType,"displayOrder":3,"title":"EVENTS.EVENTS.NEW.UPLOAD_ASSET.OPTION.CAPTIONS_WEBVTT"}]},"processing":{"workflow":"uct-publish-updated-transcripts","configuration":{"downloadSourceflavorsExist":"true","download-source-flavors":mType}}};
   
     return $.Deferred(function(d) {
       this.updateEvent(id, changes, {delayPublish: true})
