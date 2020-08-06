@@ -2596,22 +2596,33 @@ $(document).ready(function() {
    });
    $('#editPublishedModal').on('click', '#rmGoogleCaptions, #rmNibityCaptions, #rmUploadedCaptions', function(e) {
     var eventId = $(this).attr('data-event'),
-        captionsText = "",
+        modalTitle = "",
         captionsProvider = $(this).attr('data-provider');
 
+    $('#removeCaptionsModal #eventDetails').attr('data-event', eventId);
+    $('#removeCaptionsModal #eventDetails').attr('data-provider', captionsProvider);
+
     if(captionsProvider === "googleTranscript") {
-       captionsText = "Automated Google captions will be removed from this video.";
+       modalTitle = "Remove Automated captions";
     }
     if(captionsProvider === "nibityTranscript") {
-       captionsText = "Way with Words captions will be removed from this video.";
+       modalTitle = "Remove Way with words captions";
     }
     if(captionsProvider === "uploadedTranscript") {
-       captionsText = "Uploaded captions will be removed from this video.";
+       modalTitle = "Remove uploaded captions";
     }
+    $('#removeCaptionsModal #rcModalTitle').text(modalTitle);
+   });
+   $('#removeCaptionsModal').on('click', '#cancelRemoveCaptions', function(e) {
+        $('#removeCaptionsModal').modal('hide');
+   });
+   $('#removeCaptionsModal').on('click', '#confirmRemoveCaptions', function(e) {
+           var eventId = $('#eventDetails').attr('data-event'),
+               captionsProvider = $('#eventDetails').attr('data-provider');
 
-    $('#removeCaptionsModal #removeCaptionsText').text(captionsText);
-    $(this).hide();
-    removeCaptions(eventId, captionsProvider);
+           removeCaptions(eventId, captionsProvider);
+           $('#removeCaptionsModal').modal('hide');
+           $('#editPublishedModal').modal('hide');
    });
 });
 
