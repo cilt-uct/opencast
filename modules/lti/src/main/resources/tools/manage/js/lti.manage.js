@@ -2603,13 +2603,13 @@ $(document).ready(function() {
     $('#removeCaptionsModal #eventDetails').attr('data-provider', captionsProvider);
 
     if(captionsProvider === "googleTranscript") {
-       modalTitle = "Remove Automated captions";
+       modalTitle = "Remove Automated Captions";
     }
     if(captionsProvider === "nibityTranscript") {
-       modalTitle = "Remove Way with words captions";
+       modalTitle = "Remove Way with Words Captions";
     }
     if(captionsProvider === "uploadedTranscript") {
-       modalTitle = "Remove uploaded captions";
+       modalTitle = "Remove Uploaded Captions";
     }
     $('#removeCaptionsModal #rcModalTitle').text(modalTitle);
    });
@@ -2709,7 +2709,7 @@ function getCaptions(id) {
             if(attachments[i].mimetype === "text/vtt") {
               if(attachments[i].type == "captions/timedtext") {
                   providerArray.push({"id" : id, "mediatype" : attachments[i].type, "url" : attachments[i].url});
-                  $('#dlGoogleCaptions').attr('href', attachments[i].url);
+                  $('#dlGoogleCaptions').attr('href', attachments[i].url + "/download/" + attachments[i].url.substring(attachments[i].url.lastIndexOf('/') + 1));
                   $('#rmGoogleCaptions').attr('data-provider', "googleTranscript");
                   $('#dlGoogleCaptions').attr('data-mediatype', attachments[i].type);
                   $('#downloadGoogleCaptions').show();
@@ -2717,7 +2717,7 @@ function getCaptions(id) {
                   $("#removeCaptionsList").show();
               }else if(attachments[i].type == "captions/vtt") {
                   providerArray.push({"id" : id, "mediatype" : attachments[i].type, "url" : attachments[i].url});
-                  $('#dlNibityCaptions').attr('href', attachments[i].url);
+                  $('#dlNibityCaptions').attr('href', attachments[i].url + "/download/" + attachments[i].url.substring(attachments[i].url.lastIndexOf('/') + 1));
                   $('#rmNibityCaptions').attr('data-provider',"nibityTranscript");
                   $('#dlNibityCaptions').attr('data-mediatype', attachments[i].type);
                   $('#downloadNibityCaptions').show();
@@ -2725,7 +2725,7 @@ function getCaptions(id) {
                   $("#removeCaptionsList").show();
               }else if(attachments[i].type == "text/vtt") {
                   providerArray.push({"id" : id, "mediatype" : attachments[i].type, "url" : attachments[i].url});
-                  $('#dlUploadedCaptions').attr('href', attachments[i].url);
+                  $('#dlUploadedCaptions').attr('href', attachments[i].url + "/download/" + attachments[i].url.substring(attachments[i].url.lastIndexOf('/') + 1));
                   $('#rmUploadedCaptions').attr('data-provider', "uploadedTranscript");
                   $('#dlUploadedCaptions').attr('data-mediatype', attachments[i].type);
                   $('#downloadUploadedCaptions').show();
