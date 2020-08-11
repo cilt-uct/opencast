@@ -294,11 +294,12 @@ $(document).on("click", ".downloader", function () {
                     tCaptionCol2 = document.createElement('td'),
                     tCaptionCol3 = document.createElement('td'),
                     tCaptionCol4 = document.createElement('td'),
-                    captionDownloadURL = item.url.replace('http:', 'https:') + '/download/';
+                    captionsType = item.type.split('/'),
+                    captionDownloadURL = item.url.replace('http:', 'https:') + '/download/' + episodeTitle + '_' + dateStamp + '_' + captionsType[0].replace(/^./, captionsType[0][0].toUpperCase()) + '.' + captionsType[1];
 
                 tBody.appendChild(tCaptionRow);
-                tCaptionCol1.innerHTML = "Caption";
-                tCaptionCol2.innerHTML = item.mimetype;
+                tCaptionCol1.innerHTML = "Captions";
+                tCaptionCol2.innerHTML = "captions/" + captionsType[1];
                 tCaptionCol3.innerHTML = "";
                 tCaptionCol4.className = "text-center";
                 tCaptionCol4.innerHTML = "<a class='btn btn-default btn-sm dlCaption' data-episode-id='" + episodeID + "' role='button' href='" + captionDownloadURL + "'><i class='glyphicon glyphicon-download'></i></a>";
@@ -361,7 +362,7 @@ function listEpisode(info) {
                 img.src = info.mediapackage.attachments.attachment[i].url.replace('http:', 'https:'); //TODO: proper check to stop mixed-mode
                 break;
             }
-        } else if (attachments[i].type.indexOf('captions') >= 0 || attachments[i].mimetype == 'text/vtt') {
+        } else if (attachments[i].type.indexOf('captions') >= 0 || attachments[i].mimetype == 'text/vtt' || attachments[i].mimetype == 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
             captions.push(attachments[i]);
         }
     }
