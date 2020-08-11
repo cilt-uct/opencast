@@ -8,8 +8,8 @@
 			<div id="search-bar">
 				<div class="controls">
 					<label for="transcript_tab_search"><%= search_str %>:</label>
-					<input type="text" id="transcript_tab_search" placeholder="<%= search_placeholder_str %>">
-					<button onclick="document.getElementById('transcript_tab_search').value = ''">Clear</button>
+					<input id="transcript_tab_search" class="form-control" type="text" placeholder="<%= search_placeholder_str %>">
+					<button id="clear_transcript_tab_search" class="btn btn-default" type="button" role="button">Clear</button>
 				</div>
 			</div>
 			<div id="transcript"  class="highlight">

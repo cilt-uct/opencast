@@ -254,6 +254,7 @@ define(["jquery", "underscore", "backbone", "engage/core"], function($, _, Backb
 
         if(searchTerms.length===1 && (searchTerms[0] === "" || this.id === "clear_transcript_tab_search")) {
             var nodes = document.getElementById('transcript').getElementsByTagName("span");
+            document.getElementById('transcript_tab_search').value = '';
             for(var i=0; i<nodes.length; i++) {
                 nodes[i].classList.remove("greyout");
             }
