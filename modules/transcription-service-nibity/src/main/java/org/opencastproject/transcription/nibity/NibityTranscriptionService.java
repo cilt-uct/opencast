@@ -563,7 +563,8 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
     CloseableHttpClient httpClient = makeHttpClient();
     CloseableHttpResponse response = null;
 
-    String checkUrl = NIBITY_BASE_URL + "/" + nibityClientId + "/check";
+    //String checkUrl = NIBITY_BASE_URL + "/" + nibityClientId + "/check";
+    String checkUrl = "http://srvslscet002.uct.ac.za:2411/check";
 
     List <NameValuePair> nvps = new ArrayList<NameValuePair>();
     nvps.add(new BasicNameValuePair("files[0]", jobId));
@@ -663,7 +664,8 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
     CloseableHttpClient httpClient = makeHttpClient();
     CloseableHttpResponse response = null;
 
-    String transcriptUrl = NIBITY_BASE_URL + "/" + nibityClientId + "/transcript";
+    //String transcriptUrl = NIBITY_BASE_URL + "/" + nibityClientId + "/transcript";
+    String transcriptUrl = "http://srvslscet002.uct.ac.za:2411/transcript";
 
     List <NameValuePair> nvps = new ArrayList<NameValuePair>();
     nvps.add(new BasicNameValuePair("transcripts[0][transcript_id]", Long.toString(transcriptId)));
