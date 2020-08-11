@@ -99,8 +99,9 @@ public class NibityAttachTranscriptionOperationHandler extends AbstractWorkflowO
 
     // Get job id.
     String jobId = StringUtils.trimToNull(operation.getConfiguration(TRANSCRIPTION_JOB_ID));
-    if (jobId == null)
+    if (jobId == null) {
       throw new WorkflowOperationException(TRANSCRIPTION_JOB_ID + " missing");
+    }
 
     // Check which tags/flavors have been configured
     String targetFlavorOption = StringUtils.trimToNull(operation.getConfiguration(TARGET_FLAVOR));
@@ -108,14 +109,16 @@ public class NibityAttachTranscriptionOperationHandler extends AbstractWorkflowO
     String captionFormatOption = StringUtils.trimToNull(operation.getConfiguration(TARGET_CAPTION_FORMAT));
 
     // Target flavor is mandatory if target-caption-format was NOT informed and no conversion is done
-    if (targetFlavorOption == null && captionFormatOption == null)
+    if (targetFlavorOption == null && captionFormatOption == null) {
       throw new WorkflowOperationException(TARGET_FLAVOR + " missing");
+    }
 
     // Target flavor is optional if target-caption-format was informed because the default flavor
     // will be "captions/<format>". If informed, will override the default.
     MediaPackageElementFlavor flavor = null;
-    if (targetFlavorOption != null)
+    if (targetFlavorOption != null) {
       flavor = MediaPackageElementFlavor.parseFlavor(targetFlavorOption);
+    }
 
     try {
       // Get transcription result zip file from the service
@@ -128,8 +131,8 @@ public class NibityAttachTranscriptionOperationHandler extends AbstractWorkflowO
       ZipEntry zippedDocx = zipFile.getEntry(captionsZipNameDocx);
 
       if (zippedVtt == null && zippedDocx == null) {
-        logger.debug("No captions found in results zip file {}", transcription.getURI());
-        throw new WorkflowOperationException("No captions found in the zip file");
+        logger.debug("Neither captions nor transcript found in zip file {}", transcription.getURI());
+        throw new WorkflowOperationException("neither captions nor transcript found in the zip file");
       } else {
         // Extract the transcript vtt
         if (zippedVtt != null) {
@@ -137,7 +140,8 @@ public class NibityAttachTranscriptionOperationHandler extends AbstractWorkflowO
           String captionMimeType = "text/vtt";
           String captionIdentifier = "captions.vtt";
           String captionFileType = "vtt";
-          mediaPackage = addTranscriptToMediaPackage(zis, captionMimeType, captionIdentifier, captionFileType, mediaPackage, flavor, targetTagOption);
+          mediaPackage = addTranscriptionElementToMediaPackage(zis, captionMimeType, captionIdentifier, captionFileType,
+                  mediaPackage, flavor, targetTagOption);
         }
 
         // Extract the transcript docx
@@ -146,7 +150,8 @@ public class NibityAttachTranscriptionOperationHandler extends AbstractWorkflowO
           String transcriptMimeType = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
           String transcriptIdentifier = "captions.docx";
           String transcriptFileType = "docx";
-          mediaPackage = addTranscriptToMediaPackage(zis, transcriptMimeType, transcriptIdentifier, transcriptFileType, mediaPackage, flavor, targetTagOption);
+          mediaPackage = addTranscriptionElementToMediaPackage(zis, transcriptMimeType, transcriptIdentifier,
+                  transcriptFileType, mediaPackage, flavor, targetTagOption);
         }
 
         // Add the zip file to the media package
@@ -172,7 +177,10 @@ public class NibityAttachTranscriptionOperationHandler extends AbstractWorkflowO
     this.workspace = service;
   }
 
-  public MediaPackage addTranscriptToMediaPackage(InputStream zis, String captionMimeType, String captionIdentifier, String captionFileType, MediaPackage mediaPackage, MediaPackageElementFlavor flavor, String targetTagOption) throws WorkflowOperationException {
+  public MediaPackage addTranscriptionElementToMediaPackage(InputStream zis, String captionMimeType, String captionIdentifier,
+                                                            String captionFileType, MediaPackage mediaPackage,
+                                                            MediaPackageElementFlavor flavor, String targetTagOption)
+          throws WorkflowOperationException {
     try {
       MediaPackageElementBuilder builder = MediaPackageElementBuilderFactory.newInstance().newElementBuilder();
       MediaPackageElement transcriptElement = builder.newElement(Attachment.TYPE,
@@ -187,14 +195,16 @@ public class NibityAttachTranscriptionOperationHandler extends AbstractWorkflowO
       mediaPackage.add(transcriptElement);
 
       // Set the target flavor if informed
-      if (flavor != null)
+      if (flavor != null) {
         transcriptElement.setFlavor(flavor);
+      }
 
       // Add tags
       if (targetTagOption != null) {
         for (String tag : asList(targetTagOption)) {
-          if (StringUtils.trimToNull(tag) != null)
+          if (StringUtils.trimToNull(tag) != null) {
             transcriptElement.addTag(tag);
+          }
         }
       }
     } catch (Exception e) {
