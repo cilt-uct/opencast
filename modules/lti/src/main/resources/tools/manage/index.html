@@ -550,6 +550,51 @@
         </form>
       </div>
     </div>
+    <div class="modal fade" id="requestTranscriptModal" data-backdrop="static" tabindex="-1" role="dialog" aria-labelledby="rtModal">
+        <div class="modal-dialog" role="document">
+            <form class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="close">
+                        <span aria-hidden="true" title="Close Popup">&times;</span>
+                    </button>
+                    <h4 class="modal-title" id="rtModal">Transcript Request</h4>
+                </div>
+                <div class="modal-body" id="rtModalBody">
+                    <p>A transcript request has been sent to Way With Words.</p>
+                    <br/>
+                    <p>Transcription usually takes 2 - 5 working days after submission.</p>
+                    <br/>
+                    <p>You will receive an email notification when transcripts and captions are available on your video.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="reset" class="btn btn-default btn-red">Close</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <div class="modal fade" id="removeCaptionsModal" data-backdrop="static" tabindex="-1" role="dialog" aria-labelledby="rcModal">
+      <div class="modal-dialog" role="document">
+          <form class="modal-content">
+              <div class="modal-header">
+                  <button type="button" class="close" data-dismiss="modal" aria-label="close">
+                      <span aria-hidden="true" title="Close Popup">&times;</span>
+                  </button>
+                  <h4 class="modal-title" id="rcModalTitle"></h4>
+              </div>
+              <div class="modal-body" id="rcModalBody">
+                  <p><span style="color:#e45253;padding-right:5px"><b>PLEASE NOTE:</b></span>
+                      By clicking "<i>Yes, Remove Captions</i>" the current published captions will be removed (i.e. a remove
+                      process will run) and unavailable for playback.</p>
+
+                  <input type="hidden" id="eventDetails"/>
+              </div>
+              <div class="modal-footer">
+                  <button type="reset" id="cancelRemoveCaptions" class="btn btn-default btn-red">Cancel</button>
+                  <button type="reset" id="confirmRemoveCaptions" class="btn btn-success">Yes, Remove Captions</button>
+              </div>
+          </form>
+      </div>
+    </div>
     <div id="suggestion">
     </div>
     <script type="text/x-tmpl" id="tmpl-body">{% for (var i=0; i < o.length; i++) { var item=o [i]; include( 'tmpl-row', o[i]); } %} </script>
@@ -753,28 +798,28 @@
         <div class="tab-pane" id="captions" style="padding:10px;">
           <input type="hidden" id="hiddenEvent" name="hiddenEvent"/>
           <div class="list-group">
-            <div class="list-group-item">
+            <div class="list-group-item" id="editCaptionsGroup">
               <h5 class="list-group-item-heading"><b>Edit Captions</b></h5>
               <ul class="list-group">
                  <li class="list-group-item list-group-item-action borderless"><a type="button" href="" id="editCaptions" data-toggle="modal" data-target="#editCaptionsModal"></a></li>
               </ul>
             </div>
-            <div class="list-group-item">
+            <div class="list-group-item" id="downloadCaptionsGroup">
               <h5 class="list-group-item-heading"><b>Download Captions</b></h5>
               <ul class="list-group">
                 <li class="list-group-item list-group-item-action borderless" style="display:none;" id="downloadNibityCaptions">
                   <a href="#" class="list-group-item-action" title="Nibity Captions" id="dlNibityCaptions">
-                    <i class="fa fa-download"></i> Way with Words Captions
+                    <i class="fa fa-download"></i>Way with Words Captions
                   </a>
                 </li>
                 <li class="list-group-item list-group-item-action borderless" style="display:none;" id="downloadGoogleCaptions">
                   <a href="#" class="list-group-item-action" title="Google Captions" id="dlGoogleCaptions">
-                    <i class="fa fa-download"></i> Automated Captions
+                    <i class="fa fa-download"></i>Automated Captions
                   </a>
                 </li>
                 <li class="list-group-item list-group-item-action borderless" style="display:none;" id="downloadUploadedCaptions">
                   <a href="#" title="Uploaded Captions" id="dlUploadedCaptions">
-                    <i class="fa fa-download"></i> Uploaded Captions
+                    <i class="fa fa-download"></i>Uploaded Captions
                   </a>
                 </li>
               </ul>
@@ -794,21 +839,31 @@
               </span>
             </div>
             <div class="list-group-item">
+                <h5 class="list-group-item-heading"><b>Request a Transcript</b></h5>
+                <ul class="list-group">
+                    <li class="list-group-item list-group-item-action borderless" id="requestBetterCaptions">
+                      <a href="#" onclick="$('#editPublishedModal').modal('hide')" class="list-group-item-action" title="Way with Words Transcription" id="rqCaptions" data-toggle="modal" data-target="#requestTranscriptModal">
+                          <i class="fa fa-paper-plane"></i>Request better captions
+                      </a>
+                    </li>
+                </ul>
+            </div>
+            <div class="list-group-item" id="removeCaptionsGroup">
                 <h5 class="list-group-item-heading"><b>Remove Captions</b></h5>
                 <ul class="list-group">
                     <li class="list-group-item list-group-item-action borderless" style="display:none;" id="removeNibityCaptions">
-                      <a href="#" class="list-group-item-action" title="Nibity Captions" id="rmNibityCaptions">
-                        <i class="fa fa-remove" style="color:red;"></i> Way with Words Captions
+                      <a href="#" class="list-group-item-action" title="Nibity Captions" id="rmNibityCaptions" data-toggle="modal" data-target="#removeCaptionsModal">
+                        <i class="fa fa-remove" style="color:red;"></i>Way with Words Captions
                       </a>
                     </li>
                     <li class="list-group-item list-group-item-action borderless" style="display:none;" id="removeGoogleCaptions">
-                      <a href="#" class="list-group-item-action" title="Google Captions" id="rmGoogleCaptions">
-                        <i class="fa fa-remove" style="color:red;"></i> Automated Captions
+                      <a href="#" class="list-group-item-action" title="Google Captions" id="rmGoogleCaptions" data-toggle="modal" data-target="#removeCaptionsModal">
+                        <i class="fa fa-remove" style="color:red;"></i>Automated Captions
                       </a>
                     </li>
                     <li class="list-group-item list-group-item-action borderless" style="display:none;" id="removeUploadedCaptions">
-                      <a href="#" title="Uploaded Captions" id="rmUploadedCaptions">
-                        <i class="fa fa-remove" style="color:red;"></i> Uploaded Captions
+                      <a href="#" title="Uploaded Captions" id="rmUploadedCaptions" data-toggle="modal" data-target="#removeCaptionsModal">
+                        <i class="fa fa-remove" style="color:red;"></i>Uploaded Captions
                       </a>
                     </li>
                 </ul>
