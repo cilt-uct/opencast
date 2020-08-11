@@ -9,7 +9,7 @@
 				<div class="controls">
 					<label for="transcript_tab_search"><%= search_str %>:</label>
 					<input type="text" id="transcript_tab_search" placeholder="<%= search_placeholder_str %>">
-					<input type="reset" value="Clear" id="clear_transcript_tab_search">
+                    <button onclick="document.getElementById('transcript_tab_search').value = ''">Clear</button>
 				</div>
 			</div>
 			<div id="transcript"  class="highlight">
