@@ -30,3 +30,8 @@
     text-align: justify;
     margin-right: 1%;
 }
+
+#engage_transcript_tab #clear_transcript_tab_search {
+    position: relative;
+    top: -2px;
+}
