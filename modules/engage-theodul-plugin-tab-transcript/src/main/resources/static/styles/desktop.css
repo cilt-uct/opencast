@@ -23,6 +23,7 @@
 
 #engage_transcript_tab #transcript_tab_search {
     width: 30%;
+    display: initial;
 }
 
 #engage_transcript_tab p {
@@ -30,10 +31,7 @@
     margin-right: 1%;
 }
 
-#engage_transcript_tab #clear_transcript_tab_search{
-    padding: 1px 5px;
-    font: inherit;
-    color: white;
-    background-color: #24425C;
-    cursor: pointer;
+#engage_transcript_tab #clear_transcript_tab_search {
+    position: relative;
+    top: -2px;
 }

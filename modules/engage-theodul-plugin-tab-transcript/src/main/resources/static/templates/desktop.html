@@ -6,13 +6,11 @@
 	<div id="engage_transcript_tab">
 		<% if(_.size(vttObjects) > 0) { %>
 			<div id="search-bar">
-				<form>
-					<div class="controls">
-						<label for="transcript_tab_search"><%= search_str %>:</label>
-						<input type="text" id="transcript_tab_search" placeholder="<%= search_placeholder_str %>">
-						<input type="reset" value="Clear" id="clear_transcript_tab_search">
-					</div>
-				</form>
+				<div class="controls">
+					<label for="transcript_tab_search"><%= search_str %>:</label>
+					<input id="transcript_tab_search" class="form-control" type="text" placeholder="<%= search_placeholder_str %>">
+					<button id="clear_transcript_tab_search" class="btn btn-default" type="button" role="button">Clear</button>
+				</div>
 			</div>
 			<div id="transcript"  class="highlight">
 				<% if(vttObjects) { %>
