@@ -196,7 +196,7 @@ define(["jquery", "underscore", "backbone", "engage/core"], function($, _, Backb
                         search_str: translate("search_str", "Search"),
                         search_placeholder_str: translate("search_placeholder_str", "Search terms (space separated)"),
                         request_transcript_str: translate("request_transcript_str", "No captions or transcripts are available for this video. "),
-                        request_transcript_instruction: translate("request_transcript_instruction", "To request transcripts, go to the manage tab in lecture recordings, click the edit icon of the desired video, go to the captions tab in the pop-up and click request better captions."),
+                        request_transcript_instruction_str: translate("request_transcript_instruction_str", "To request transcripts, go to the manage tab in lecture recordings, click the edit icon of the desired video, go to the captions tab in the pop-up and click request better captions."),
                         request_transcript_link_mail: "mailto:help@vula.uct.ac.za?Subject=Captions%20request",
                         vttObjects: vttObjects,
                         user: Engage.model.get("meInfo").get("user"),
