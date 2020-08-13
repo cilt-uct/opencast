@@ -2555,6 +2555,7 @@ $(document).ready(function() {
   });
   $('#vttText').on('change keyup paste', function(e) {
     var changes = $(this)[0].value;
+    changes = changes.replace(/&/g, "&amp;");
     var Parser = new WebVTTParser();
     var vttText = Parser.parse(changes, 'subtitles/captions/descriptions');
     var ol = $('#editCaptionsModal #errorLi')[0];
