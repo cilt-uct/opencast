@@ -196,7 +196,7 @@ define(["jquery", "underscore", "backbone", "engage/core"], function($, _, Backb
                         search_str: translate("search_str", "Search"),
                         search_placeholder_str: translate("search_placeholder_str", "Search terms (space separated)"),
                         request_transcript_str: translate("request_transcript_str", "No captions or transcripts are available for this video. "),
-                        request_transcript_link_text_str: translate("request_transcript_link_text_str", "Request a transcript."),
+                        request_transcript_instruction: translate("request_transcript_instruction", "To request transcripts, go to the manage tab in lecture recordings, click the edit icon of the desired video, go to the captions tab in the pop-up and click request better captions."),
                         request_transcript_link_mail: "mailto:help@vula.uct.ac.za?Subject=Captions%20request",
                         vttObjects: vttObjects,
                         user: Engage.model.get("meInfo").get("user"),
@@ -214,35 +214,9 @@ define(["jquery", "underscore", "backbone", "engage/core"], function($, _, Backb
         }
     });
 
-    function requestTranscriptWorkflow() {
-        $.ajax({
-            url:"/api/workflows",
-            method:"POST",
-            data:{
-                event_identifier: Engage.model.get('mediaPackage').get('eventid'),
-                workflow_definition_identifier: "uct-request-transcript",
-                withoperations: false,
-                withconfiguration: false,
-            },
-        }).done(function(response) {
-            var paragraph = document.getElementById("transcriptRequested")
-            var text = document.createTextNode("Transcript has been requested and will be available in 2 to 3 days.");
-            paragraph.appendChild(text);
-            paragraph.style.color = 'green'
-            console.log(response.description);
-        }).fail(function( jqXHR, textStatus ) {
-            var paragraph = document.getElementById("transcriptFailed")
-            var text = document.createTextNode("Transcript could not be requested, please contact vula help.");
-            paragraph.appendChild(text);
-            paragraph.style.color = 'red'
-            console.log(textStatus);
-        });
-    }
-
     function addListeners(vttText) {
         $( "#transcript_tab_search" ).keyup(filterText);
         $( "#clear_transcript_tab_search" ).click(filterText);
-        $( "#requestTranscript" ).click(requestTranscriptWorkflow);
 
         for (var i = 1; i < vttText.length; i++) {
             $( "#" + i ).click(updateVideo);
