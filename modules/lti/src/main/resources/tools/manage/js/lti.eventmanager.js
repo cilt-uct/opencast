@@ -1362,7 +1362,7 @@ EventManager.prototype = {
     }.bind(this)).promise();
   },
   addLectureNotes: function(id, changes, opts) {
-    var payload = {"assets":{"options":[{"id":"attachment_class_handout_notes","type":"attachment","flavorType":"attachment","flavorSubType":"notes","title":"EVENTS.EVENTS.NEW.UPLOAD_ASSET.OPTION.CLASS_HANDOUT_NOTES"}]},"processing":{"workflow":"uct-publish-uploaded-assets","configuration":{"downloadSourceflavorsExist":"true","download-source-flavors":"attachment/notes"}}};
+    var payload = {"assets":{"options":[{"id":"attachment_class_handout_notes","type":"attachment","flavorType":"attachment","flavorSubType":"notes","title":"EVENTS.EVENTS.NEW.UPLOAD_ASSET.OPTION.CLASS_HANDOUT_NOTES"}]},"processing":{"workflow":"publish-uploaded-assets","configuration":{"downloadSourceflavorsExist":"true","download-source-flavors":"attachment/notes"}}};
 
     return $.Deferred(function(d) {
       this.updateEvent(id, changes, {delayPublish: true})
