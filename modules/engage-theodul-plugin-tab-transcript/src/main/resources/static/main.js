@@ -141,16 +141,20 @@ define(["jquery", "underscore", "backbone", "engage/core"], function($, _, Backb
     function getVTT(captions) {
         var id = Engage.model.get('mediaPackage').get('eventid');
         var url = '/search/episode.json?limit1&id=' + id;
-        var request = new XMLHttpRequest();
-        request.open('GET', url, false);
-        request.send(null);
+        var vtt = '';
 
-        if(request.status === 200) {
-            return request.responseText;
-        } else {
-            console.error(request.statusText);
-            return undefined;
-        }
+        $.get({url: url},
+        function(response) {
+            var attachments = response["search-results"]["result"]["mediapackage"]["attachments"]["attachment"];
+            for(var i = 0; i < attachments.length; i++) {
+                if(attachments[i].mimetype === "text/vtt") {
+                  vtt = attachments[i];
+                  return attachments[i];
+                }
+            }
+        })
+
+        return vtt;
     }
 
     var TranscriptTabView = Backbone.View.extend({
