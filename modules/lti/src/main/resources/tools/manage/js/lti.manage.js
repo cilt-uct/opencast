@@ -2451,8 +2451,10 @@ $(document).ready(function() {
       $('#editPublishedCancel').text("Cancel");
   });
   $('#editPublishedModal').on('click', '.captionsLink', function(){
+      var id = $('#hiddenEvent').attr('data-event');
       $('#editPublished').hide();
       $('#editPublishedCancel').text("Close");
+      $('#btnUploadCaptions, #rqCaptions').attr('data-event', id);
   })
   $('#editPublishedModal').on('hidden.bs.modal', function () {
       $('#uploadModal .fileContainer').attr('data-title', 'Choose video');
