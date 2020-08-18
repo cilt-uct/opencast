@@ -138,21 +138,30 @@ define(["jquery", "underscore", "backbone", "engage/core"], function($, _, Backb
         return (translations[str] != undefined) ? translations[str] : strIfNotFound;
     }
 
-    function getVTT(captions) {
-       var id = Engage.model.get('mediaPackage').get('eventid');
-       var url = '/search/episode.json?limit1&id=' + id;
-       var vtt = '';
+    function getCaptionList(model) {
+        var attachments = model.get('attachments');
+        var captions = '';
+        // mimetype: "text/vtt", tag: "engage-download"
+        for(var i = 0; i < attachments.length; i++) {
+            if (attachments[i].mimetype == 'text/vtt' && attachments[i].tags['tag'].indexOf('engage-download') >= 0) {
+                attachments[i].url = window.location.protocol + attachments[i].url.substring(attachments[i].url.indexOf('/'));
+                captions = attachments[i];
+                return attachments[i];
+            }
+        }
+        return captions;
+    }
 
-       $.get({url: url},
-       function(response) {
-           var attachments = response["search-results"]["result"]["mediapackage"]["attachments"]["attachment"];
-           for(var i = 0; i < attachments.length; i++) {
-               if(attachments[i].mimetype === "text/vtt" && attachments[i].tags["tag"].indexOf("engage-download") >= 0) {
-                 vtt = attachments[i];
-                 return attachments[i];
-               }
-           }
-       })
+    function getVTT(captions) {
+        var request = new XMLHttpRequest();
+        request.open('GET', captions["url"], false);
+        request.send(null);
+        if(request.status === 200) {
+           return request.responseText;
+        } else {
+           console.error(request.statusText);
+           return undefined;
+        }
     }
 
     var TranscriptTabView = Backbone.View.extend({
@@ -168,6 +177,9 @@ define(["jquery", "underscore", "backbone", "engage/core"], function($, _, Backb
         render: function () {
             if (!mediapackageError) {
                 var vttText = [];
+                var captions = getCaptionList(this.model);
+
+            if (!_.isUndefined(captions)) {
                 var vtt = getVTT(captions);
 
                 if(vtt) {
@@ -176,6 +188,7 @@ define(["jquery", "underscore", "backbone", "engage/core"], function($, _, Backb
                         buildVTTObject(i, vttText[i])
                     }
                 }
+            }
 
                 var parts = [],
                     tempVars = {
