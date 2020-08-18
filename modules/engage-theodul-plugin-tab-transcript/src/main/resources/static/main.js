@@ -138,31 +138,21 @@ define(["jquery", "underscore", "backbone", "engage/core"], function($, _, Backb
         return (translations[str] != undefined) ? translations[str] : strIfNotFound;
     }
 
-    function getCaptionList(model) {
-
-        var captions = _.find(model.get('attachments'), function (item) {
-            // type: "captions/timedtext", mimetype: "text/vtt"
-            // assumption is that there is only one vvt file per video.
-            if (item.type.indexOf('captions') >= 0 || item.mimetype == 'text/vtt') {
-                item.url = window.location.protocol + item.url.substring(item.url.indexOf('/'));
-                return item;
-            }
-        });
-
-        return captions;
-    }
-
     function getVTT(captions) {
-        var request = new XMLHttpRequest();
-        request.open('GET', captions["url"], false);
-        request.send(null);
+       var id = Engage.model.get('mediaPackage').get('eventid');
+       var url = '/search/episode.json?limit1&id=' + id;
+       var vtt = '';
 
-        if(request.status === 200) {
-            return request.responseText;
-        } else {
-            console.error(request.statusText);
-            return undefined;
-        }
+       $.get({url: url},
+       function(response) {
+           var attachments = response["search-results"]["result"]["mediapackage"]["attachments"]["attachment"];
+           for(var i = 0; i < attachments.length; i++) {
+               if(attachments[i].mimetype === "text/vtt" && attachments[i].tags["tag"].indexOf("engage-download") >= 0) {
+                 vtt = attachments[i];
+                 return attachments[i];
+               }
+           }
+       })
     }
 
     var TranscriptTabView = Backbone.View.extend({
@@ -178,16 +168,12 @@ define(["jquery", "underscore", "backbone", "engage/core"], function($, _, Backb
         render: function () {
             if (!mediapackageError) {
                 var vttText = [];
-                var captions = getCaptionList(this.model);
+                var vtt = getVTT(captions);
 
-                if (!_.isUndefined(captions)) {
-                    var vtt = getVTT(captions);
-
-                    if(vtt) {
-                        var vttText = Parser.parse(vtt, 'metadata')['cues'];
-                        for (var i = 0; i < vttText.length; i++) {
-                            buildVTTObject(i, vttText[i])
-                        }
+                if(vtt) {
+                    var vttText = Parser.parse(vtt, 'metadata')['cues'];
+                    for (var i = 0; i < vttText.length; i++) {
+                        buildVTTObject(i, vttText[i])
                     }
                 }
 
