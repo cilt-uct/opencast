@@ -183,10 +183,10 @@ define(["jquery", "underscore", "backbone", "engage/core"], function($, _, Backb
                 var vtt = getVTT(captions);
 
                 if(vtt) {
-                    var vttText = Parser.parse(vtt, 'metadata')['cues'];
+                    var cleanVttText = vtt.replace(/&/g, "&amp;");
+                    var vttText = Parser.parse(cleanVttText, 'metadata')['cues'];
                     for (var i = 0; i < vttText.length; i++) {
-                        var cleanVttText = vttText[i].replace(/&/g, "&amp;");
-                        buildVTTObject(i, cleanVttText);
+                        buildVTTObject(i, vttText[i]);
                     }
                 }
             }
