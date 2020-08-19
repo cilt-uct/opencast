@@ -2691,7 +2691,7 @@ function checkCaptions(id) {
     function(response) {
         var attachments = response["search-results"]["result"]["mediapackage"]["attachments"]["attachment"];
         for(var i = 0; i < attachments.length; i++) {
-            if(attachments[i].mimetype === "text/vtt") {
+            if(attachments[i].mimetype === "text/vtt" && attachments[i].tags["tag"].indexOf("engage-download") >= 0) {
               if($('#btnCaptions_' + id).hide()) {
                  $('#btnCaptions_' + id).show();
               }
@@ -2709,7 +2709,7 @@ function getCaptions(id) {
     function(response) {
         var attachments = response["search-results"]["result"]["mediapackage"]["attachments"]["attachment"];
         for(var i = 0; i < attachments.length; i++) {
-            if(attachments[i].mimetype === "text/vtt") {
+            if(attachments[i].mimetype === "text/vtt" && attachments[i].tags["tag"].indexOf("engage-download") >= 0) {
               if(attachments[i].type == "captions/timedtext") {
                   providerArray.push({"id" : id, "mediatype" : attachments[i].type, "url" : attachments[i].url});
                   $('#dlGoogleCaptions').attr('href', attachments[i].url + "/download/" + attachments[i].url.substring(attachments[i].url.lastIndexOf('/') + 1));
