@@ -185,7 +185,8 @@ define(["jquery", "underscore", "backbone", "engage/core"], function($, _, Backb
                 if(vtt) {
                     var vttText = Parser.parse(vtt, 'metadata')['cues'];
                     for (var i = 0; i < vttText.length; i++) {
-                        buildVTTObject(i, vttText[i])
+                        var cleanVttText = vttText[i].replace(/&/g, "&amp;");
+                        buildVTTObject(i, cleanVttText);
                     }
                 }
             }
