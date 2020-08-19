@@ -2404,7 +2404,7 @@ define(['require', 'jquery', 'underscore', 'backbone', 'basil', 'bowser', 'engag
 
     // Load from attachment
     for(var a in attachments) {
-      if(attachments[a].mimetype == "text/vtt") {
+      if((attachments[a].mimetype == "text/vtt" || attachments[a].mimetype == "application/vnd.openxmlformats-officedocument.wordprocessingml.document") && attachments[a].tags["tag"].indexOf("engage-download") >= 0) {
         Engage.log("Found caption in attachments.");
         captionsURL = attachments[a].url;
         Engage.model.set("captions", true);

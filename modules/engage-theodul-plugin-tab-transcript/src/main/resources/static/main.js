@@ -139,16 +139,16 @@ define(["jquery", "underscore", "backbone", "engage/core"], function($, _, Backb
     }
 
     function getCaptionList(model) {
-
-        var captions = _.find(model.get('attachments'), function (item) {
-            // type: "captions/timedtext", mimetype: "text/vtt"
-            // assumption is that there is only one vvt file per video.
-            if (item.type.indexOf('captions') >= 0 || item.mimetype == 'text/vtt') {
-                item.url = window.location.protocol + item.url.substring(item.url.indexOf('/'));
-                return item;
+        var attachments = model.get('attachments');
+        var captions = '';
+        // mimetype: "text/vtt", tag: "engage-download"
+        for(var i = 0; i < attachments.length; i++) {
+            if ((attachments[i].mimetype == 'text/vtt' || attachments[i].mimetype == "application/vnd.openxmlformats-officedocument.wordprocessingml.document") && attachments[i].tags['tag'].indexOf('engage-download') >= 0) {
+                attachments[i].url = window.location.protocol + attachments[i].url.substring(attachments[i].url.indexOf('/'));
+                captions = attachments[i];
+                return attachments[i];
             }
-        });
-
+        }
         return captions;
     }
 
@@ -156,12 +156,11 @@ define(["jquery", "underscore", "backbone", "engage/core"], function($, _, Backb
         var request = new XMLHttpRequest();
         request.open('GET', captions["url"], false);
         request.send(null);
-
         if(request.status === 200) {
-            return request.responseText;
+           return request.responseText;
         } else {
-            console.error(request.statusText);
-            return undefined;
+           console.error(request.statusText);
+           return undefined;
         }
     }
 
@@ -180,16 +179,17 @@ define(["jquery", "underscore", "backbone", "engage/core"], function($, _, Backb
                 var vttText = [];
                 var captions = getCaptionList(this.model);
 
-                if (!_.isUndefined(captions)) {
-                    var vtt = getVTT(captions);
+            if (!_.isUndefined(captions)) {
+                var vtt = getVTT(captions);
 
-                    if(vtt) {
-                        var vttText = Parser.parse(vtt, 'metadata')['cues'];
-                        for (var i = 0; i < vttText.length; i++) {
-                            buildVTTObject(i, vttText[i])
-                        }
+                if(vtt) {
+                    var vttText = Parser.parse(vtt, 'metadata')['cues'];
+                    for (var i = 0; i < vttText.length; i++) {
+                        var cleanVttText = vttText[i].replace(/&/g, "&amp;");
+                        buildVTTObject(i, cleanVttText);
                     }
                 }
+            }
 
                 var parts = [],
                     tempVars = {
