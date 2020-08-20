@@ -143,7 +143,7 @@ define(["jquery", "underscore", "backbone", "engage/core"], function($, _, Backb
         var captions = '';
         // mimetype: "text/vtt", tag: "engage-download"
         for(var i = 0; i < attachments.length; i++) {
-            if ((attachments[i].mimetype == 'text/vtt' || attachments[i].mimetype == "application/vnd.openxmlformats-officedocument.wordprocessingml.document") && attachments[i].tags['tag'].indexOf('engage-download') >= 0) {
+            if (attachments[i].mimetype == 'text/vtt' && attachments[i].tags['tag'].indexOf('engage-download') >= 0) {
                 attachments[i].url = window.location.protocol + attachments[i].url.substring(attachments[i].url.indexOf('/'));
                 captions = attachments[i];
                 return attachments[i];
