@@ -191,7 +191,7 @@ define(["jquery", "underscore", "backbone", "engage/core"], function($, _, Backb
                 }
             }
 
-                var noTranscript = "No captions/transcipts are available for this video. \nSite owners can request transcripts under Manage Recordings, click the edit icon of the video, then go to the captions tab in the pop-up and click request better captions. Students should consult their lecturers if captions/transcripts will be used in their course.";
+                var noTranscript = "Site owners can request transcripts under Manage Recordings, click the edit icon of the video, then go to the captions tab in the pop-up and click request better captions. Students should consult their lecturers if captions/transcripts will be used in their course.";
 
                 var parts = [],
                     tempVars = {
