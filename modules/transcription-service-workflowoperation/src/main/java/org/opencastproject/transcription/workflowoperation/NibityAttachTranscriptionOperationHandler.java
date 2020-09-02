@@ -60,6 +60,7 @@ public class NibityAttachTranscriptionOperationHandler extends AbstractWorkflowO
   static final String TARGET_FLAVOR = "target-flavor";
   static final String TARGET_TAG = "target-tag";
   static final String TARGET_CAPTION_FORMAT = "target-caption-format";
+  static final String HAS_VTT = "has-vtt";
 
   /** The transcription service */
   private TranscriptionService service = null;
@@ -76,6 +77,7 @@ public class NibityAttachTranscriptionOperationHandler extends AbstractWorkflowO
     CONFIG_OPTIONS.put(TARGET_FLAVOR, "The target \"flavor\" of the transcription file");
     CONFIG_OPTIONS.put(TARGET_TAG, "The target \"tag\" of the transcription file");
     CONFIG_OPTIONS.put(TARGET_CAPTION_FORMAT, "The target caption format of the transcription file (dfxp, etc)");
+    CONFIG_OPTIONS.put(HAS_VTT, "The type of transcription file");
   }
 
   @Override
@@ -90,7 +92,7 @@ public class NibityAttachTranscriptionOperationHandler extends AbstractWorkflowO
    *      JobContext)
    */
   @Override
-  public WorkflowOperationResult start(final WorkflowInstance workflowInstance, JobContext context)
+  public WorkflowOperationResult start(WorkflowInstance workflowInstance, JobContext context)
           throws WorkflowOperationException {
     MediaPackage mediaPackage = workflowInstance.getMediaPackage();
     WorkflowOperationInstance operation = workflowInstance.getCurrentOperation();
@@ -142,6 +144,8 @@ public class NibityAttachTranscriptionOperationHandler extends AbstractWorkflowO
           String captionFileType = "vtt";
           mediaPackage = addTranscriptionElementToMediaPackage(zis, captionMimeType, captionIdentifier, captionFileType,
                   mediaPackage, flavor, targetTagOption);
+        } else {
+          workflowInstance.setConfiguration("has-vtt", "false");
         }
 
         // Extract the transcript docx
