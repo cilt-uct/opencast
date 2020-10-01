@@ -198,6 +198,14 @@ function EventManager(params) {
       required: true,
       fieldMap: ['source', 'activity_id']
     },
+    {
+      readOnly: false,
+            id: 'captions',
+         label: 'EVENTS.EVENTS.DETAILS.METADATA.CAPTIONS',
+          type: 'text',
+      required: true,
+      fieldMap: ['doCaptioning']
+    },
   ];
 
   this.processing = {workflow: 'fast', configuration: {comment: "false", publish: "true"}};
@@ -1067,6 +1075,9 @@ EventManager.prototype = {
     };
     if (isUpload && data.hasSlides) {
       processing.configuration.hasSlides = "true";
+    }
+    if (isUpload && !data.doCaptioning) {
+      processing.configuration.doCaptioning = "false";
     }
     return processing;
   },
