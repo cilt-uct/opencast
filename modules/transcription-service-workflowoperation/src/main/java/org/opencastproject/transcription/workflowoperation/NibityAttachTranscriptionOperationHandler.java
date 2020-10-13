@@ -144,6 +144,7 @@ public class NibityAttachTranscriptionOperationHandler extends AbstractWorkflowO
           String captionFileType = "vtt";
           mediaPackage = addTranscriptionElementToMediaPackage(zis, captionMimeType, captionIdentifier, captionFileType,
                   mediaPackage, flavor, targetTagOption);
+          workflowInstance.setConfiguration(HAS_VTT, "true");
         } else {
           workflowInstance.setConfiguration(HAS_VTT, "false");
         }
