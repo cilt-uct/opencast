@@ -257,6 +257,7 @@ define(['require', 'jquery', 'underscore', 'backbone', 'basil', 'bowser', 'engag
   var overlayTimer;
 
   var foundQualities = undefined;
+  var sortedResolutionsList = undefined;
   var zoomTimeout = 500;
 
   function initTranslate(language, funcSuccess, funcError) {
@@ -310,7 +311,7 @@ define(['require', 'jquery', 'underscore', 'backbone', 'basil', 'bowser', 'engag
     return true;
   }
 
-  function filterTracksByTag(tracks, filterTags) {
+  function filterTracksByTag(tracks, filterTags, strict = false) {
     if (filterTags == undefined) {
       return tracks;
     }
@@ -318,27 +319,56 @@ define(['require', 'jquery', 'underscore', 'backbone', 'basil', 'bowser', 'engag
         filterTagsArray = (Array.isArray(filterTags) ? filterTags : filterTags.split(','))
                                 .map(x => Utils.preferredQualityFormat(x.trim(), false))
                                 .filter(x => x);
-    
+
     if (filterTagsArray.length == 0) {
         return tracks;
     }
 
-    for (var i = 0; i < tracks.length; i++) {   
+    for (var i = 0; i < tracks.length; i++) {
         if (tracks[i].tags) {
             if (tracks[i].tags.tag) {
                 if (_.intersection(tracks[i].tags.tag.map(x => Utils.preferredQualityFormat(x.trim(), false)), filterTagsArray).length > 0) {
                     newTracksArray.push(tracks[i]);
                 }
             }
-        }   
+        }
     }
 
     // avoid filtering to an empty list, better play something than nothing
-    if (newTracksArray.length < 1) {
+    if (newTracksArray.length < 1 && !strict) {
         console.warn("No valid track tags found - returning tracks.");
         return tracks;
     }
     return newTracksArray;
+  }
+
+  function getTrackResolutionWidth(track) {
+    return track.resolution.split('x')[1]
+  }
+
+  function getTrackClosestToResolution(tracks, quality) {
+    // match quality tag to resolution
+    var desiredWidth;
+    for (var i = 0; i < sortedResolutionsList.length; i++) {
+      if (sortedResolutionsList[i][0] == quality) {
+        desiredWidth = sortedResolutionsList[i][1];
+        break;
+      }
+    }
+
+    if (desiredWidth == undefined) {
+      // This should not happen. quality should be found in sortedResolutionsList
+      // after it got populated by getQualities.
+      return tracks[0];
+    }
+
+    // find track
+    var widthAbsDifferences = tracks.map(function (track) {
+      return Math.abs(getTrackResolutionWidth(track) - desiredWidth);
+    });
+
+    var closestIndex = widthAbsDifferences.indexOf(Math.min(...widthAbsDifferences));
+    return tracks[closestIndex];
   }
 
   /**
@@ -380,33 +410,33 @@ define(['require', 'jquery', 'underscore', 'backbone', 'basil', 'bowser', 'engag
   function getQualities(videoSources) {
     // using a cache for qualities, as they probably do not change
     if (foundQualities) {
-        return foundQualities;
+      return foundQualities;
     }
     var tagsList = getTags(videoSources, '-quality');
     var qualitiesList = [];
     tagsList.forEach(function(quality) {
       qualitiesList.push(quality);
     });
-    var tracks;
+    var tracks = [];
     for (var source in videoSources) {
       if (videoSources[source] !== undefined) {
-        tracks = videoSources[source];
-        break;
+        tracks = tracks.concat(videoSources[source]);
       }
     }
     qualitiesList = qualitiesList.map(x => Utils.preferredQualityFormat(x.trim(), false));
     var sortedResolutionsList = [];
-  
+
     sortedResolutionsList = _.map(qualitiesList, function(quality) {
-        var currentTrack = filterTracksByTag(tracks, quality + '-quality')[0];
-        if (currentTrack !== undefined && currentTrack.resolution !== undefined)
-            return [quality, currentTrack.resolution.substring(0, currentTrack.resolution.indexOf('x'))];
+      var currentTrack = filterTracksByTag(tracks, [quality + '-quality'])[0];
+      if (currentTrack !== undefined && currentTrack.resolution !== undefined)
+        return [quality, getTrackResolutionWidth(currentTrack)];
     });
     sortedResolutionsList.sort(compareQuality);
+    sortedResolutionsList.reverse();
     foundQualities = [];
     for (var i = 0; i < sortedResolutionsList.length; ++i) {
       foundQualities.push(sortedResolutionsList[i][0]);
-    }    
+    }
     return foundQualities;
   }
 
@@ -438,12 +468,12 @@ define(['require', 'jquery', 'underscore', 'backbone', 'basil', 'bowser', 'engag
             newTracksArray.push(tracks[i]);
         }
     }
-    
+
     // avoid filtering to an empty list, better play something than nothing
     if (newTracksArray.length < 1) {
         console.warn("No valid track formats found - returning tracks.");
         return tracks;
-    }    
+    }
     return newTracksArray;
   }
 
@@ -498,28 +528,34 @@ define(['require', 'jquery', 'underscore', 'backbone', 'basil', 'bowser', 'engag
         changeQuality(q);
       });
       Engage.trigger(plugin.events.videoFormatsFound.getName(), qualities);
-      if (isMobileMode) {
-        Engage.model.set('quality', 'low');
+      if (!Engage.model.get('quality')) {
+        if (isMobileMode) {
+          Engage.model.set('quality', qualities[qualities.length - 1]);
+        } else {
+          Engage.model.set('quality', qualities[Math.floor(qualities.length / 2)]);
+        }
       }
       changeQuality(Engage.model.get('quality'));
     }
   }
 
-  function changeQuality(q) {
-    if (q) {
+  function changeQuality(quality) {
+    if (quality) {
       var isPaused = videodisplayMaster.paused();
       Engage.trigger(plugin.events.pause.getName(), false);
-      var quality = q + '-quality';
-      Engage.model.set('quality', q);
-      Engage.log('Video: Setting quality to: ' + q);
+      var qualityTag = quality + '-quality';
+      Engage.model.set('quality', quality);
+      Engage.log('Video: Setting quality to: ' + quality);
       var tuples = getSortedVideosourcesArray(globalVideoSource);
       for (var i = 0; i < tuples.length; ++i) {
         var value = tuples[i][1];
         if (value[1][0]) {
-          var track = filterTracksByTag(value[1], quality);
-          if (track && track.length > 0) {
-            videojs(value[0]).src(track[0].src);
+          var track = filterTracksByTag(value[1], [qualityTag], true);
+          if (track.length == 0) {
+            // couldn't find track with exact tag; search with resolution
+            track = [getTrackClosestToResolution(value[1], quality)];
           }
+          videojs(value[0]).src(track[0].src);
         }
       }
       if (pressedPlayOnce && (currentTime > 0)) {
@@ -994,7 +1030,7 @@ define(['require', 'jquery', 'underscore', 'backbone', 'basil', 'bowser', 'engag
   }
 
   Engage.on(plugin.events.aspectRatioSet.getName(), function (param) {
-    if (param === undefined) {
+    if (param === undefined && aspectRatio) {
       Engage.trigger(plugin.events.aspectRatioSet.getName(), [aspectRatio[1], aspectRatio[2], (aspectRatio[1] / aspectRatio[2]) * 100]);
     }
   })
@@ -1344,9 +1380,14 @@ define(['require', 'jquery', 'underscore', 'backbone', 'basil', 'bowser', 'engag
           // init video.js
           videojs(id, videoOptions, function () {
             var videodisplay = this;
-            // set sources
-            videodisplay.src(videoSource);
+            if (videoSource.length == 1 || foundQualities == undefined || foundQualities.length == 0) {
+              // set sources if there
+              //   * is only a single video (other video sets could have quality tags)
+              //   * are no quality tags in any video set
+              videodisplay.src(videoSource);
+            }
           });
+
           // URL to the flash swf
           if (videojs_swf) {
             Engage.log('Video: Loaded flash component');
@@ -1446,11 +1487,6 @@ define(['require', 'jquery', 'underscore', 'backbone', 'basil', 'bowser', 'engag
       $engageVideoId.css('max-width', minWidth + 'px');
     }
     $engageVideoId.css('min-height', minVideoAreaHeight + 'px');
-    if (maxVideoAreaHeight > minVideoAreaHeight) {
-      $engageVideoId.css('max-height', maxVideoAreaHeight + 'px');
-    } else {
-      $engageVideoId.css('max-height', minVideoAreaHeight + 'px');
-    }
 
     if (!isDefaultLayout()) {
       if (isPiP) {
@@ -1497,8 +1533,9 @@ define(['require', 'jquery', 'underscore', 'backbone', 'basil', 'bowser', 'engag
   }
 
   function registerEventsAudioOnly(videoDisplay) {
-    var audioPlayer_id = $('#' + videoDisplay);
-    var audioPlayer = audioPlayer_id[0];
+    var video_display = $('#' + videoDisplay);
+    var audioPlayer_id = video_display.find('audio');
+    var audioPlayer = video_display[0].player;
     var audioLoadTimeout = window.setTimeout(function () {
       Engage.trigger(plugin.events.audioCodecNotSupported.getName());
       $('.' + class_audioDisplay).hide();
@@ -2037,7 +2074,7 @@ define(['require', 'jquery', 'underscore', 'backbone', 'basil', 'bowser', 'engag
         });
         $videoDisplayClass.removeClass(videoFocusedClass).removeClass(videoUnfocusedClass).addClass(videoDefaultLayoutClass);
         var numberDisplays = $videoDisplayClass.length;
-        $videoDisplayClass.css('width', (((1 / numberDisplays) * 100) - 0.5) + '%');
+        $videoDisplayClass.css('width', ((1 / numberDisplays) * 100) + '%');
         delayedCalculateVideoAreaAspectRatio();
       });
 
@@ -2231,7 +2268,7 @@ define(['require', 'jquery', 'underscore', 'backbone', 'basil', 'bowser', 'engag
     var hasAudio = false;
     var hasVideo = false;
     videoSources.audio = [];
-    
+
     if (mediaInfo.tracks) {
       $(mediaInfo.tracks).each(function (i, track) {
         if (track.mimetype && track.type && acceptFormat(track)) {

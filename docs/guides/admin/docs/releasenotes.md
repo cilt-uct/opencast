@@ -60,7 +60,7 @@ Improvements
 - Reduced memory needed for Workflow Index rebuild
 - Ansible script documentation
 - Automatic publication of streaming URLs
-- S3 compatibility - Endpoint configuration for Amazon S3 alternatives added  
+- S3 compatibility - Endpoint configuration for Amazon S3 alternatives added
 - Theodul player ui config
 - Re-introduce ability to avoid data loss during ingest
 
@@ -75,6 +75,97 @@ API changes
 - Removed REST endpoints for modifying workflow definitions
     - DELETE /workflow/definition/{id}
     - PUT /workflow/definition
+
+Additional Notes About 8.7
+--------------------------
+
+This maintenance release fixes severals bugs including problems with the scheduler in multitenant systems and adds
+missing ACLs after asset uploads.
+
+Additional Notes About 8.6
+--------------------------
+
+This maintenance release contains some bugfixes.
+
+Additional Notes About 8.5
+--------------------------
+
+This maintenance release contains mainly fixes for LTI issues.
+
+Additional Notes About 8.4
+--------------------------
+
+This maintenance release contains several Opencast Studio bug fixes and enhancements, plus additional security filters.
+
+### Configuration Changes in 8.4
+
+- Updated studio workflows
+- Additional security configuration in `etc/security/mh_default_org.xml` include
+    - 403 Logout redirect
+    - admin access to "/"
+    - role access to system filters
+    - prevent normal user from deleting series
+    - additional studio access filters
+- Muxing fix in encoding files
+
+    - `etc/encoding/adaptive-streaming-movies.properties`
+    - `etc/encoding/opencast-movies.properties`
+- Increased preview image resolution in
+    - `etc/encoding/engage-images.properties`
+- A new editor preview profile in
+    - `etc/encoding/opencast-movies.properties`
+- Default maximum job attempt increases 1 to 10 in
+    - `etc/org.opencastproject.serviceregistry.impl.ServiceRegistryJpaImpl.cfg`
+
+
+Additional Notes About 8.3
+--------------------------
+
+To improve the integration of Opencast Studio we introduced the custom roles plugin for LTI.
+
+There are also several changes in Opencast Studio:
+
+- Added
+    - Add detection of cameras. If none are detected, the buttons for "Camera" and "Screen & Camera"
+    are grayed out and not clickable.
+    - Add configuration options for the ACL sent by Studio on upload (the defaults haven't changed).
+    - Add configurations to limit the maximum video size and frame rate (the default haven't changed).
+    - Add configurations for video bitrate and preferred MIME types
+    - Add option to pass full configuration as hex encoded GET parameter.
+    - Show "Your recording will now be processed by Opencast." after upload.
+    - Full German translation
+    - Add build-time configuration of the settings.json path
+
+- Changed
+    - Remove "beta" status of Studio
+    - Update dependencies
+    - Settings are now validated against a fixed schema
+    - An invalid Content-Type for the ACL XML request does not lead to the ACL template being ignored.
+    Now it's used anyway, but a warning is still printed.
+    - Source map files are now included in the released tarballs.
+
+- Fixed
+    - Fix bug in parsing GET parameters that would lead to only the last parameter being used
+    - Errors during upload are now shown to the user (previously, it would just show "Opencast connection not
+    configured").
+    - Fixed very short recordings on weak devices leading to an error
+    - Fix MIME type to file extension detection
+    - Fix Safari detection
+    - GET parameters are now retained all the time
+    - text/xml is now also accepted as valid Content-Type for the ACL XML request (previously only application/xml
+    was accepted)
+
+
+### Configuration Changes in 8.3
+
+- The configuration file `etc/org.opencastproject.kernel.security.LtiLaunchAuthenticationHandler.cfg` was moved
+   to `etc/org.opencastproject.security.lti.LtiLaunchAuthenticationHandler.cfg`.
+- The configuration file `etc/org.ops4j.pax.web.cfg` was updated to include the `org.ops4j.pax.web.session.timeout`
+   option with value `240`.
+- New workflows and encodings for Opencast Studio
+- New configuration file `etc/ui-config/mh_default_org/studio/settings.json`
+
+
 
 Additional Notes About 8.2
 --------------------------
