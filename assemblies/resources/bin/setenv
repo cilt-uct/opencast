@@ -39,5 +39,12 @@ export JAVA_MAX_MEM=1G
 export JAVA_PERM_MEM=256M
 export KARAF_NOROOT=true
 
+# Mitigation for new Tesseract 4.x locking up the system
+export OMP_THREAD_LIMIT=1
 
 . "$DIRNAME/check_ports"
+
+if ! java -version 2>&1 | grep -q '1\.8\.'; then
+  echo "ERROR: Opencast 8 requires OpenJDK 8"
+  exit 1
+fi

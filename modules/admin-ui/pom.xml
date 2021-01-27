@@ -127,7 +127,7 @@
     </dependency>
     <dependency>
       <groupId>org.opencastproject</groupId>
-      <artifactId>opencast-asset-manager-util</artifactId>
+      <artifactId>opencast-shared-filesystem-utils</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
@@ -355,8 +355,6 @@
                 </goals>
                 <phase>compile</phase>
                 <configuration>
-                  <!-- bring PHANTOMJS_BIN into scope -->
-                  <environmentScript>phantomjs-path.sh</environmentScript>
                   <executable>node_modules/grunt-cli/bin/grunt</executable>
                   <arguments>
                     <argument>build</argument>

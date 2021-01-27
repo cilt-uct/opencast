@@ -28,7 +28,7 @@
     <cxf.version>3.2.6</cxf.version>
     <eclipselink.version>2.7.3</eclipselink.version>
     <functional.version>1.4.2</functional.version>
-    <guava.version>23.0</guava.version>
+    <guava.version>24.1.1-jre</guava.version>
     <httpcomponents-httpclient.version>4.5.7</httpcomponents-httpclient.version>
     <httpcomponents-httpcore.version>4.4.11</httpcomponents-httpcore.version>
     <jackson.version>2.10.0</jackson.version>
@@ -60,7 +60,7 @@
     <module>modules/asset-manager-workflowoperation</module>
     <module>modules/asset-manager-storage-aws</module>
     <module>modules/asset-manager-storage-fs</module>
-    <module>modules/asset-manager-util</module>
+    <module>modules/shared-filesystem-utils</module>
     <module>modules/authorization-manager</module>
     <module>modules/authorization-xacml</module>
     <module>modules/caption-api</module>
@@ -188,7 +188,7 @@
     <module>modules/security-cas-client-wrapper</module>
     <module>modules/security-cas</module>
     <module>modules/security-ldap</module>
-    <module>modules/security-openid</module>
+    <module>modules/security-lti</module>
     <module>modules/security-shibboleth</module>
     <module>modules/series-service-api</module>
     <module>modules/series-service-impl</module>
@@ -1064,11 +1064,6 @@
         <version>${spring-security.version}</version>
       </dependency>
       <dependency>
-        <groupId>org.springframework.security</groupId>
-        <artifactId>spring-security-openid</artifactId>
-        <version>${spring-security.version}</version>
-      </dependency>
-      <dependency>
         <groupId>org.springframework.security.oauth</groupId>
         <artifactId>spring-security-oauth</artifactId>
         <version>2.3.7.RELEASE</version>
@@ -1107,11 +1102,6 @@
         <groupId>org.jasig.cas.client</groupId>
         <artifactId>cas-client-core</artifactId>
         <version>3.3.3</version>
-      </dependency>
-      <dependency>
-        <groupId>org.openid4java</groupId>
-        <artifactId>com.springsource.org.openid4java</artifactId>
-        <version>0.9.5</version>
       </dependency>
       <dependency>
         <groupId>net.sourceforge.nekohtml</groupId>
@@ -1905,11 +1895,6 @@
       <id>central</id>
       <name>Central Maven Repository</name>
       <url>https://repo.maven.apache.org/maven2/</url>
-    </repository>
-    <repository>
-      <id>spring.io</id>
-      <name>Spring Framework Maven Plugins-Release Repository</name>
-      <url>https://repo.spring.io/plugins-release/</url>
     </repository>
     <repository>
       <id>mvn.opencast.org</id>
