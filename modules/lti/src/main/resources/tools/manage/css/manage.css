@@ -2039,7 +2039,7 @@ input:checked + .fileContainer + label {
 }
 
 .fileContainer:not([data-title]):before {
-  content: 'Choose video or audio';
+  content: 'Choose a presenter video or audio';
   padding-right: 0;
   margin-right: 0.5rem;
 }
@@ -3208,4 +3208,131 @@ input:focus, textarea:focus {
    color: #333;
    background-color: #e6e6e6;
    border-color: #adadad;
+}
+.presentationContainer {
+  border: 1px solid #ccc;
+  position: relative;
+  transition: width 0.5s 0.3s;
+  color: #337ab7;
+  height: 2.5rem;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  padding-right: 0.5rem;
+}
+input:checked + .presentationContainer {
+  width: calc((200% / 3) - 4px - 3rem) !important;
+  transition: width 0.5s;
+}
+input:checked + .presentationContainer + label {
+  width: calc(2.5rem + 4px);
+  opacity: 1;
+  transition: opacity 0.3s 0.5s, width 0s;
+}
+
+.presentationContainer input[type=file] {
+  opacity: 0;
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+.presentationContainer:before {
+  pointer-events: none;
+  content: attr(data-title);
+  padding: 0 0.5rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+  position: relative;
+  z-index: 2;
+}
+.presentationContainer:not([data-title]):before {
+  content: 'Choose a presentation video';
+  padding-right: 0;
+  margin-right: 0.5rem;
+}
+.presentationContainer + label {
+  margin: 0;
+  width: 0;
+  position: absolute;
+  top: 0;
+  right: 0;
+  opacity: 0;
+  border: 1px solid #ccc;
+  height: 2.5rem;
+  transition: opacity 0.3s, width 0s 0.3s;
+  cursor: pointer;
+  background: white;
+}
+.presentationContainer[data-title]:hover ~ .presentationPreview {
+  display: block !important;
+}
+.presentationContainer progress {
+  display: none;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.uploading .presentationContainer progress {
+  display: block;
+  z-index: 1;
+}
+.presentationPreview:after {
+  content: '';
+  position: absolute;
+  border-top: 7px solid #ccc;
+  border-left: 7px solid transparent;
+  border-right: 7px solid transparent;
+  position: absolute;
+  bottom: -7px;
+  right: calc(1rem - 2px);
+  z-index: 1;
+}
+.presentationPreview {
+  position: absolute !important;
+  right: 3rem;
+  top: -7px;
+  transform: translateY(-100%);
+  border: 1px solid #ccc;
+  border-radius: 0.25rem;
+  padding: 0.5rem !important;
+  background: white;
+  width: auto !important;
+  display: none !important;
+  min-width: 50px;
+  min-height: 10px;
+}
+.presentationPreview img[src] {
+  height: 100px;
+  box-shadow: inset 0 0 3px rgba(0,0,0,0.7);
+}
+.presentationPreview:before {
+  content: '';
+  position: absolute;
+  border-top: 5px solid white;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  position: absolute;
+  bottom: -5px;
+  right: 1rem;
+  z-index: 2;
+}
+.presentationPreview[data-previewerror]:before {
+  content: attr(data-previewerror);
+  border-top: none;
+  border-left: none;
+  border-right: none;
+  width: 100%;
+  font-style: italic;
+  display: block;
+  margin: 0 auto;
+  position: static;
+  color: #777;
 }

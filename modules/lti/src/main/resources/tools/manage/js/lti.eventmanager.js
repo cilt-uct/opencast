@@ -757,6 +757,9 @@ EventManager.prototype = {
 
             if (isUpload) {
               fd.append('track_presenter.0', data.presenter);
+              if (data.presentation && data.presentation instanceof File) {
+                fd.append('track_presentation.0', data.presentation);
+              }
               ajaxOpts.xhr = this.uploadProgress.bind(this);
             }
             $.ajax(ajaxOpts)
@@ -1075,6 +1078,9 @@ EventManager.prototype = {
     };
     if (isUpload && data.hasSlides) {
       processing.configuration.hasSlides = "true";
+    }
+    if (data.presentation && data.presentation instanceof File) {
+      processing.configuration.hasPresentation = "true";
     }
     if (isUpload && !data.doCaptioning) {
       processing.configuration.doCaptioning = "false";
