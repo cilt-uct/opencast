@@ -3336,3 +3336,11 @@ input:checked + .presentationContainer + label {
   position: static;
   color: #777;
 }
+li[data-field=presenter] > span:first-child:after {
+   font-size: 0.8rem;
+   font-style: italic;
+   content: '*Presenter video required';
+   display: block;
+   color: red;
+   margin-top: -1rem;
+ }
