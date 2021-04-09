@@ -473,11 +473,15 @@
                   <span class="valueContainer" class="choose_start" data-target="#upload_start"><i class="glyphicon glyphicon-time fa fa-clock-o"></i><span class="selectedValue"></span><span class="single">Choose</span><span class="multiple">Start</span> <span>date</span></span>
                 </span>
               </li>
+              <hr/>
+              <li>
+                <p style="color:red;">* Upload either a webcam video/audio file, screenshare video, or both</p>
+              </li>
               <li data-field="presenter">
-                <span>Webcam (presenter) video or audio file</span>
+                <span>Webcam video or audio file</span>
                 <input autocomplete="off" type="checkbox" id="populatedPresVid" class="filePopulated" />
                 <span class="fileContainer" data-mediatype="video" >
-                  <input autocomplete="off" type="file" name="presenter" data-mediatype="video" required title="Select a video/audio file that has a presenter in it"/>
+                  <input autocomplete="off" type="file" name="presenter" data-mediatype="video" title="Choose a presenter/webcam video or audio file"/>
                   <progress min="0" value=0 max="100"></progress>
                 </span>
                 <label for="populatedPresVid" class="removeFile"></label>
@@ -486,10 +490,10 @@
                   </span>
               </li>
               <li>
-                <span>Screenshare (presentation) video</span>
+                <span>Screenshare video</span>
                 <input autocomplete="off" type="checkbox" id="populatedPresentationVid" class="filePopulated" />
                 <span class="presentationContainer" data-mediatype="video" >
-                   <input autocomplete="off" type="file" name="presentation" data-mediatype="video" title="Select a video that contains presentation slides"/>
+                   <input autocomplete="off" type="file" name="presentation" data-mediatype="video" title="Choose a presentation/screenshare video"/>
                    <progress min="0" value="0" max="100"></progress>
                 </span>
                 <label for="populatedPresentationVid" class="removeFile"></label>
@@ -497,6 +501,7 @@
                     <img />
                 </span>
               </li>
+              <hr/>
               <li>
                   <span>Create automatic captions</span>
                   <span>

@@ -2039,7 +2039,7 @@ input:checked + .fileContainer + label {
 }
 
 .fileContainer:not([data-title]):before {
-  content: 'Choose a presenter video or audio';
+  content: 'Choose a webcam video or audio file';
   padding-right: 0;
   margin-right: 0.5rem;
 }
@@ -3251,7 +3251,7 @@ input:checked + .presentationContainer + label {
   z-index: 2;
 }
 .presentationContainer:not([data-title]):before {
-  content: 'Choose a presentation video';
+  content: 'Choose a screenshare video';
   padding-right: 0;
   margin-right: 0.5rem;
 }
@@ -3336,11 +3336,3 @@ input:checked + .presentationContainer + label {
   position: static;
   color: #777;
 }
-li[data-field=presenter] > span:first-child:after {
-   font-size: 0.8rem;
-   font-style: italic;
-   content: '*Presenter video required';
-   display: block;
-   color: red;
-   margin-top: -1rem;
- }
