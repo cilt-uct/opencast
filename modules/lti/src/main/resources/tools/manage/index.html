@@ -494,7 +494,9 @@
                 <input autocomplete="off" type="checkbox" id="populatedPresentationVid" class="filePopulated" />
                 <span class="presentationContainer" data-mediatype="video" >
                    <input autocomplete="off" type="file" name="presentation" data-mediatype="video" title="Choose a presentation/screenshare video"/>
-                   <progress min="0" value="0" max="100"></progress>
+                   <div id="uploadProgress">
+                    <progress min="0" value="0" max="100"></progress>
+                   </div>
                 </span>
                 <label for="populatedPresentationVid" class="removeFile"></label>
                 <span class="presentationPreview">

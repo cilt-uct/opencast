@@ -1045,10 +1045,10 @@ EventManager.prototype = {
   },
   createPayload: function(data, isUpload) {
     try {
-      if ((data.presenter && !(data.presenter instanceof File)) || (data.presentation && !(data.presentation instanceof File)) {
+      if ((data.presenter && !(data.presenter instanceof File)) || (data.presentation && !(data.presentation instanceof File))) {
         throw new Error('Please add a file for upload prior to submission');
       }
-      else if ((!data.presenter || !data.presentation) && ((!data.location && !data.ca_name) || !data.start_date)) {
+      else if (!data.presenter && !data.presentation && ((!data.location && !data.ca_name) || !data.start_date)) {
         throw new Error('Please complete form fully prior to submission');
       }
 

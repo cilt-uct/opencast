@@ -931,7 +931,12 @@ ocManager.eventMgr.on('event.delete.fail', function(events) {
 });
 
 ocManager.eventMgr.on('event.upload.progress', function(progress) {
-  ocManager.progressBar.value = progress.loaded / progress.total * 100;
+  if($('#populatedPresVid').prop('checked')) {
+    ocManager.progressBar.value = progress.loaded / progress.total * 100;
+  } else if($('#populatedPresentationVid').prop('checked')) {
+    $('#uploadProgress progress')[0].value = progress.loaded / progress.total * 100;
+  }
+
 });
 
 ocManager.eventMgr.on('event.update.progress', function(progress) {
