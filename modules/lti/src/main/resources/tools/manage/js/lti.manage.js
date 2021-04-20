@@ -2167,7 +2167,6 @@ $(document).ready(function() {
     }
 
     var file = this.files[0];
-    console.log(file);
     if (file.type.indexOf("video") === -1) {
        $(this).parent().attr('data-title', 'Please provide a file of video type');
        $(this).val('');
