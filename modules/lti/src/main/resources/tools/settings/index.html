@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <title>Series settings</title>
+
+    <link rel="stylesheet" type="text/css" href="../shared/css/bootstrap.min.css">
+    <link rel="stylesheet" type="text/css" href="../shared/css/admin.css?v=%version%" />
+    <link rel="stylesheet" type="text/css" href="../shared/css/lti.css?v=%version%" />
+    <link rel="stylesheet" type="text/css" href="../shared/css/daterangepicker.css" />
+    <link rel="stylesheet" type="text/css" href="../manage/css/font-awesome.min.css" />
+    <link href="css/settings.css?v=%version%" rel="stylesheet" />
+</head>
+
+<body>
+<div class="lti-outer">
+    <div id="addHeader">
+        <div class="lti_links">
+            <ul>
+                <li data-access="read"><a href="/ltitools/courses/index.html?sid=%courseID%&upload=%upload%" style="font-weight: 300;">Recordings</a></li>
+                <li data-access="write" data-page="manage"><a href="/ltitools/manage/index.html?sid=%courseID%&upload=%upload%&v=%version%">Manage</a></li>
+                <li data-access="write" data-page="settings"><a class="active" href="/ltitools/settings/index.html?sid=%courseID%&upload=%upload%&v=%version%">Settings</a></li>
+            </ul>
+        </div>
+
+        <div class="lti-oc-title">
+            <h2>Manage Series Settings</h2>
+        </div>
+    </div>
+    <div class="container" style="width: auto;">
+        <form autocomplete="off" id="settingsForm">
+            <div class="form-group row">
+                <label for="series_title" class="col-sm-2 col-form-label">Title</label>
+                <div class="col-sm-10">
+                    <input type="text" class="form-control" id="series_title" name="series_title" readonly>
+                </div>
+            </div>
+            <fieldset class="form-group">
+                <div class="row">
+                    <legend class="col-form-label col-sm-2 pt-0">Captions</legend>
+                    <div class="col-sm-10">
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="no_captions" id="no_captions" value="No captions" checked>
+                            <label class="form-check-label" for="no_captions">
+                                None
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="google_speech" id="google_speech" value="Google captions">
+                            <label class="form-check-label" for="google_speech">
+                                Google Speech-to-Text
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </fieldset>
+            <div class="form-group row">
+                <label class="form-label col-sm-2" for="series_retention">Retention</label>
+                <div class="col-sm-10">
+                    <select class="custom-select" id="series_retention" name="series_retention">
+                        <option value="default">Default (4 years)</option>
+                        <option value="forever">Keep Forever</option>
+                        <option value="longer">Long (8 years)</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-group row">
+                <label class="form-label col-sm-2" for="retain_date">Retain until</label>
+                <div class="col-sm-10">
+                    <input  type="text" name="retain_date" id="retain_date"/>
+                    <span class="valueContainer" class="choose_date" data-target="#retain_date">
+                        <i class="glyphicon glyphicon-time fa fa-clock-o"></i>
+                        <span class="selectedValue"></span><span class="single">Choose</span>
+                        <span class="multiple">Retain</span> <span>date</span>
+                    </span>
+                </div>
+            </div>
+            <div class="form-group row">
+                <label class="form-label col-sm-2" for="locked_status">Series locked</label>
+                <div class="col-sm-10">
+                    <div class="form-check disabled">
+                        <input class="form-check-input" type="checkbox" id="locked_status" name="locked_status" disabled>
+                    </div>
+                </div>
+            </div>
+            <button type="submit" class="btn btn-primary">Save</button>
+        </form>
+        <div id="suggestion">
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript" src="../shared/js/jquery/jquery.min.js"></script>
+<script type="text/javascript" src="../shared/js/jquery/plugins/jquery.utils.js"></script>
+<script type="text/javascript" src="../shared/js/ext/moment.min.js"></script>
+<script type="text/javascript" src="../shared/js/daterangepicker.js"></script>
+<script type="text/javascript" src="../shared/js/he.js"></script>
+<script type="text/javascript" src="../shared/js/underscore.js?v=%version%"></script>
+<script type="text/javascript" src="../shared/js/bootstrap.js?v=%version%"></script>
+<script type="text/javascript" src="../shared/js/lti.js?v=%version%"></script>
+
+<script type="text/javascript" src="js/lti.settings.js?v=%version%"></script>
+<link href="https://fonts.googleapis.com/css?family=Open+Sans:300,300i,400,400i,600,600i,700,700i" rel="stylesheet">
+</body>
+</html>
