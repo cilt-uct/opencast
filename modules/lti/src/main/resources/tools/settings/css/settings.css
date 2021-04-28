@@ -246,3 +246,16 @@ width: auto;
     background: rgba(0,160,255,0.3);
   }
 }
+
+.table-borderless > tbody > tr > td,
+.table-borderless > tbody > tr > th,
+.table-borderless > tfoot > tr > td,
+.table-borderless > tfoot > tr > th,
+.table-borderless > thead > tr > td,
+.table-borderless > thead > tr > th {
+    border: none !important;
+}
+
+.table-borderless > tbody > tr:hover td {
+    background-color: transparent !important;
+}

@@ -35,63 +35,53 @@
         </div>
     </div>
     <div class="container" style="width: auto;">
-        <form autocomplete="off" id="settingsForm">
-            <div class="form-group row">
-                <label for="series_title" class="col-sm-2 col-form-label">Title</label>
-                <div class="col-sm-10">
-                    <input type="text" class="form-control" id="series_title" name="series_title" readonly>
-                </div>
+        <div class="row">
+            <div class="col-lg-8 col-md-8 col-sm-12">
+                <table class="table table-borderless">
+                    <tbody>
+                    <form id="settingsForm">
+                        <tr>
+                            <td><label for="series_title">Title</label></td>
+                            <td><input type="text" placeholder="John" class="form-control" id="series_title" name="series_title" readonly></td>
+                        </tr>
+                        <tr>
+                            <td><label for="series_creator">Series Creator</label></td>
+                            <td><input type="text" placeholder="Doe" class="form-control" id="series_creator" name="series_creator" readonly></td>
+                        </tr>
+                        <tr>
+                            <td><label for="series_captions">Captions</label></td>
+                            <td><select class="form-control" id="series_captions" name="series_captions">
+                                <option value="none" selected>None</option>
+                                <option value="googleSpeech">Google Speech-to-Text</option>
+                            </select></td>
+                        </tr>
+                        <tr>
+                            <td><label for="series_retention"> Retention cycle</label></td>
+                            <td><select class="form-control" id="series_retention" name="series_retention">
+                                <option value="normal" selected>Default (4 years)</option>
+                                <option value="forever">Keep Forever</option>
+                                <option value="long">Long (8 years)</option>
+                            </select></td>
+                        </tr>
+                        <tr>
+                            <td><label for="retain_date">Retain until</label></td>
+                            <td><input type="date" class="form-control" id="retain_date" name="retain_date"></td>
+                        </tr>
+                        <tr>
+                            <td><label for="locked_status">Lock Series</label></td>
+                            <td><input type="text" class="form-control" id="locked_status" name="locked_status" readonly></td>
+                        </tr>
+                        <tr>
+                            <td colspan="2" class="text-right"><input type="submit" value="Save" class="btn btn-success"></td>
+                        </tr>
+                    </form>
+                    </tbody>
+                </table>
             </div>
-            <fieldset class="form-group">
-                <div class="row">
-                    <legend class="col-form-label col-sm-2 pt-0">Captions</legend>
-                    <div class="col-sm-10">
-                        <div class="form-check">
-                            <input class="form-check-input" type="radio" name="no_captions" id="no_captions" value="No captions" checked>
-                            <label class="form-check-label" for="no_captions">
-                                None
-                            </label>
-                        </div>
-                        <div class="form-check">
-                            <input class="form-check-input" type="radio" name="google_speech" id="google_speech" value="Google captions">
-                            <label class="form-check-label" for="google_speech">
-                                Google Speech-to-Text
-                            </label>
-                        </div>
-                    </div>
-                </div>
-            </fieldset>
-            <div class="form-group row">
-                <label class="form-label col-sm-2" for="series_retention">Retention</label>
-                <div class="col-sm-10">
-                    <select class="custom-select" id="series_retention" name="series_retention">
-                        <option value="default">Default (4 years)</option>
-                        <option value="forever">Keep Forever</option>
-                        <option value="longer">Long (8 years)</option>
-                    </select>
-                </div>
+            <div class="col-lg-4 col-md-4 col-sm-12">
+                <p>&nbsp;</p>
             </div>
-            <div class="form-group row">
-                <label class="form-label col-sm-2" for="retain_date">Retain until</label>
-                <div class="col-sm-10">
-                    <input  type="text" name="retain_date" id="retain_date"/>
-                    <span class="valueContainer" class="choose_date" data-target="#retain_date">
-                        <i class="glyphicon glyphicon-time fa fa-clock-o"></i>
-                        <span class="selectedValue"></span><span class="single">Choose</span>
-                        <span class="multiple">Retain</span> <span>date</span>
-                    </span>
-                </div>
-            </div>
-            <div class="form-group row">
-                <label class="form-label col-sm-2" for="locked_status">Series locked</label>
-                <div class="col-sm-10">
-                    <div class="form-check disabled">
-                        <input class="form-check-input" type="checkbox" id="locked_status" name="locked_status" disabled>
-                    </div>
-                </div>
-            </div>
-            <button type="submit" class="btn btn-primary">Save</button>
-        </form>
+        </div>
         <div id="suggestion">
         </div>
     </div>
