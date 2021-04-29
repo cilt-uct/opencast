@@ -66,6 +66,8 @@ function getSeriesInfo() {
                     $('#series_captions  option[value=none]').attr('selected','selected');
                  } else if(response[i].value == "google") {
                     $('#series_captions  option[value=google]').attr('selected','selected');
+                 } else if(response[i].value == "") {
+                    $('#series_captions  option[value=no_selection]').attr('selected','selected');
                  }
               }
               if(response[i].id == "series-locked") {

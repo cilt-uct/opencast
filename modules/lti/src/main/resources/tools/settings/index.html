@@ -42,30 +42,31 @@
                     <form id="settingsForm">
                         <tr>
                             <td><label for="series_title">Title</label></td>
-                            <td><input type="text" placeholder="John" class="form-control" id="series_title" name="series_title" readonly></td>
+                            <td><input type="text" class="form-control" id="series_title" name="series_title" readonly></td>
                         </tr>
                         <tr>
                             <td><label for="series_creator">Series Creator</label></td>
-                            <td><input type="text" placeholder="Doe" class="form-control" id="series_creator" name="series_creator" readonly></td>
+                            <td><input type="text" class="form-control" id="series_creator" name="series_creator" readonly></td>
                         </tr>
                         <tr>
                             <td><label for="series_captions">Captions</label></td>
                             <td><select class="form-control" id="series_captions" name="series_captions">
-                                <option value="none" selected>None</option>
-                                <option value="googleSpeech">Google Speech-to-Text</option>
+                                <option value="no_selection">No option selected</option>
+                                <option value="none">None</option>
+                                <option value="google">Google Speech-to-Text</option>
                             </select></td>
                         </tr>
                         <tr>
                             <td><label for="series_retention"> Retention cycle</label></td>
-                            <td><select class="form-control" id="series_retention" name="series_retention">
-                                <option value="normal" selected>Default (4 years)</option>
+                            <td><select class="form-control" id="series_retention" name="series_retention" readonly>
+                                <option value="normal">Default (4 years)</option>
                                 <option value="forever">Keep Forever</option>
                                 <option value="long">Long (8 years)</option>
                             </select></td>
                         </tr>
                         <tr>
                             <td><label for="retain_date">Retain until</label></td>
-                            <td><input type="date" class="form-control" id="retain_date" name="retain_date"></td>
+                            <td><input type="text" class="form-control" id="retain_date" name="retain_date" readonly></td>
                         </tr>
                         <tr>
                             <td><label for="locked_status">Lock Series</label></td>
