@@ -30,54 +30,61 @@
             </ul>
         </div>
 
-        <div class="lti-oc-title">
-            <h2>Manage Series Settings</h2>
+        <div class="lti-oc-top-section">
+            <div class="lti-oc-title">
+                <h2>Manage Series Settings</h2>
+            </div>
         </div>
     </div>
     <div class="container" style="width: auto;">
         <div class="row">
             <div class="col-lg-8 col-md-8 col-sm-12">
-                <table class="table table-borderless">
-                    <tbody>
-                    <form id="settingsForm">
-                        <tr>
-                            <td><label for="series_title">Title</label></td>
-                            <td><input type="text" class="form-control" id="series_title" name="series_title" readonly></td>
-                        </tr>
-                        <tr>
-                            <td><label for="series_creator">Series Creator</label></td>
-                            <td><input type="text" class="form-control" id="series_creator" name="series_creator" readonly></td>
-                        </tr>
-                        <tr>
-                            <td><label for="series_captions">Captions</label></td>
-                            <td><select class="form-control" id="series_captions" name="series_captions">
+                <form class="form-horizontal">
+                    <div class="form-group">
+                        <label class="control-label col-sm-2" for="series_title">Title:</label>
+                        <div class="col-sm-10">
+                            <input type="text" class="form-control" id="series_title" readonly>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="control-label col-sm-2" for="series_creator">Series Creator:</label>
+                        <div class="col-sm-10">
+                            <input type="text" class="form-control" id="series_creator" readonly>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="control-label col-sm-2" for="series_captions">Captions:</label>
+                        <div class="col-sm-10">
+                            <select class="form-control" id="series_captions" name="series_captions">
                                 <option value="no_selection">No option selected</option>
                                 <option value="none">None</option>
                                 <option value="google">Google Speech-to-Text</option>
-                            </select></td>
-                        </tr>
-                        <tr>
-                            <td><label for="series_retention"> Retention cycle</label></td>
-                            <td><select class="form-control" id="series_retention" name="series_retention" readonly>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="control-label col-sm-2" for="series_retention">Retention cycle:</label>
+                        <div class="col-sm-10">
+                            <select class="form-control" id="series_retention" name="series_retention" readonly>
                                 <option value="normal">Default (4 years)</option>
                                 <option value="forever">Keep Forever</option>
                                 <option value="long">Long (8 years)</option>
-                            </select></td>
-                        </tr>
-                        <tr>
-                            <td><label for="retain_date">Retain until</label></td>
-                            <td><input type="text" class="form-control" id="retain_date" name="retain_date" readonly></td>
-                        </tr>
-                        <tr>
-                            <td><label for="locked_status">Lock Series</label></td>
-                            <td><input type="text" class="form-control" id="locked_status" name="locked_status" readonly></td>
-                        </tr>
-                        <tr>
-                            <td colspan="2" class="text-right"><input type="submit" value="Save" class="btn btn-success"></td>
-                        </tr>
-                    </form>
-                    </tbody>
-                </table>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="control-label col-sm-2" for="retain_date">Retain until:</label>
+                        <div class="col-sm-10">
+                            <input type="text" class="form-control" id="retain_date" readonly>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="control-label col-sm-2" for="locked_status">Lock series:</label>
+                        <div class="col-sm-10">
+                            <input type="text" class="form-control" id="locked_status" readonly>
+                        </div>
+                    </div>
+                </form>
             </div>
             <div class="col-lg-4 col-md-4 col-sm-12">
                 <p>&nbsp;</p>

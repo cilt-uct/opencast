@@ -50,7 +50,7 @@ $(document).ready(function(){
         }
     }
 
-    $("#settingsForm").submit(function(e){
+    $("#series_captions").change(function(e){
       e.preventDefault();
       var captions = $('#series_captions').val();
       var fd;
@@ -70,9 +70,9 @@ $(document).ready(function(){
           data: fd,
           dataType: "json"
       }).done(function (data) {
-          $('#confirmationModal').modal('toggle');
+         return data;
       }).fail(function (error) {
-          console.log('FAIL');
+          retain error;
       });
     });
 });
