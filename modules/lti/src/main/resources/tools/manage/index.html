@@ -473,11 +473,12 @@
                   <span class="valueContainer" class="choose_start" data-target="#upload_start"><i class="glyphicon glyphicon-time fa fa-clock-o"></i><span class="selectedValue"></span><span class="single">Choose</span><span class="multiple">Start</span> <span>date</span></span>
                 </span>
               </li>
-              <li>
-                <span>Video/Audio file</span>
+              <hr/>
+              <li data-field="presenter">
+                <span>Webcam video or audio file</span>
                 <input autocomplete="off" type="checkbox" id="populatedPresVid" class="filePopulated" />
                 <span class="fileContainer" data-mediatype="video" >
-                  <input autocomplete="off" type="file" name="presenter" data-mediatype="video"/>
+                  <input autocomplete="off" type="file" name="presenter" data-mediatype="video" title="Choose a presenter/webcam video or audio file"/>
                   <progress min="0" value=0 max="100"></progress>
                 </span>
                 <label for="populatedPresVid" class="removeFile"></label>
@@ -486,138 +487,152 @@
                   </span>
               </li>
               <li>
-                <span>Video has slides?</span>
-                <span>
-                  <input id="uploadHasSlides" name="hasSlides" type="checkbox" class="hiddenCheck"/>
-                  <label for="uploadHasSlides" title="Specify whether the attached video file has slides or not" class="checkBox"></label>
+                <span>Screenshare video</span>
+                <input autocomplete="off" type="checkbox" id="populatedPresentationVid" class="filePopulated" />
+                <span class="presentationContainer" data-mediatype="video" >
+                   <input autocomplete="off" type="file" name="presentation" data-mediatype="video" title="Choose a presentation/screenshare video"/>
+                   <div id="uploadProgress">
+                    <progress min="0" value="0" max="100"></progress>
+                   </div>
+                </span>
+                <label for="populatedPresentationVid" class="removeFile"></label>
+                <span class="presentationPreview">
+                    <img />
                 </span>
               </li>
-                <li>
-                <span>Create automatic captions</span>
-                <span>
-                  <input id="uploadWithAutomaticCaptions" name="doCaptioning" type="checkbox" class="hiddenCheck" />
-                  <label for="uploadWithAutomaticCaptions" title="Specify whether automatic Google Speech captions should be created for this video or not"
-                         class="checkBox"></label>
-                </span>
+              <li style="line-height:120%;margin-bottom:15px;font-size:0.8em;">
+                  <p class="text-info"><b><u>NOTE:</u></b> 
+                      Upload either a webcam video file, screenshare video, or both provided they are the same length.
+                      If two videos have different lengths, the shorter video will be modified to match the length of the longer video.
+                  </p>
               </li>
-              <li class="errors"></li>
-            </ul>
-            <p class="instruction show" data-instruction="warning">I hereby confirm that I own the copyright to, or have the authorisation to distribute, all performances attached to this submission.</p>
-          </div>
-          <div class="modal-footer">
-            <button type="reset" class="btn btn-default">Cancel</button>
-            <button class="btn btn-success"><span class="loader"><i class="fa fa-cog fa-spin"></i></span><span class="text"></span></button>
-          </div>
-        </form>
-      </div>
-    </div>
-
-    <div class="modal fade" id="bulkModal" data-backdrop="static" tabindex="-1" role="dialog" aria-labelledby="bModal">
-      <div class="modal-dialog" role="document">
-        <form class="modal-content">
-          <div class="modal-header">
-            <button type="button" class="close" data-dismiss="modal" aria-label="close">
-              <span aria-hidden="true" title="Close Popup">&times;</span>
-            </button>
-            <h4 class="modal-title" id="bModal"></h4>
-          </div>
-          <div class="modal-body">
-          </div>
-          <div class="modal-footer">
-            <button type="reset" class="btn btn-default">Cancel</button>
-            <button class="btn btn-success"><span class="loader"><i class="fa fa-cog fa-spin"></i></span><span class="text"></span></button>
-          </div>
-        </form>
-      </div>
-    </div>
-    
-    <div class="modal fade" id="editCaptionsModal" data-backdrop="static" tabindex="-1" role="dialog" aria-labelledby="ecModal">
-      <div class="modal-dialog" role="document">
-        <form class="modal-content">
-          <div class="modal-header">
-            <button type="button" class="close" data-dismiss="modal" aria-label="close">
-              <span aria-hidden="true" title="Close Popup">&times;</span>
-            </button>
-            <h4 class="modal-title" id="ecModal"></h4>
-          </div>
-          <div class="modal-body" id="ecModalBody">
-            <div class="form-group green-border-focus">
-              <input type="hidden" id="vttInfo">
-              <label class="vttLabel" for="vttText" id="vttLabel"></label>
-              <p class="note">
-                <b>PLEASE NOTE: </b> Your changes will only be published when you click the <b><i>SAVE</i></b> button. 
-              </p><br/>
-             <span id="editCaptionsError" class="errors" style="display:none;color:red;"><ol id="errorLi"></ol><br/></span>
-              <textarea id="vttText" name="text/vtt" rows="15" class="form-control rounded-0 newVtt"></textarea>
+              <hr/>
+              <li>
+                  <span>Create automatic captions</span>
+                  <span>
+                    <input id="uploadWithAutomaticCaptions" name="doCaptioning" type="checkbox" class="hiddenCheck" />
+                    <label for="uploadWithAutomaticCaptions" title="Specify whether automatic Google Speech captions should be created for this video or not"
+                           class="checkBox"></label>
+                  </span>
+                </li>
+                <li class="errors"></li>
+              </ul>
+              <p class="instruction show" data-instruction="warning">I hereby confirm that I own the copyright to, or have the authorisation to distribute, all performances attached to this submission.</p>
             </div>
-          </div>
-          <div class="modal-footer">
-            <button type="reset" class="btn btn-default btn-red">Cancel</button>
-            <button type="button" class="btn btn-success updateCaptions" style="float:right;display:none;">Save</button>
-          </div>
-        </form>
+            <div class="modal-footer">
+              <button type="reset" class="btn btn-default">Cancel</button>
+              <button class="btn btn-success"><span class="loader"><i class="fa fa-cog fa-spin"></i></span><span class="text"></span></button>
+            </div>
+          </form>
+        </div>
       </div>
-    </div>
-    <div class="modal fade" id="requestTranscriptModal" data-backdrop="static" tabindex="-1" role="dialog" aria-labelledby="rtModal">
+
+      <div class="modal fade" id="bulkModal" data-backdrop="static" tabindex="-1" role="dialog" aria-labelledby="bModal">
+        <div class="modal-dialog" role="document">
+          <form class="modal-content">
+            <div class="modal-header">
+              <button type="button" class="close" data-dismiss="modal" aria-label="close">
+                <span aria-hidden="true" title="Close Popup">&times;</span>
+              </button>
+              <h4 class="modal-title" id="bModal"></h4>
+            </div>
+            <div class="modal-body">
+            </div>
+            <div class="modal-footer">
+              <button type="reset" class="btn btn-default">Cancel</button>
+              <button class="btn btn-success"><span class="loader"><i class="fa fa-cog fa-spin"></i></span><span class="text"></span></button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <div class="modal fade" id="editCaptionsModal" data-backdrop="static" tabindex="-1" role="dialog" aria-labelledby="ecModal">
+        <div class="modal-dialog" role="document">
+          <form class="modal-content">
+            <div class="modal-header">
+              <button type="button" class="close" data-dismiss="modal" aria-label="close">
+                <span aria-hidden="true" title="Close Popup">&times;</span>
+              </button>
+              <h4 class="modal-title" id="ecModal"></h4>
+            </div>
+            <div class="modal-body" id="ecModalBody">
+              <div class="form-group green-border-focus">
+                <input type="hidden" id="vttInfo">
+                <label class="vttLabel" for="vttText" id="vttLabel"></label>
+                <p class="note">
+                  <b>PLEASE NOTE: </b> Your changes will only be published when you click the <b><i>SAVE</i></b> button.
+                </p><br/>
+               <span id="editCaptionsError" class="errors" style="display:none;color:red;"><ol id="errorLi"></ol><br/></span>
+                <textarea id="vttText" name="text/vtt" rows="15" class="form-control rounded-0 newVtt"></textarea>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="reset" class="btn btn-default btn-red">Cancel</button>
+              <button type="button" class="btn btn-success updateCaptions" style="float:right;display:none;">Save</button>
+            </div>
+          </form>
+        </div>
+      </div>
+      <div class="modal fade" id="requestTranscriptModal" data-backdrop="static" tabindex="-1" role="dialog" aria-labelledby="rtModal">
+          <div class="modal-dialog" role="document">
+              <form class="modal-content">
+                  <div class="modal-header">
+                      <button type="button" class="close" data-dismiss="modal" aria-label="close">
+                          <span aria-hidden="true" title="Close Popup">&times;</span>
+                      </button>
+                      <h4 class="modal-title" id="rtModal">Transcript Request</h4>
+                  </div>
+                  <div class="modal-body" id="rtModalBody">
+                      <p>A transcript request has been sent to Way With Words.</p>
+                      <br/>
+                      <p>Transcription usually takes 2 - 5 working days after submission.</p>
+                      <br/>
+                      <p>You will receive an email notification when transcripts and captions are available on your video.</p>
+                  </div>
+                  <div class="modal-footer">
+                      <button type="reset" class="btn btn-default btn-red">Close</button>
+                  </div>
+              </form>
+          </div>
+      </div>
+      <div class="modal fade" id="removeCaptionsModal" data-backdrop="static" tabindex="-1" role="dialog" aria-labelledby="rcModal">
         <div class="modal-dialog" role="document">
             <form class="modal-content">
                 <div class="modal-header">
                     <button type="button" class="close" data-dismiss="modal" aria-label="close">
                         <span aria-hidden="true" title="Close Popup">&times;</span>
                     </button>
-                    <h4 class="modal-title" id="rtModal">Transcript Request</h4>
+                    <h4 class="modal-title" id="rcModalTitle"></h4>
                 </div>
-                <div class="modal-body" id="rtModalBody">
-                    <p>A transcript request has been sent to Way With Words.</p>
-                    <br/>
-                    <p>Transcription usually takes 2 - 5 working days after submission.</p>
-                    <br/>
-                    <p>You will receive an email notification when transcripts and captions are available on your video.</p>
+                <div class="modal-body" id="rcModalBody">
+                    <p><span style="color:#e45253;padding-right:5px"><b>PLEASE NOTE:</b></span>
+                        By clicking "<i>Yes, Remove Captions</i>" the current published captions will be removed (i.e. a remove
+                        process will run) and unavailable for playback.</p>
+
+                    <input type="hidden" id="eventDetails"/>
                 </div>
                 <div class="modal-footer">
-                    <button type="reset" class="btn btn-default btn-red">Close</button>
+                    <button type="reset" id="cancelRemoveCaptions" class="btn btn-default btn-red">Cancel</button>
+                    <button type="reset" id="confirmRemoveCaptions" class="btn btn-success">Yes, Remove Captions</button>
                 </div>
             </form>
         </div>
-    </div>
-    <div class="modal fade" id="removeCaptionsModal" data-backdrop="static" tabindex="-1" role="dialog" aria-labelledby="rcModal">
-      <div class="modal-dialog" role="document">
-          <form class="modal-content">
-              <div class="modal-header">
-                  <button type="button" class="close" data-dismiss="modal" aria-label="close">
-                      <span aria-hidden="true" title="Close Popup">&times;</span>
-                  </button>
-                  <h4 class="modal-title" id="rcModalTitle"></h4>
-              </div>
-              <div class="modal-body" id="rcModalBody">
-                  <p><span style="color:#e45253;padding-right:5px"><b>PLEASE NOTE:</b></span>
-                      By clicking "<i>Yes, Remove Captions</i>" the current published captions will be removed (i.e. a remove
-                      process will run) and unavailable for playback.</p>
-
-                  <input type="hidden" id="eventDetails"/>
-              </div>
-              <div class="modal-footer">
-                  <button type="reset" id="cancelRemoveCaptions" class="btn btn-default btn-red">Cancel</button>
-                  <button type="reset" id="confirmRemoveCaptions" class="btn btn-success">Yes, Remove Captions</button>
-              </div>
-          </form>
       </div>
-    </div>
-    <div id="suggestion">
-    </div>
-    <script type="text/x-tmpl" id="tmpl-body">{% for (var i=0; i < o.length; i++) { var item=o [i]; include( 'tmpl-row', o[i]); } %} </script>
-    <script type="text/x-tmpl" id="tmpl-row">
-        <tr id="row-{%=o['id']%}" data-status="{%=o['status']%}">
-            <td class="text-center">
-                <input type="checkbox"  id="chk-{%=o['id']%}" />
-                <label class="checkbox" for="chk-{%=o['id']%}">
-                <span class="fa fa-square-o"></span>
-                <span class="fa fa-check-square-o"></span>
-                </label>
-            </td>
-            <td>{%=o['title']%}</td>
-            <td>{%=o['presenters'].join(', ')%}</td>
-            <td>{%=moment(o['start_date']).format('ddd D MMM YYYY, HH:mm') + (o['end_date'] ? ' - ' + moment(o['end_date']).format('HH:mm') : '')%}</td> <!-- TODO: add day of week -->
+      <div id="suggestion">
+      </div>
+      <script type="text/x-tmpl" id="tmpl-body">{% for (var i=0; i < o.length; i++) { var item=o [i]; include( 'tmpl-row', o[i]); } %} </script>
+      <script type="text/x-tmpl" id="tmpl-row">
+          <tr id="row-{%=o['id']%}" data-status="{%=o['status']%}">
+              <td class="text-center">
+                  <input type="checkbox"  id="chk-{%=o['id']%}" />
+                  <label class="checkbox" for="chk-{%=o['id']%}">
+                  <span class="fa fa-square-o"></span>
+                  <span class="fa fa-check-square-o"></span>
+                  </label>
+              </td>
+              <td>{%=o['title']%}</td>
+              <td>{%=o['presenters'].join(', ')%}</td>
+              <td>{%=moment(o['start_date']).format('ddd D MMM YYYY, HH:mm') + (o['end_date'] ? ' - ' + moment(o['end_date']).format('HH:mm') : '')%}</td> <!-- TODO: add day of week -->
             <td>{%=getVenueName(o['location'] || o['agent_id'])%}</td>
             <td title="{%=getTooltip(o)%}">{%=getStatus(o)%}</td>
             <td>{%#getEditControls(o)%}</td>

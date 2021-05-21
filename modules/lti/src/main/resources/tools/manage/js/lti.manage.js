@@ -931,7 +931,12 @@ ocManager.eventMgr.on('event.delete.fail', function(events) {
 });
 
 ocManager.eventMgr.on('event.upload.progress', function(progress) {
-  ocManager.progressBar.value = progress.loaded / progress.total * 100;
+  if($('#populatedPresVid').prop('checked')) {
+    ocManager.progressBar.value = progress.loaded / progress.total * 100;
+  } else if($('#populatedPresentationVid').prop('checked')) {
+    $('#uploadProgress progress')[0].value = progress.loaded / progress.total * 100;
+  }
+
 });
 
 ocManager.eventMgr.on('event.update.progress', function(progress) {
@@ -2155,6 +2160,63 @@ $(document).ready(function() {
       videoReader.readAsArrayBuffer(vidSlice);
     }
   });
+
+  $('#uploadModal').on('change', '.presentationContainer input[type=file]', function(e) {
+    if(this.files.length === 0) {
+       return;
+    }
+
+    var file = this.files[0];
+    if (file.type.indexOf("video") === -1) {
+       $(this).parent().attr('data-title', 'Please provide a file of video type');
+       $(this).val('');
+       $(this).parent().prev()[0].checked = false;
+       return;
+    }
+
+    var fileName = this.files[0].name;
+    $(this).parent().prev()[0].checked = true;
+    $(this).parent().attr('data-title', fileName);
+    $(this).parent().siblings('.presentationPreview').find('img').removeAttr('src');
+
+    var self = this;
+    if (file.type.indexOf('video') > -1) {
+         var vidPreview = document.createElement('video');
+         var canvas = document.createElement('canvas');
+         vidPreview.muted = true;
+         var videoReader = new FileReader();
+
+         videoReader.onload = function() {
+         var previewBlob = new Blob([videoReader.result],  {type: file.type});
+         $(self).parent().siblings('.presentationPreview').attr('data-previewerror', 'Preview Unavailable');
+         vidPreview.onloadeddata = function() {
+            this.currentTime = this.seekable.end(0) === Infinity ? 10 : this.seekable.end(0);
+         };
+         vidPreview.ontimeupdate = function() {
+             canvas.width = this.videoWidth;
+             canvas.height = this.videoHeight;
+             canvas.getContext('2d').drawImage(vidPreview, 0, 0, canvas.width, canvas.height);
+             var img = new Image();
+             img.onload = function() {
+                 $(self).parent().siblings('.presentationPreview').find('img').attr('src', img.src);
+                 $(self).parent().siblings('.presentationPreview').removeAttr('data-previewerror');
+                 img = null;
+                 canvas = null;
+                 videoPreview = null;
+                 videoReader = null;
+                 previewBlob = null;
+             }
+             img.src = canvas.toDataURL();
+           }
+           vidPreview.src = URL.createObjectURL(previewBlob);
+         };
+
+         var vidSlice = file.slice(0, Math.min(file.size, 10000000));
+         videoReader.readAsArrayBuffer(vidSlice);
+    }
+
+  });
+
   $('.filePopulated').on('change', function(e) {
     if (!this.checked) {
       $(this).next().find('input[type=file]').val('');
@@ -2411,7 +2473,8 @@ $(document).ready(function() {
   });
   $('#uploadModal').on('shown.bs.modal', function(e) {
     if (!$('#uploadModal input[type=file]')) {
-      $('.fileContainer').attr('data-title', 'Choose video or audio');
+      $('.fileContainer').attr('data-title', 'Choose a presenter video or audio');
+      $('.presentationContainer').attr('data-title', 'Choose a presentation video');
     }
     if (!$('#uploadModal input[name=start_date]').val()) {
       $('#uploadModal input[name=start_date]').val(moment().format('YYYY-MM-DD'));
@@ -2424,8 +2487,10 @@ $(document).ready(function() {
     }
   });
   $('#uploadModal').on('hidden.bs.modal', function () {
-    $('.fileContainer').attr('data-title', 'Choose video or audio');
+    $('.fileContainer').attr('data-title', 'Choose a presenter video or audio');
+    $('.presentationContainer').attr('data-title', 'Choose a presentation video');
     $('.videoPreview').find('img').removeAttr('src');
+    $('.presentationPreview').find('img').removeAttr('src');
   });
   $('#editPublishedModal').on('show.bs.modal', function(e) {
     var triggerElement = $(e.relatedTarget),
