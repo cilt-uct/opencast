@@ -499,13 +499,13 @@ EventManager.prototype = {
   },
   checkConflictsViaAdmin: function(data, isOnTheFly, doReturnId) {
     return $.Deferred(function(d) {
-      if (data.hasOwnProperty('presenter') && data.presenter instanceof File) {
+      if ((data.hasOwnProperty('presenter') && data.presenter instanceof File) || (data.hasOwnProperty('presentation') && data.presentation instanceof File)) {
         d.resolve();
         return;
       }
       if (!data || (!data.location && !data.device && !data.ca_name) || (!data.start_date && !data.start)) {
         if (!isOnTheFly) {
-          d.reject({error: "Location or start date not set"});
+          d.reject({error: "Location or start date not set, or no file uploaded"});
         }
         else {
           d.resolve();
@@ -744,7 +744,7 @@ EventManager.prototype = {
                     cache: false,
             };
             var payload;
-            var isUpload = (!!data.presenter && data.presenter instanceof File);
+            var isUpload = ((!!data.presenter && data.presenter instanceof File) || (!!data.presentation && data.presentation instanceof File));
 
             try {
               payload = this.createPayload(data, isUpload);
@@ -757,6 +757,9 @@ EventManager.prototype = {
 
             if (isUpload) {
               fd.append('track_presenter.0', data.presenter);
+              if (data.presentation && data.presentation instanceof File) {
+                fd.append('track_presentation.0', data.presentation);
+              }
               ajaxOpts.xhr = this.uploadProgress.bind(this);
             }
             $.ajax(ajaxOpts)
@@ -1042,14 +1045,14 @@ EventManager.prototype = {
   },
   createPayload: function(data, isUpload) {
     try {
-      if (data.presenter && !(data.presenter instanceof File)) {
+      if ((data.presenter && !(data.presenter instanceof File)) || (data.presentation && !(data.presentation instanceof File))) {
         throw new Error('Please add a file for upload prior to submission');
       }
-      else if (!data.presenter && ((!data.location && !data.ca_name) || !data.start_date)) {
+      else if (!data.presenter && !data.presentation && ((!data.location && !data.ca_name) || !data.start_date)) {
         throw new Error('Please complete form fully prior to submission');
       }
 
-      var isUpload = !!data.presenter;
+      var isUpload = !!data.presenter || !!data.presentation;
 
       var payload = {
         processing: this.getProcessing(data, isUpload),
@@ -1075,6 +1078,9 @@ EventManager.prototype = {
     };
     if (isUpload && data.hasSlides) {
       processing.configuration.hasSlides = "true";
+    }
+    if (data.presentation && data.presentation instanceof File) {
+      processing.configuration.hasPresentation = "true";
     }
     if (isUpload && !data.doCaptioning) {
       processing.configuration.doCaptioning = "false";
