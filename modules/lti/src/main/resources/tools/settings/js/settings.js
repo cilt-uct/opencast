@@ -60,20 +60,23 @@ $(document).ready(function(){
 
       var metadata = JSON.stringify(updatedMetadata);
       fd.append("metadata",metadata);
-      var url = "/api/series/" + seriesID;
 
-      $.ajax({
-          type: "PUT",
-          url: url,
-          processData: false,
-          contentType: false,
-          data: fd,
-          dataType: "json"
-      }).done(function (data) {
-         return data;
-      }).fail(function (error) {
-          return error;
-      });
+      updateSeriesMetadata(fd);
+    });
+
+
+    $("#series_retention").change(function(e){
+        e.preventDefault();
+        var retention = $('#series_retention').val();
+        var fd;
+        fd = new FormData();
+        const newExt = ext.map(obj => obj.id === "retention-cycle" ? { ...obj, value: retention } : obj)
+        const updatedMetadata = seriesInfo.map(obj => obj.flavor === "ext/series" ? { ...obj, fields: newExt} : obj)
+
+        var metadata = JSON.stringify(updatedMetadata);
+        fd.append("metadata",metadata);
+
+        updateSeriesMetadata(fd);
     });
 });
 
@@ -88,4 +91,21 @@ function getSeries(url) {
            return data;
         }
     }).responseText);
+}
+
+function updateSeriesMetadata(fd) {
+    var url = "/api/series/" + seriesID;
+
+    $.ajax({
+        type: "PUT",
+        url: url,
+        processData: false,
+        contentType: false,
+        data: fd,
+        dataType: "json"
+    }).done(function (data) {
+        return data;
+    }).fail(function (error) {
+        return error;
+    });
 }
