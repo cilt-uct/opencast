@@ -519,7 +519,7 @@ module.exports = function (grunt) {
     'postcss',
     'connect:test',
     'htmlvalidate',
-    'karma',
+//    'karma',
     'newer:jshint'
   ]);
 
