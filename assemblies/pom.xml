@@ -126,10 +126,10 @@
             <execution>
               <phase>prepare-package</phase>
               <configuration>
-		<target>
-		  <ant antfile="../resources/build.xml">
-		    <target name="basic configuration"/>
-                  </ant>
+                <target>
+                   <ant antfile="../resources/build.xml">
+                     <target name="basic configuration"/>
+                   </ant>
                 </target>
               </configuration>
               <goals>
