@@ -25,7 +25,7 @@
     <commons-fileupload.version>1.4</commons-fileupload.version>
     <commons-lang3.version>3.8.1</commons-lang3.version>
     <commons-text.version>1.7</commons-text.version>
-    <cxf.version>3.4.3</cxf.version>
+    <cxf.version>3.2.6</cxf.version>
     <eclipselink.version>2.7.3</eclipselink.version>
     <functional.version>1.4.2</functional.version>
     <guava.version>24.1.1-jre</guava.version>
