@@ -24,22 +24,14 @@ package org.opencastproject.ingest.scanner;
 
 import static org.opencastproject.security.util.SecurityUtil.getUserAndOrganization;
 import static org.opencastproject.util.data.Collections.dict;
-import static org.opencastproject.util.data.Option.none;
-import static org.opencastproject.util.data.Option.some;
 import static org.opencastproject.util.data.Tuple.tuple;
 
 import org.opencastproject.ingest.api.IngestService;
-import org.opencastproject.security.api.Organization;
 import org.opencastproject.security.api.OrganizationDirectoryService;
 import org.opencastproject.security.api.SecurityService;
-import org.opencastproject.security.api.User;
 import org.opencastproject.security.api.UserDirectoryService;
 import org.opencastproject.security.util.SecurityContext;
 import org.opencastproject.series.api.SeriesService;
-import org.opencastproject.util.data.Effect;
-import org.opencastproject.util.data.Function;
-import org.opencastproject.util.data.Option;
-import org.opencastproject.util.data.Tuple;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -61,11 +53,14 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
+import java.time.format.DateTimeFormatter;
 import java.util.Dictionary;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
+import java.util.regex.Pattern;
 
 /**
  * The inbox scanner monitors a directory for incoming media packages.
@@ -75,7 +70,7 @@ import java.util.Objects;
  * can be arbitrarily chosen and has no further meaning. <code>inbox-scanned-pid</code> must confirm to the PID given to
  * the InboxScanner in the declarative service (DS) configuration <code>OSGI-INF/inbox-scanner-service.xml</code>.
  *
- * <h3>Implementation notes</h3>
+ * <h2>Implementation notes</h2>
  * Monitoring leverages Apache FileInstall by implementing {@link ArtifactInstaller}.
  *
  * @see Ingestor
@@ -122,6 +117,9 @@ public class InboxScannerService implements ArtifactInstaller, ManagedService {
   public static final String INBOX_TRIES = "inbox.tries";
   public static final String INBOX_TRIES_BETWEEN_SEC = "inbox.tries.between.sec";
 
+  public static final String INBOX_METADATA_REGEX = "inbox.metadata.regex";
+  public static final String INBOX_DATETIME_FORMAT = "inbox.datetime.format";
+
   private IngestService ingestService;
   private SecurityService securityService;
   private UserDirectoryService userDir;
@@ -130,8 +128,8 @@ public class InboxScannerService implements ArtifactInstaller, ManagedService {
 
   private ComponentContext cc;
 
-  private volatile Option<Ingestor> ingestor = none();
-  private volatile Option<Configuration> fileInstallCfg = none();
+  private volatile Ingestor ingestor = null;
+  private volatile Configuration fileInstallCfg = null;
 
   /** OSGi callback. */
   // synchronized with updated(Dictionary)
@@ -143,7 +141,7 @@ public class InboxScannerService implements ArtifactInstaller, ManagedService {
   /** OSGi callback. */
   @Deactivate
   public void deactivate() {
-    fileInstallCfg.foreach(removeFileInstallCfg);
+    removeFileInstallCfg();
   }
 
   // synchronized with activate(ComponentContext)
@@ -179,35 +177,51 @@ public class InboxScannerService implements ArtifactInstaller, ManagedService {
     final int maxThreads = NumberUtils.toInt(Objects.toString(properties.get(INBOX_THREADS), "1"));
     final int maxTries = NumberUtils.toInt(Objects.toString(properties.get(INBOX_TRIES), "3"));
     final int secondsBetweenTries = NumberUtils.toInt(Objects.toString(properties.get(INBOX_TRIES_BETWEEN_SEC), "300"));
-    final Option<SecurityContext> secCtx = getUserAndOrganization(securityService, orgDir, orgId, userDir, userId)
-            .bind(new Function<Tuple<User, Organization>, Option<SecurityContext>>() {
-              @Override
-              public Option<SecurityContext> apply(Tuple<User, Organization> a) {
-                return some(new SecurityContext(securityService, a.getB(), a.getA()));
-              }
-            });
-    // Only setup new inbox if security context could be aquired
-    if (secCtx.isSome()) {
-      // remove old file install configuration
-      fileInstallCfg.foreach(removeFileInstallCfg);
-      // set up new file install config
-      fileInstallCfg = some(configureFileInstall(cc.getBundleContext(), inbox, interval));
-      // create new scanner
-      Ingestor ingestor = new Ingestor(ingestService, secCtx.get(), workflowDefinition,
-              workflowConfig, mediaFlavor, inbox, maxThreads, seriesService, maxTries, secondsBetweenTries);
-      this.ingestor = some(ingestor);
-      new Thread(ingestor).start();
-      logger.info("Now watching inbox {}", inbox.getAbsolutePath());
-    } else {
-      logger.warn("Cannot create security context for user {}, organization {}. "
-              + "Either the organization or the user does not exist", userId, orgId);
+
+    // Metadata parsing configuration
+    var metadataPattern = Optional.ofNullable(properties.get(INBOX_METADATA_REGEX))
+            .map(Objects::toString)
+            .map(Pattern::compile);
+    var dateFormatter = Optional.ofNullable(properties.get(INBOX_DATETIME_FORMAT))
+            .map(Objects::toString)
+            .map(DateTimeFormatter::ofPattern)
+            .orElse(DateTimeFormatter.ISO_DATE_TIME);
+
+
+    var securityContext = getUserAndOrganization(securityService, orgDir, orgId, userDir, userId)
+            .map(a -> new SecurityContext(securityService, a.getB(), a.getA()));
+    while (securityContext.isEmpty()) {
+      logger.debug("Could not create security context for user {}, organization {}. "
+              + "Either the organization or the user does not exist (yet).", userId, orgId);
+        try {
+          Thread.sleep(5000);
+        } catch (InterruptedException e) {
+          return;
+        }
+      securityContext = getUserAndOrganization(securityService, orgDir, orgId, userDir, userId)
+              .map(a -> new SecurityContext(securityService, a.getB(), a.getA()));
     }
+
+    // remove old file install configuration
+    removeFileInstallCfg();
+    // set up new file install config
+    fileInstallCfg = configureFileInstall(cc.getBundleContext(), inbox, interval);
+    // create new scanner
+    this.ingestor = new Ingestor(ingestService, securityContext.get(), workflowDefinition,
+            workflowConfig, mediaFlavor, inbox, maxThreads, seriesService, maxTries, secondsBetweenTries,
+            metadataPattern, dateFormatter);
+    new Thread(ingestor).start();
+    logger.info("Now watching inbox {}", inbox.getAbsolutePath());
   }
 
-  private static final Effect<Configuration> removeFileInstallCfg = new Effect.X<Configuration>() {
-    @Override
-    protected void xrun(Configuration cfg) throws Exception {
-      cfg.delete();
+  private void removeFileInstallCfg() {
+    if (fileInstallCfg != null) {
+      try {
+        fileInstallCfg.delete();
+      } catch (IOException e) {
+        logger.error("Failed to delete file install configuration", e);
+      }
+      fileInstallCfg = null;
     }
   };
 
@@ -246,23 +260,15 @@ public class InboxScannerService implements ArtifactInstaller, ManagedService {
   // are not set yet.
   @Override
   public boolean canHandle(final File artifact) {
-    return ingestor.fmap(new Function<Ingestor, Boolean>() {
-      @Override
-      public Boolean apply(Ingestor ingestor) {
-        return ingestor.canHandle(artifact);
-      }
-    }).getOrElse(false);
+    return ingestor != null && ingestor.canHandle(artifact);
   }
 
   @Override
   public void install(final File artifact) throws Exception {
-    logger.trace("install(): {}", artifact.getName());
-    ingestor.foreach(new Effect<Ingestor>() {
-      @Override
-      protected void run(Ingestor ingestor) {
-        ingestor.ingest(artifact);
-      }
-    });
+    if (ingestor != null) {
+      logger.trace("install(): {}", artifact.getName());
+      ingestor.ingest(artifact);
+    }
   }
 
   @Override
@@ -272,13 +278,10 @@ public class InboxScannerService implements ArtifactInstaller, ManagedService {
 
   @Override
   public void uninstall(File artifact) {
-    logger.trace("uninstall(): {}", artifact.getName());
-    ingestor.foreach(new Effect<Ingestor>() {
-      @Override
-      protected void run(Ingestor ingestor) {
-        ingestor.cleanup(artifact);
-      }
-    });
+    if (ingestor != null) {
+      logger.trace("uninstall(): {}", artifact.getName());
+      ingestor.cleanup(artifact);
+    }
   }
 
   // --

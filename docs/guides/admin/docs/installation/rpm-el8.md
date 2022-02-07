@@ -7,10 +7,6 @@ This guide is based on an RPM software repository available for Red Hat-based Li
 University](https://uni-osnabrueck.de). This repository provides preconfigured Opencast installations and all necessary
 3rd-party-tools.
 
-<div class=warn>
-  <b>Opencast {{ opencast_major_version() }}</b> is not yet available.
-</div>
-
 > In addition to this guide, we have also recorded [a full installation done in 30 minutes](https://vt.uos.de/71hfc)
 > if you like to see how this works before you try it yourself.
 
@@ -105,7 +101,7 @@ dnf install elasticsearch-oss
 Opencast automatically configures the search index once it is connected.
 The default configuration will work for a local Elasticsearch with no modifications.
 The only exception for this is to add a configuration to mitigate Log4Shell.
-For this, add a file `/etc/elasticsearch/jvm.options.d/log4shell` with the content:
+For this, add a file `/etc/elasticsearch/jvm.options.d/log4shell.options` with the content:
 
 ```
 -Dlog4j2.formatMsgNoLookups=true

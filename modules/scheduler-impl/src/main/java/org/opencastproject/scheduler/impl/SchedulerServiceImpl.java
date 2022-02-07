@@ -668,8 +668,6 @@ public class SchedulerServiceImpl extends AbstractIndexProducer implements Sched
       Date start = extendedEventDto.getStartDate();
       Date end = extendedEventDto.getEndDate();
 
-      verifyActive(mpId, end);
-
       if ((startDateTime.isSome() || endDateTime.isSome()) && endDateTime.getOr(end).before(startDateTime.getOr(start)))
         throw new SchedulerException("The end date is before the start date");
 
@@ -825,19 +823,6 @@ public class SchedulerServiceImpl extends AbstractIndexProducer implements Sched
       return Opt.some(DublinCores.read(inputStream));
     } finally {
       IOUtils.closeQuietly(inputStream);
-    }
-  }
-
-  private void verifyActive(String eventId, Date end) throws SchedulerException {
-    if (end == null) {
-      throw new IllegalArgumentException("Start and/or end date for event ID " + eventId + " is not set");
-    }
-    // TODO: Assumption of no TimeZone adjustment because catalog temporal is local to server
-    if (new Date().after(end)) {
-      logger.info("Event ID {} has already ended as its end time was {} and current time is {}", eventId,
-          DateTimeSupport.toUTC(end.getTime()), DateTimeSupport.toUTC(new Date().getTime()));
-      throw new SchedulerException("Event ID " + eventId + " has already ended at "
-              + DateTimeSupport.toUTC(end.getTime()) + " and now is " + DateTimeSupport.toUTC(new Date().getTime()));
     }
   }
 
@@ -1030,12 +1015,14 @@ public class SchedulerServiceImpl extends AbstractIndexProducer implements Sched
     try {
       final Organization organization = securityService.getOrganization();
       final User user = SecurityUtil.createSystemUser(systemUserName, organization);
-      List<MediaPackage> conflictingEvents = new ArrayList();
+      List<MediaPackage> conflictingEvents = new ArrayList<>();
 
       SecurityUtil.runAs(securityService, organization, user, () -> {
         try {
-          conflictingEvents.addAll(persistence.getEvents(captureDeviceID, startDate, endDate, Util.EVENT_MINIMUM_SEPARATION_MILLISECONDS)
-            .stream().map(this::getEventMediaPackage).collect(Collectors.toList()));
+          persistence.getEvents(captureDeviceID, startDate, endDate, Util.EVENT_MINIMUM_SEPARATION_MILLISECONDS)
+                  .stream()
+                  .map(id -> getEventMediaPackage(id, false))
+                  .forEach(conflictingEvents::add);
         } catch (SchedulerServiceDatabaseException e) {
           logger.error("Failed to get conflicting events", e);
         }
@@ -1582,17 +1569,24 @@ public class SchedulerServiceImpl extends AbstractIndexProducer implements Sched
     return wfPropertiesString.toString();
   }
 
-  private MediaPackage getEventMediaPackage(String mediaPackageId) {
+  private MediaPackage getEventMediaPackage(final String mediaPackageId, boolean checkOwner) {
     AQueryBuilder query = assetManager.createQuery();
-    AResult result = query.select(query.snapshot())
-            .where(withOrganization(query).and(query.mediaPackageId(mediaPackageId)).and(withOwner(query))
-            .and(query.version().isLatest()))
-            .run();
-    Opt<ARecord> record = result.getRecords().head();
+    var predicate = withOrganization(query)
+            .and(query.mediaPackageId(mediaPackageId))
+            .and(query.version().isLatest());
+    if (checkOwner) {
+      predicate = predicate.and(withOwner(query));
+    }
+
+    Opt<ARecord> record = query.select(query.snapshot()).where(predicate).run().getRecords().head();
     if (record.isNone())
       throw new RuntimeNotFoundException(new NotFoundException());
 
     return record.bind(recordToMp).get();
+  }
+
+  private MediaPackage getEventMediaPackage(final String mediaPackageId) {
+    return getEventMediaPackage(mediaPackageId, true);
   }
 
   /**

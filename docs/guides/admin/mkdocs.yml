@@ -76,7 +76,7 @@ nav:
    - Inbox: 'configuration/inbox.md'
    - List Providers: 'configuration/listproviders.md'
    - Load: 'configuration/load.md'
-   - Log: 'configuration/log.md'
+   - Logging: 'configuration/log.md'
    - User Statistics and Privacy Configuration: 'configuration/user-statistics.and.privacy.md'
    - Multi Tenancy: 'configuration/multi.tenancy.md'
    - Authentication, Authorization and User Management:
@@ -236,6 +236,7 @@ nav:
    - Send Email: 'workflowoperationhandlers/send-email-woh.md'
    - Series: 'workflowoperationhandlers/series-woh.md'
    - Silence: 'workflowoperationhandlers/silence-woh.md'
+   - Speech to Text: 'workflowoperationhandlers/speech-to-text-woh.md'
    - Start Watson Transcription: 'workflowoperationhandlers/start-watson-transcription-woh.md'
    - Start Workflow: 'workflowoperationhandlers/start-workflow-woh.md'
    - Statistics Writer: 'workflowoperationhandlers/statistics-writer.md'
