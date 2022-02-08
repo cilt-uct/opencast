@@ -70,5 +70,10 @@
       description="Tagging transcoded and trimmed presentation video as source and for archive">
       <configurations>
         <configuration key="source-flavors">presentation/source+trimmed</configuration>
+        <configuration key="target-flavor">presentation/source</configuration>
+        <configuration key="target-tags">archive</configuration>
+      </configurations>
+    </operation>
+
   </operations>
 </definition>

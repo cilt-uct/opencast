@@ -114,8 +114,6 @@ custom parameters to be defined globally.
 
 For more information about how to set custom LTI parameters, please check the documentation of your LMS.
 
-LTI Deep Linking integration
------------------------------
 
 ### Customizing LTI’s look
 

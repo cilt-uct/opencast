@@ -710,7 +710,7 @@ public class SolrIndexManager {
 
     for (AccessControlEntry entry : acl.getEntries()) {
       if (!entry.isAllow()) {
-        logger.debug("Search service does not support denial via ACL, ignoring {}", entry);
+        logger.warn("Search service does not support denial via ACL, ignoring {}", entry);
         continue;
       }
       List<String> actionPermissions = permissions.get(entry.getAction());
