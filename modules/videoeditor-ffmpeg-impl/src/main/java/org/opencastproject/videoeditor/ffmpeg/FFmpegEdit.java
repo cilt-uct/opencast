@@ -54,7 +54,6 @@ public class FFmpegEdit {
   private static final String CONFIG_FFMPEG_PATH = "org.opencastproject.composer.ffmpeg.path";
 
   private static final String DEFAULT_FFMPEG_PROPERTIES = "-strict -2 -preset faster -crf 18";
-  public static final String DEFAULT_OUTPUT_FILE_EXTENSION = ".mp4";
   private static final String DEFAULT_AUDIO_FADE = "2.0";
   private static final String DEFAULT_VIDEO_FADE = "2.0";
   private static String binary = FFMPEG_BINARY_DEFAULT;
@@ -74,8 +73,7 @@ public class FFmpegEdit {
     }
   }
 
-  public FFmpegEdit()
-  {
+  public FFmpegEdit() {
     this.afade = Float.parseFloat(DEFAULT_AUDIO_FADE);
     this.vfade = Float.parseFloat(DEFAULT_VIDEO_FADE);
     this.ffmpegProperties = DEFAULT_FFMPEG_PROPERTIES;
@@ -84,8 +82,7 @@ public class FFmpegEdit {
   /*
    * Init with properties
    */
-  public FFmpegEdit(Properties properties)
-  {
+  public FFmpegEdit(Properties properties) {
     String fade = properties.getProperty(VideoEditorProperties.AUDIO_FADE, DEFAULT_AUDIO_FADE);
     try {
       this.afade = Float.parseFloat(fade);
@@ -134,8 +131,9 @@ public class FFmpegEdit {
       String line;
       int n = 5;
       while ((line = in.readLine()) != null) {
-        if (n-- > 0)
+        if (n-- > 0) {
           logger.info(line);
+        }
       }
 
       // wait until the task is finished

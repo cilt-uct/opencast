@@ -24,8 +24,8 @@ package org.opencastproject.workflow.handler.distribution;
 import static org.opencastproject.workflow.handler.distribution.EngagePublicationChannel.CHANNEL_ID;
 
 import org.opencastproject.distribution.api.DistributionException;
-import org.opencastproject.distribution.api.DistributionService;
 import org.opencastproject.distribution.api.DownloadDistributionService;
+import org.opencastproject.distribution.api.StreamingDistributionService;
 import org.opencastproject.job.api.Job;
 import org.opencastproject.job.api.JobContext;
 import org.opencastproject.mediapackage.MediaPackage;
@@ -40,8 +40,6 @@ import org.opencastproject.workflow.api.WorkflowOperationException;
 import org.opencastproject.workflow.api.WorkflowOperationResult;
 import org.opencastproject.workflow.api.WorkflowOperationResult.Action;
 
-import org.apache.commons.lang3.StringUtils;
-import org.osgi.framework.BundleContext;
 import org.osgi.service.component.ComponentContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -59,11 +57,8 @@ public class RetractEngageWorkflowOperationHandler extends AbstractWorkflowOpera
   /** The logging facility */
   private static final Logger logger = LoggerFactory.getLogger(RetractEngageWorkflowOperationHandler.class);
 
-  /** Configuration property id */
-  private static final String STREAMING_URL_PROPERTY = "org.opencastproject.streaming.url";
-
   /** The streaming distribution service */
-  protected DistributionService streamingDistributionService = null;
+  protected StreamingDistributionService streamingDistributionService = null;
 
   /** The download distribution service */
   protected DownloadDistributionService downloadDistributionService = null;
@@ -71,16 +66,13 @@ public class RetractEngageWorkflowOperationHandler extends AbstractWorkflowOpera
   /** The search service */
   protected SearchService searchService = null;
 
-  /** Whether to distribute to streaming server */
-  private boolean distributeStreaming = false;
-
   /**
    * Callback for the OSGi declarative services configuration.
    *
    * @param streamingDistributionService
    *          the streaming distribution service
    */
-  protected void setStreamingDistributionService(DistributionService streamingDistributionService) {
+  protected void setStreamingDistributionService(StreamingDistributionService streamingDistributionService) {
     this.streamingDistributionService = streamingDistributionService;
   }
 
@@ -105,19 +97,9 @@ public class RetractEngageWorkflowOperationHandler extends AbstractWorkflowOpera
     this.searchService = searchService;
   }
 
-  /**
-   * {@inheritDoc}
-   *
-   * @see org.opencastproject.workflow.api.AbstractWorkflowOperationHandler#activate(org.osgi.service.component.ComponentContext)
-   */
   @Override
   protected void activate(ComponentContext cc) {
     super.activate(cc);
-    BundleContext bundleContext = cc.getBundleContext();
-
-    if (StringUtils.isNotBlank(bundleContext.getProperty(STREAMING_URL_PROPERTY))) {
-      distributeStreaming = true;
-    }
   }
 
   /**
@@ -131,19 +113,18 @@ public class RetractEngageWorkflowOperationHandler extends AbstractWorkflowOpera
           DistributionException {
     List<Job> jobs = new ArrayList<Job>();
     if (retractElementIds.size() > 0) {
-      Job retractDownloadDistributionJob = downloadDistributionService.retract(CHANNEL_ID, searchMediaPackage, retractElementIds);
+      Job retractDownloadDistributionJob
+          = downloadDistributionService.retract(CHANNEL_ID, searchMediaPackage, retractElementIds);
       if (retractDownloadDistributionJob != null) {
         jobs.add(retractDownloadDistributionJob);
       }
     }
-    if (distributeStreaming) {
+    if (streamingDistributionService != null && streamingDistributionService.publishToStreaming()) {
       for (MediaPackageElement element : searchMediaPackage.getElements()) {
-        if (distributeStreaming) {
-          Job retractStreamingJob = streamingDistributionService.retract(CHANNEL_ID, searchMediaPackage,
-                  element.getIdentifier());
-          if (retractStreamingJob != null) {
-            jobs.add(retractStreamingJob);
-          }
+        Job retractStreamingJob = streamingDistributionService.retract(CHANNEL_ID, searchMediaPackage,
+                element.getIdentifier());
+        if (retractStreamingJob != null) {
+          jobs.add(retractStreamingJob);
         }
       }
     }
@@ -189,8 +170,9 @@ public class RetractEngageWorkflowOperationHandler extends AbstractWorkflowOpera
 
       logger.info("Removing media package {} from the search index", mediaPackage);
       Job deleteFromSearch = searchService.delete(mediaPackage.getIdentifier().toString());
-      if (!waitForStatus(deleteFromSearch).isSuccess())
+      if (!waitForStatus(deleteFromSearch).isSuccess()) {
         throw new WorkflowOperationException("Removing media package from search did not complete successfully");
+      }
 
       logger.debug("Remove from search operation complete");
 

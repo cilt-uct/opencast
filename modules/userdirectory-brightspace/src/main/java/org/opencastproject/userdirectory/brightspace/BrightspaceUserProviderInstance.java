@@ -65,7 +65,6 @@ import javax.management.ObjectName;
 public class BrightspaceUserProviderInstance implements UserProvider, RoleProvider, CachingUserProviderMXBean {
 
   private static final Logger logger = LoggerFactory.getLogger(BrightspaceUserProviderInstance.class);
-  private static final String PROVIDER_NAME = "brightspace";
 
   private String pid;
   private BrightspaceClient client;
@@ -113,8 +112,9 @@ public class BrightspaceUserProviderInstance implements UserProvider, RoleProvid
 
   @Override
   public float getCacheHitRatio() {
-    if (loadUserRequests.get() == 0)
+    if (loadUserRequests.get() == 0) {
       return 0;
+    }
     return (float) (loadUserRequests.get() - brightspaceWebServiceRequests.get()) / loadUserRequests.get();
   }
 

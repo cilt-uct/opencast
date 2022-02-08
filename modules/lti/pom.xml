@@ -7,7 +7,7 @@
   <parent>
     <groupId>org.opencastproject</groupId>
     <artifactId>base</artifactId>
-    <version>8-SNAPSHOT</version>
+    <version>11-SNAPSHOT</version>
     <relativePath>../../pom.xml</relativePath>
   </parent>
   <properties>
@@ -42,17 +42,35 @@
       <scope>provided</scope>
     </dependency>
     <dependency>
-      <groupId>org.osgi</groupId>
-      <artifactId>org.osgi.compendium</artifactId>
+      <groupId>com.google.code.gson</groupId>
+      <artifactId>gson</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.opencastproject</groupId>
+      <artifactId>opencast-lti-service-api</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.opencastproject</groupId>
+      <artifactId>opencast-common</artifactId>
+      <version>${project.version}</version>
       <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>commons-fileupload</groupId>
+      <artifactId>commons-fileupload</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.googlecode.json-simple</groupId>
+      <artifactId>json-simple</artifactId>
     </dependency>
     <dependency>
       <groupId>com.google.code.gson</groupId>
       <artifactId>gson</artifactId>
     </dependency>
     <dependency>
-      <groupId>org.apache.commons</groupId>
-      <artifactId>commons-lang3</artifactId>
+      <groupId>jakarta.ws.rs</groupId>
+      <artifactId>jakarta.ws.rs-api</artifactId>
     </dependency>
   </dependencies>
 
@@ -66,7 +84,7 @@
             <artifactId>exec-maven-plugin</artifactId>
             <!--executions>
               <execution>
-                <id>npm install</id>
+                <id>npm ci</id>
                 <goals>
                   <goal>exec</goal>
                 </goals>
@@ -74,7 +92,7 @@
                 <configuration>
                   <executable>npm</executable>
                   <arguments>
-                    <argument>install</argument>
+                    <argument>ci</argument>
                   </arguments>
                 </configuration>
               </execution>
@@ -149,23 +167,22 @@
                 </goals>
                 <configuration>
                   <nodeVersion>${node.version}</nodeVersion>
-                  <npmVersion>${npm.version}</npmVersion>
                 </configuration>
               </execution>
 
               <execution>
                 <phase>validate</phase>
-                <id>npm install</id>
+                <id>npm ci</id>
                 <goals>
                   <goal>npm</goal>
                 </goals>
                 <configuration>
-                  <arguments>install</arguments>
+                  <arguments>ci</arguments>
                 </configuration>
               </execution>
 
               <execution>
-                <phase>compile</phase>
+                <phase>initialize</phase>
                 <id>i18n</id>
                 <goals>
                   <goal>npm</goal>
@@ -175,27 +192,16 @@
                 </configuration>
               </execution>
 
-<!--              <execution>-->
-<!--                <phase>test</phase>-->
-<!--                <id>eslint</id>-->
-<!--                <goals>-->
-<!--                  <goal>npm</goal>-->
-<!--                </goals>-->
-<!--                <configuration>-->
-<!--                  <arguments>run eslint</arguments>-->
-<!--                </configuration>-->
-<!--              </execution>-->
-
-<!--              <execution>-->
-<!--                <phase>test</phase>-->
-<!--                <id>html-linter</id>-->
-<!--                <goals>-->
-<!--                  <goal>npm</goal>-->
-<!--                </goals>-->
-<!--                <configuration>-->
-<!--                  <arguments>run html-linter</arguments>-->
-<!--                </configuration>-->
-<!--              </execution>-->
+              <execution>
+                <phase>initialize</phase>
+                <id>npm run build</id>
+                <goals>
+                  <goal>npm</goal>
+                </goals>
+                <configuration>
+                  <arguments>run build</arguments>
+                </configuration>
+              </execution>
             </executions>
           </plugin>
         </plugins>
@@ -217,23 +223,10 @@
               <goal>copy-resources</goal>
             </goals>
             <configuration>
-              <outputDirectory>${basedir}/target/classes/tools/lib/</outputDirectory>
+              <outputDirectory>${basedir}/target/classes/tools</outputDirectory>
               <resources>
                 <resource>
-                  <directory>node_modules/</directory>
-                  <includes>
-                    <include>font-awesome/css/font-awesome.min.css</include>
-                    <include>font-awesome/fonts/**</include>
-                    <include>jquery/dist/jquery.min.js</include>
-                    <include>mustache/mustache.min.js</include>
-                    <include>paginationjs/dist/pagination.css</include>
-                    <include>paginationjs/dist/pagination.min.js</include>
-                    <include>vue/dist/vue.js</include>
-                    <include>vue/dist/vue.min.js</include>
-                    <include>bootstrap/dist/css/bootstrap.min.css</include>
-                    <include>bootstrap/dist/js/bootstrap.min.js</include>
-                    <include>axios/dist/axios.min.js</include>
-                  </includes>
+                  <directory>build/</directory>
                   <filtering>false</filtering>
                 </resource>
               </resources>
@@ -271,7 +264,8 @@
               org.opencastproject.lti;version=${project.version}
             </Export-Package>
             <Service-Component>
-              OSGI-INF/opencast-lti.xml
+              OSGI-INF/opencast-lti.xml,
+              OSGI-INF/opencast-lti-service-gui-endpoint.xml
             </Service-Component>
             <Private-Package>tools.*</Private-Package>
             <Http-Alias>/ltitools</Http-Alias>

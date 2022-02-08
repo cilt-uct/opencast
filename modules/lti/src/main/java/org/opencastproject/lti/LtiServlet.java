@@ -41,6 +41,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Dictionary;
 import java.util.HashMap;
@@ -157,29 +158,19 @@ public class LtiServlet extends HttpServlet implements ManagedService {
     String messageType = StringUtils.trimToEmpty(req.getParameter(BasicLTIConstants.LTI_MESSAGE_TYPE));
 
     // The URL of the LTI tool. If no specific tool is passed we use the test tool
-    UriBuilder builder = null;
+    UriBuilder builder;
     try {
-      // If a content item request, use the dl_tool instead of tool so that we can
-      // return a custom tool param in the result later
-      logger.debug("Received '{}' LTI message type", messageType);
+      String customTool = URLDecoder
+              .decode(StringUtils.trimToEmpty(req.getParameter(LTI_CUSTOM_TOOL)), StandardCharsets.UTF_8.displayName());
+      customTool = customTool.replaceAll(
+          "/?ltitools/(?<tool>[^/]*)/index.html\\??",
+          "/ltitools/index.html?subtool=${tool}&"
+      );
+      URI toolUri = new URI(customTool);
 
-      URI toolUri;
-      if (messageType.equals(BasicLTIConstants.LTI_MESSAGE_TYPE_CONTENTITEMSELECTIONREQUEST)) {
-        toolUri = new URI(URLDecoder.decode(StringUtils.trimToEmpty(
-                req.getParameter(CUSTOM_DL_TOOL)), "UTF-8"));
-      } else if (req.getRequestURI().startsWith("/lti/player/")) {
-        String mpID = req.getRequestURI().replace("/lti/player/", "");
-        String redirectUrl = "/engage/theodul/ui/core.html?id=" + mpID + "&ltimode=true";
-        logger.debug("Received LTI content play request for {}: redirecting to {}", mpID, redirectUrl);
-        resp.sendRedirect(redirectUrl);
-        return;
-      } else {
-        toolUri = new URI(URLDecoder.decode(StringUtils.trimToEmpty(
-                req.getParameter(CUSTOM_TOOL)), "UTF-8"));
-      }
-
-      if (toolUri.getPath().isEmpty())
+      if (toolUri.getPath().isEmpty()) {
         throw new URISyntaxException(toolUri.toString(), "Provided 'custom_tool' has an empty path");
+      }
 
       // Make sure that the URI path starts with '/'. Otherwise, UriBuilder handles URIs incorrectly
       if (!toolUri.isOpaque() && !toolUri.getPath().startsWith("/")) {
@@ -205,19 +196,17 @@ public class LtiServlet extends HttpServlet implements ManagedService {
               && !CUSTOM_DL_TOOL.equals(key)) {
         String paramValue = req.getParameter(key);
         // we need to remove the prefix custom_
-        String paramName = key.substring(BasicLTIConstants.CUSTOM_PREFIX.length());
+        String paramName = key.substring(LTI_CUSTOM_PREFIX.length());
         logger.debug("Found custom var: {}:{}", paramName, paramValue);
         builder.queryParam(paramName, paramValue);
       }
     }
 
-    // add params required for content item
-    if (messageType.equals(BasicLTIConstants.LTI_MESSAGE_TYPE_CONTENTITEMSELECTIONREQUEST)) {
-      if (req.getParameterMap().containsKey(BasicLTIConstants.DATA)) {
-        builder.queryParam(BasicLTIConstants.DATA, req.getParameter(BasicLTIConstants.DATA));
-      }
-      builder.queryParam(CONSUMER_KEY, req.getParameter(BasicLTIConstants.OAUTH_PREFIX + CONSUMER_KEY));
-      builder.queryParam(BasicLTIConstants.CONTENT_ITEM_RETURN_URL, req.getParameter(BasicLTIConstants.CONTENT_ITEM_RETURN_URL));
+    // Add locale param from LMS
+    String localeParamValue = req.getParameter(LOCALE);
+    if (StringUtils.isNotBlank(localeParamValue)) {
+      // 'lng' is query param for i18next-browser-languagedetector
+      builder.queryParam("lng", localeParamValue);
     }
 
     // Build the final URL (as a string)
@@ -231,7 +220,6 @@ public class LtiServlet extends HttpServlet implements ManagedService {
       resp.getWriter().write("<a href=\"" + redirectUrl + "\">continue...</a></body></html>");
       // TODO we should probably print the parameters.
     } else {
-      logger.debug(redirectUrl);
       resp.sendRedirect(redirectUrl);
     }
   }
@@ -303,7 +291,8 @@ public class LtiServlet extends HttpServlet implements ManagedService {
     } else {
       Map<String, String> ltiAttributes = (Map<String, String>) session.getAttribute(SESSION_ATTRIBUTE_KEY);
       if (ltiAttributes == null) {
-        ltiAttributes = new HashMap<String, String>();
+        ltiAttributes = new HashMap<>();
+        ltiAttributes.put("roles", "Instructor");
       }
       resp.setContentType("application/json");
       Gson gson = new GsonBuilder().create();
