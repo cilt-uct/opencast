@@ -324,19 +324,21 @@ define(['require', 'jquery', 'underscore', 'backbone', 'basil', 'bowser', 'engag
         filterTagsArray = (Array.isArray(filterTags) ? filterTags : filterTags.split(','))
                                 .map(x => Utils.preferredQualityFormat(x.trim(), false))
                                 .filter(x => x);
-    
+
     if (filterTagsArray.length == 0) {
-        return tracks;
+      return tracks;
     }
 
-    for (var i = 0; i < tracks.length; i++) {   
-        if (tracks[i].tags) {
-            if (tracks[i].tags.tag) {
-                if (_.intersection(tracks[i].tags.tag.map(x => Utils.preferredQualityFormat(x.trim(), false)), filterTagsArray).length > 0) {
-                    newTracksArray.push(tracks[i]);
-                }
-            }
-        }   
+    let utils_get_quality_st = function(st) { return Utils.preferredQualityFormat(st, false); };
+    for (var i = 0; i < tracks.length; i++) {
+      if (tracks[i].tags) {
+        if (tracks[i].tags.tag) {
+          if (_.intersection(tracks[i].tags.tag
+              .map(x => utils_get_quality_st(x.trim()) ), filterTagsArray).length > 0) {
+            newTracksArray.push(tracks[i]);
+          }
+        }
+      }
     }
 
     // avoid filtering to an empty list, better play something than nothing
@@ -414,7 +416,7 @@ define(['require', 'jquery', 'underscore', 'backbone', 'basil', 'bowser', 'engag
   function getQualities(videoSources) {
     // using a cache for qualities, as they probably do not change
     if (foundQualities) {
-        return foundQualities;
+      return foundQualities;
     }
     var tagsList = getTags(videoSources, '-quality');
     var qualitiesList = [];
@@ -438,7 +440,7 @@ define(['require', 'jquery', 'underscore', 'backbone', 'basil', 'bowser', 'engag
     foundQualities = [];
     for (var i = 0; i < sortedResolutionsList.length; ++i) {
       foundQualities.push(sortedResolutionsList[i][0]);
-    }    
+    }
     return foundQualities;
   }
 
@@ -462,20 +464,20 @@ define(['require', 'jquery', 'underscore', 'backbone', 'basil', 'bowser', 'engag
                                 .filter(x => x);
 
     if (filterFormatsArray.length == 0) {
-        return tracks;
+      return tracks;
     }
 
     for (var i = 0; i < tracks.length; i++) {
-        if (filterFormatsArray.includes(tracks[i].mimetype)) {
-            newTracksArray.push(tracks[i]);
-        }
+      if (filterFormatsArray.includes(tracks[i].mimetype)) {
+        newTracksArray.push(tracks[i]);
+      }
     }
-    
+
     // avoid filtering to an empty list, better play something than nothing
     if (newTracksArray.length < 1) {
-        console.warn("No valid track formats found - returning tracks.");
-        return tracks;
-    }    
+      Engage.log('No valid track formats found - returning tracks.');
+      return tracks;
+    }
     return newTracksArray;
   }
 
@@ -2301,7 +2303,7 @@ define(['require', 'jquery', 'underscore', 'backbone', 'basil', 'bowser', 'engag
     var hasAudio = false;
     var hasVideo = false;
     videoSources.audio = [];
-    
+
     if (mediaInfo.tracks) {
       $(mediaInfo.tracks).each(function (i, track) {
         if (track.mimetype && track.type && acceptFormat(track)) {
@@ -2329,8 +2331,8 @@ define(['require', 'jquery', 'underscore', 'backbone', 'basil', 'bowser', 'engag
               track = Utils.removeQualityTag(track);
               loadHls = true;
             }
-            if (typeof(videoSources[mainFlavor]) === "undefined") {
-                videoSources[mainFlavor] = [];
+            if (typeof(videoSources[mainFlavor]) === 'undefined') {
+              videoSources[mainFlavor] = [];
             }
             videoSources[mainFlavor].push({
               src: track.url,
@@ -2480,8 +2482,8 @@ define(['require', 'jquery', 'underscore', 'backbone', 'basil', 'bowser', 'engag
 
     // Load from attachment
     for(var a in attachments) {
-      if(attachments[a].mimetype == "text/vtt"  && attachments[a].tags["tag"].indexOf("engage-download") >= 0) {
-        Engage.log("Found caption in attachments.");
+      if(attachments[a].mimetype == 'text/vtt'  && attachments[a].tags['tag'].indexOf('engage-download') >= 0) {
+        Engage.log('Found caption in attachments.');
         captionsURL = attachments[a].url;
         Engage.model.set('captions', true);
         Engage.trigger(plugin.events.captionsFound.getName());
@@ -2524,13 +2526,13 @@ define(['require', 'jquery', 'underscore', 'backbone', 'basil', 'bowser', 'engag
 
     Engage.on(plugin.events.captionsFound.getName(), function (data) {
       var captionMode = activeCaption.mode; // remember previous setting
-      activeCaption.mode = "hidden"; // hide current
-      activeCaption = videojs("videojs_videodisplay_" + data).textTracks()[0];
+      activeCaption.mode = 'hidden'; // hide current
+      activeCaption = videojs('videojs_videodisplay_' + data).textTracks()[0];
       activeCaption.mode = captionMode; // restore setting
-      if(data == "none") {
-        console.warn("none " + data);
+      if(data == 'none') {
+        Engage.log('none ' + data);
       } else {
-        console.warn("else " + data);
+        Engage.log('else ' + data);
       }
     });
   }

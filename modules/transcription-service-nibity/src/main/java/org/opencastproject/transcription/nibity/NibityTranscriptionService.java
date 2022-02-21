@@ -196,7 +196,8 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
     enabled = OsgiUtil.getOptCfgAsBoolean(cc.getProperties(), ENABLED_CONFIG).get();
 
     if (!enabled) {
-      logger.info("Nibity Transcription Service disabled. If you want to enable it, please update the service configuration.");
+      logger.info("Nibity Transcription Service disabled. If you want to enable it, "
+                  + "please update the service configuration.");
       return;
     }
 
@@ -302,7 +303,7 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
       logger.info("Environment name is {}", clusterName);
     }
 
-   logger.info("Activated!");
+    logger.info("Activated!");
   }
 
   public void deactivate(ComponentContext cc) {
@@ -430,7 +431,8 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
    *
    * Called by process(Job job)
    */
-  void createRecognitionsJob(String mpId, Track track, String languageCode) throws TranscriptionServiceException, IOException {
+  void createRecognitionsJob(String mpId, Track track, String languageCode)
+          throws TranscriptionServiceException, IOException {
 
     String filename = addMediaFileToLocalStorage(mpId, track);
     String mediaUrl = serverUrl + SUBMISSION_PATH + filename;
@@ -439,17 +441,17 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
 
     CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
     credentialsProvider.setCredentials(AuthScope.ANY,
-      new UsernamePasswordCredentials(nibityClientKey, ""));
+        new UsernamePasswordCredentials(nibityClientKey, ""));
 
-    // Timeout 3 hours (needs to include the time for the remote service to fetch the media URL before sending final response)
+    // Timeout 3 hours (the time for the remote service to fetch the media URL before sending final response)
     RequestConfig config = RequestConfig.custom()
-     .setConnectTimeout(CONNECTION_TIMEOUT)
-     .setSocketTimeout(3 * 3600 * 1000).build();
+        .setConnectTimeout(CONNECTION_TIMEOUT)
+        .setSocketTimeout(3 * 3600 * 1000).build();
 
     CloseableHttpClient httpClient = HttpClientBuilder.create()
-     .setDefaultCredentialsProvider(credentialsProvider)
-     .setDefaultRequestConfig(config)
-     .build();
+        .setDefaultCredentialsProvider(credentialsProvider)
+        .setDefaultRequestConfig(config)
+        .build();
 
     CloseableHttpResponse response = null;
 
@@ -484,7 +486,8 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
         case HttpStatus.SC_OK: // 200
 
           /**
-           * Response returned is a json object: {"test-submission":{"file_id":"3074","file_type":"mp4","seconds":2633.677,"status":500,"deadline":"2019-02-25 11:28:42"}}
+           * Response returned is a json object: {"test-submission":{"file_id":"3074","file_type":"mp4",
+           * "seconds":2633.677,"status":500,"deadline":"2019-02-25 11:28:42"}}
            * Status codes other than 500 are an error.
            */
           JSONObject result = (JSONObject) jsonObject.get(mpId);
@@ -511,14 +514,16 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
 
           // TODO how does this handle timezones?
 
-          logger.info("mp {} has been submitted to nibity: file id: {} status {} type {}", mpId, jobId, jobStatus, fileType);
+          logger.info("mp {} has been submitted to nibity: file id: {} status {} type {}",
+              mpId, jobId, jobStatus, fileType);
 
           if (jobStatus == 500) {
-              database.storeJobControl(mpId, track.getIdentifier(), jobId, TranscriptionJobControl.Status.InProgress.name(),
-                  track.getDuration() == null ? 0 : track.getDuration().longValue(), expectedDate, PROVIDER);
-              EntityUtils.consume(entity);
+            database.storeJobControl(mpId, track.getIdentifier(), jobId,
+                TranscriptionJobControl.Status.InProgress.name(),
+                track.getDuration() == null ? 0 : track.getDuration().longValue(), expectedDate, PROVIDER);
+            EntityUtils.consume(entity);
           } else {
-              logger.warn("Unknown job status {} in JSON response: {}", jsonString);
+            logger.warn("Unknown job status {} in JSON response: {}", jsonString);
           }
           return;
 
@@ -658,7 +663,8 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
    * @throws org.opencastproject.transcription.api.TranscriptionServiceException
    * @throws java.io.IOException
    */
-  private boolean getAndSaveJobResult(String jobId, Long transcriptId) throws TranscriptionServiceException, IOException {
+  private boolean getAndSaveJobResult(String jobId, Long transcriptId)
+          throws TranscriptionServiceException, IOException {
 
     CloseableHttpClient httpClient = makeHttpClient();
     CloseableHttpResponse response = null;
@@ -695,7 +701,8 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
           break;
 
         default:
-          logger.warn("Error retrieving details for transcription with transcript id: '{}', return status: {}.", transcriptId, code);
+          logger.warn("Error retrieving details for transcription with transcript id: '{}', return status: {}.",
+              transcriptId, code);
           break;
       }
     } catch (Exception e) {
@@ -783,15 +790,15 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
     CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
 
     credentialsProvider.setCredentials(AuthScope.ANY,
-      new UsernamePasswordCredentials(nibityClientKey, ""));
+        new UsernamePasswordCredentials(nibityClientKey, ""));
 
     RequestConfig reqConfig = RequestConfig.custom().setConnectTimeout(CONNECTION_TIMEOUT)
-            .setSocketTimeout(SOCKET_TIMEOUT).setConnectionRequestTimeout(CONNECTION_TIMEOUT).build();
+        .setSocketTimeout(SOCKET_TIMEOUT).setConnectionRequestTimeout(CONNECTION_TIMEOUT).build();
 
     CloseableHttpClient httpClient = HttpClientBuilder.create()
-     .setDefaultCredentialsProvider(credentialsProvider)
-     .setDefaultRequestConfig(reqConfig)
-     .build();
+        .setDefaultCredentialsProvider(credentialsProvider)
+        .setDefaultRequestConfig(reqConfig)
+        .build();
 
     return httpClient;
   }
@@ -956,7 +963,8 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
 
                     // Send notification email
                     sendEmail("Transcription ERROR", String.format(
-                            "Transcription job was in processing state for too long and was marked as canceled (media package %s, job id %s).",
+                            "Transcription job was in processing state for too long"
+                            + " and was marked as canceled (media package %s, job id %s).",
                             mpId, jobId));
                   }
                   // else Job still running, not finished
@@ -1018,11 +1026,11 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
 
             // Update state in the database
             database.updateJobControl(jobId, TranscriptionJobControl.Status.Closed.name());
-            logger.info("Attach transcription workflow {} scheduled for mp {}, transcription service job {}", new String[]{wfId,
-              mpId, jobId});
+            logger.info("Attach transcription workflow {} scheduled for mp {}, transcription service job {}",
+                  new String[]{wfId, mpId, jobId});
           } catch (Exception e) {
             logger.warn("Attach transcription workflow could NOT be scheduled for mp {}, nibity job {}, {}: {}",
-                    new String[]{mpId, jobId, e.getClass().getName(), e.getMessage()});
+                  new String[]{mpId, jobId, e.getClass().getName(), e.getMessage()});
           }
         }
       } catch (TranscriptionDatabaseException e) {

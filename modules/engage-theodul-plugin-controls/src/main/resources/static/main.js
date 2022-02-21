@@ -431,13 +431,13 @@ define(['require', 'jquery', 'underscore', 'backbone', 'basil', 'bootbox', 'enga
       $('#' + id_str_loginlogout).html(translate('login', 'Log in'));
       $('#' + id_loginlogout).click(login);
     }
-    if(window.location.href.indexOf("ltimode") > -1) {
-      $("#navigation_wrapper_top").detach();
+    if(window.location.href.indexOf('ltimode') > -1) {
+      $('#navigation_wrapper_top').detach();
       if ($('#engage_controls_second').length > 0) {
         $('#engage_controls_second').detach();
       }
     } else {
-      $("#" + id_dropdownMenuLoginInfo).removeClass("disabled");
+      $('#' + id_dropdownMenuLoginInfo).removeClass('disabled');
     }
   }
 
@@ -1125,8 +1125,8 @@ define(['require', 'jquery', 'underscore', 'backbone', 'basil', 'bootbox', 'enga
         videosInitialReadyness = false;
       }
 
-      if (Engage.model.get("captions")) {
-        $("#" + id_captions_button).removeClass("disabled").addClass('active');
+      if (Engage.model.get('captions')) {
+        $('#' + id_captions_button).removeClass('disabled').addClass('active');
         captionsOn = true;
         Engage.trigger(plugin.events.toggleCaptions.getName(), captionsOn);
       }
@@ -1289,8 +1289,7 @@ define(['require', 'jquery', 'underscore', 'backbone', 'basil', 'bootbox', 'enga
           timelinePreviewsTileResolution[1] = img.naturalHeight / timelinePreviewsImageSize[1];
         }
       } catch (ex) {
-          timelinePreviewsError = true;
-          console.warn("The timeline previews image cannot be set or the resolution cannot be found", ex);
+        timelinePreviewsError = true;
       }
     }
   }
@@ -1318,7 +1317,7 @@ define(['require', 'jquery', 'underscore', 'backbone', 'basil', 'bootbox', 'enga
       inited = true;
       Engage.on(plugin.events.videoFormatsFound.getName(), function (formatarr) {
         if (Array.isArray(formatarr)) {
-          resolutions = formatarr.map(x => Utils.preferredQualityFormat(x.trim(), false))
+          resolutions = formatarr.map(x => Utils.preferredQualityFormat(x.trim(), false));
           if (controlsViewTopIfBottom) {
             controlsViewTopIfBottom.render();
           }
@@ -1632,9 +1631,9 @@ define(['require', 'jquery', 'underscore', 'backbone', 'basil', 'bootbox', 'enga
           }
         });
         Engage.on(plugin.events.captionsFound.getName(), function () {
-            $("#" + id_captions_button).removeClass("disabled").addClass('active');
-            captionsOn = true;
-            Engage.trigger(plugin.events.toggleCaptions.getName(), captionsOn);
+          $('#' + id_captions_button).removeClass('disabled').addClass('active');
+          captionsOn = true;
+          Engage.trigger(plugin.events.toggleCaptions.getName(), captionsOn);
         });
       }
 

@@ -112,47 +112,47 @@ define(['jquery'], function($) {
   };
 
 
-    Utils.prototype.preferredQualityFormat = function(preferredFormat, withQuality = false) {
-        if (preferredFormat == null) {
-            return null;
-        }
-        var r = preferredFormat.replace(/-quality/g,'');
-        switch (r) {
-            case "low":
-                r = "480p";
-                break;
-            case "medium":
-                r = "720p";
-                break;
-            case "high":
-                r = "1080p";
-                break;
-        }
-        return r + (withQuality ? '-quality' : '');
-    };
+  Utils.prototype.preferredQualityFormat = function(preferredFormat, withQuality = false) {
+    if (preferredFormat == null) {
+      return null;
+    }
+    var r = preferredFormat.replace(/-quality/g,'');
+    switch (r) {
+    case 'low':
+      r = '480p';
+      break;
+    case 'medium':
+      r = '720p';
+      break;
+    case 'high':
+      r = '1080p';
+      break;
+    }
+    return r + (withQuality ? '-quality' : '');
+  };
 
-    // parameter from Basil.get("preferredFormat")
-    Utils.prototype.preferredFormat = function(preferredFormat) {
-        if (preferredFormat == null) {
-            return null;
-        }
-        switch (preferredFormat) {
-            case "hls":
-                return "application/x-mpegURL";
-            case "dash":
-                return "application/dash+xml";
-            case "rtmp":
-                return "rtmp/mp4";
-            case "mp4":
-                return "video/mp4";
-            case "webm":
-                return "video/webm";
-            case "audio":
-                return "audio/";
-            default:
-                return null;
-        }
-    };
+  // parameter from Basil.get("preferredFormat")
+  Utils.prototype.preferredFormat = function(preferredFormat) {
+    if (preferredFormat == null) {
+      return null;
+    }
+    switch (preferredFormat) {
+    case 'hls':
+      return 'application/x-mpegURL';
+    case 'dash':
+      return 'application/dash+xml';
+    case 'rtmp':
+      return 'rtmp/mp4';
+    case 'mp4':
+      return 'video/mp4';
+    case 'webm':
+      return 'video/webm';
+    case 'audio':
+      return 'audio/';
+    default:
+      return null;
+    }
+  };
 
   Utils.prototype.escapeRegExp = function(string) {
     return string.replace(/([.*+?^=!:${}()|[\]/\\])/g, '\\$1');
@@ -161,8 +161,6 @@ define(['jquery'], function($) {
   Utils.prototype.replaceAll = function(string, find, replace) {
     return string.replace(new RegExp(this.escapeRegExp(find), 'g'), replace);
   };
-
-
 
   /**
      * @description Returns a time in the URL time format, e.g. 30m10s

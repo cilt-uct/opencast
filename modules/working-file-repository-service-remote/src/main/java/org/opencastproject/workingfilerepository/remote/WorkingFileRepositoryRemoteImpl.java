@@ -288,6 +288,12 @@ public class WorkingFileRepositoryRemoteImpl extends RemoteBase implements Worki
     throw new RuntimeException("Unable to get collection URI");
   }
 
+  @Override
+  public File getFileFromCollection(String collectionId, String fileName)
+    throws NotFoundException, IllegalArgumentException {
+    throw new RuntimeException("Unsupported");
+  }
+
   /**
    * {@inheritDoc}
    *

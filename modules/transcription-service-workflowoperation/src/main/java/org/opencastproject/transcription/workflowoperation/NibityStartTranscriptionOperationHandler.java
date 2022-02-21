@@ -67,7 +67,7 @@ public class NibityStartTranscriptionOperationHandler extends AbstractWorkflowOp
     CONFIG_OPTIONS.put(SOURCE_FLAVOR, "The \"flavor\" of the track to use as audio input");
     CONFIG_OPTIONS.put(SOURCE_TAG, "The \"tag\" of the track to use as audio input");
     CONFIG_OPTIONS.put(SKIP_IF_FLAVOR_EXISTS,
-      "If this \"flavor\" is already in the media package, skip this operation");
+        "If this \"flavor\" is already in the media package, skip this operation");
   }
 
   @Override
@@ -78,8 +78,8 @@ public class NibityStartTranscriptionOperationHandler extends AbstractWorkflowOp
   /**
    * {@inheritDoc}
    *
-   * @see org.opencastproject.workflow.api.WorkflowOperationHandler#start(org.opencastproject.workflow.api.WorkflowInstance,
-   *      JobContext)
+   * @see org.opencastproject.workflow.api.WorkflowOperationHandler#start
+   *    (org.opencastproject.workflow.api.WorkflowInstance, JobContext)
    */
   @Override
   public WorkflowOperationResult start(final WorkflowInstance workflowInstance, JobContext context)
@@ -107,8 +107,9 @@ public class NibityStartTranscriptionOperationHandler extends AbstractWorkflowOp
     AbstractMediaPackageElementSelector<Track> elementSelector = new TrackSelector();
 
     // Make sure either one of tags or flavors are provided
-    if (StringUtils.isBlank(sourceTagOption) && StringUtils.isBlank(sourceFlavorOption))
+    if (StringUtils.isBlank(sourceTagOption) && StringUtils.isBlank(sourceFlavorOption)) {
       throw new WorkflowOperationException("No source tag or flavor have been specified!");
+    }
 
     if (StringUtils.isNotBlank(sourceFlavorOption)) {
       String flavor = StringUtils.trim(sourceFlavorOption);
@@ -118,14 +119,15 @@ public class NibityStartTranscriptionOperationHandler extends AbstractWorkflowOp
         throw new WorkflowOperationException("Source flavor '" + flavor + "' is malformed");
       }
     }
-    if (sourceTagOption != null)
+    if (sourceTagOption != null) {
       elementSelector.addTag(sourceTagOption);
+    }
 
     Collection<Track> elements = elementSelector.select(mediaPackage, false);
     Job job = null;
     for (Track track : elements) {
       try {
-        job = service.startTranscription(mediaPackage.getIdentifier().compact(), track);
+        job = service.startTranscription(mediaPackage.getIdentifier().toString(), track);
         // Only one job per media package
         break;
       } catch (TranscriptionServiceException e) {

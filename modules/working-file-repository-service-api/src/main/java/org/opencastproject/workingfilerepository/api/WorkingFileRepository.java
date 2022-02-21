@@ -24,6 +24,7 @@ package org.opencastproject.workingfilerepository.api;
 import org.opencastproject.storage.StorageUsage;
 import org.opencastproject.util.NotFoundException;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
@@ -171,6 +172,17 @@ public interface WorkingFileRepository extends StorageUsage {
    *           if the collectionId does not exist
    */
   URI[] getCollectionContents(String collectionId) throws NotFoundException;
+
+  /**
+   * Gets data from a collection
+   *
+   * @param collectionId
+   *          the collection identifier
+   * @param fileName
+   *          The filename to retrieve
+   * @return File to the data
+   */
+  File getFileFromCollection(String collectionId, String fileName) throws NotFoundException, IllegalArgumentException;
 
   /**
    * Removes a file from a collection

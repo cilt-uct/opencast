@@ -63,26 +63,26 @@ define(['jquery'], function($) {
     return (rate * 100) + '%';
   };
 
-    Utils.prototype.preferredQualityFormat = function(preferredFormat, withQuality = false) {
-        if (preferredFormat == null) {
-            return null;
-        }
-        var r = preferredFormat.replace(/-quality/g,'');
-        switch (r) {
-            case "low":
-                r = "480p";
-                break;
-            case "medium":
-                r = "720p";
-                break;
-            case "high":
-                r = "1080p";
-                break;
-        }
-        return r + (withQuality ? '-quality' : '');
-    };
+  Utils.prototype.preferredQualityFormat = function(preferredFormat, withQuality = false) {
+    if (preferredFormat == null) {
+      return null;
+    }
+    var r = preferredFormat.replace(/-quality/g,'');
+    switch (r) {
+    case 'low':
+      r = '480p';
+      break;
+    case 'medium':
+      r = '720p';
+      break;
+    case 'high':
+      r = '1080p';
+      break;
+    }
+    return r + (withQuality ? '-quality' : '');
+  };
 
-    /**
+  /**
      * Returns the input time in milliseconds
      *
      * @param data data in the format ab:cd:ef
