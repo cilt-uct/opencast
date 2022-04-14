@@ -1,37 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <definition xmlns="http://workflow.opencastproject.org">
-
-  <id>republish-metadata</id>
-  <title>Republish metadata</title>
+  <id>publish-uploaded-assets</id>
+  <title>Publish uploaded assets</title>
   <tags>
-    <tag>archive</tag>
+     <!-- Only launched from add asset in admin-ng, not available for selection by end users via the UI -->
   </tags>
-  <description/>
-  <displayOrder>900</displayOrder>
+  <description>Publish uploaded assets</description>
   <configuration_panel>
-    <![CDATA[
-      <div id="workflow-configuration">
-        <fieldset>
-          <legend>Update metadata at:</legend>
-          <ul>
-            <li>
-              <input id="publishToEngage" name="publishToEngage" type="checkbox" checked="checked" class="configField" value="true" />
-              <label for="publishToEngage">Opencast Media Module</label>
-            </li>
-            <li>
-              <input id="publishToOaiPmh" name="publishToOaiPmh" type="checkbox" checked="checked" class="configField" value="true" />
-              <label for="publishToOaiPmh">Default OAI-PMH Repository</label>
-            </li>
-            <!-- Fixme: uncomment as soon as the publish-youtube workflow operation handler supports merging
-            <li>
-              <input id="publishToYouTube" name="publishToYouTube" type="checkbox" class="configField" value="true" />
-              <label for="publishToYouTube">YouTube</label>
-            </li>
-            -->
-          </ul>
-        </fieldset>
-      </div>
-    ]]>
   </configuration_panel>
 
   <operations>
@@ -43,8 +18,6 @@
       description="Applying default configuration values">
       <configurations>
         <configuration key="publishToEngage">true</configuration>
-        <configuration key="publishToOaiPmh">true</configuration>
-        <configuration key="publishToYouTube">false</configuration>
       </configurations>
     </operation>
 
@@ -62,7 +35,9 @@
       exception-handler-workflow="partial-error"
       description="Update recording in Opencast Media Module">
       <configurations>
-        <configuration key="download-source-flavors">dublincore/*,security/*</configuration>
+        <configuration key="download-source-flavors">${download-source-flavors},dublincore/*,security/*</configuration>
+        <configuration key="download-source-tags">engage-download</configuration>
+        <configuration key="streaming-source-tags">engage-streaming</configuration>
         <configuration key="strategy">merge</configuration>
         <configuration key="check-availability">false</configuration>
       </configurations>
@@ -76,25 +51,20 @@
       exception-handler-workflow="partial-error"
       description="Update recording metadata in default OAI-PMH repository">
       <configurations>
-        <configuration key="source-flavors">dublincore/*,security/*</configuration>
+        <configuration key="source-flavors">${download-source-flavors}</configuration>
         <configuration key="repository">default</configuration>
       </configurations>
     </operation>
 
-    <!-- Publish to YouTube -->
+    <!-- Archive the current state of the mediapackage -->
 
-    <!-- Fixme: activate as soon as the publish-youtube supports merging
     <operation
-      id="publish-youtube"
-      if="${publishToYouTube}"
-      max-attempts="2"
-      exception-handler-workflow="partial-error"
-      description="Update recording in YouTube">
+      id="snapshot"
+      description="Archiving new assets">
       <configurations>
-        <configuration key="source-flavors">dublincore/*</configuration>
+        <configuration key="source-flavors">*/*</configuration>
       </configurations>
     </operation>
-    -->
 
     <!-- Clean up work artifacts -->
 
@@ -112,8 +82,8 @@
   </operations>
 
   <state-mappings>
-    <state-mapping state="running">EVENTS.EVENTS.STATE_MAPPING.REPUBLISHING_METADATA</state-mapping>
-    <state-mapping state="failing">EVENTS.EVENTS.STATE_MAPPING.REPUBLISHING_METADATA</state-mapping>
+    <state-mapping state="running">EVENTS.EVENTS.STATE_MAPPING.PUBLISHING</state-mapping>
+    <state-mapping state="failing">EVENTS.EVENTS.STATE_MAPPING.PUBLISHING</state-mapping>
   </state-mappings>
 
 </definition>
