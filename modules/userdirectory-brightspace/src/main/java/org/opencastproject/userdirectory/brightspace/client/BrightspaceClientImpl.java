@@ -158,7 +158,8 @@ public class BrightspaceClientImpl implements BrightspaceClient {
     try (InputStream inputStream = urlConnection.getInputStream()) {
       return readInputStream(inputStream);
     } catch (IOException io) {
-      logger.error("error in brightspace data fetching", io);
+      // Can be a 404 {"Errors":[{"Message":"Resource Not Found"}]}
+      logger.debug("error in brightspace data fetching", io);
       throw new BrightspaceClientException("could not read response");
     }
   }
