@@ -124,7 +124,7 @@ public class NibityAttachTranscriptionOperationHandler extends AbstractWorkflowO
 
     try {
       // Get transcription result zip file from the service
-      MediaPackageElement transcription = service.getGeneratedTranscription(mediaPackage.getIdentifier().compact(), jobId);
+      MediaPackageElement transcription = service.getGeneratedTranscription(mediaPackage.getIdentifier().toString(), jobId);
 
       String captionsZipNameVtt = mediaPackage + ".vtt";
       String captionsZipNameDocx = mediaPackage + ".docx";

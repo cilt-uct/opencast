@@ -80,6 +80,10 @@ import org.apache.http.util.EntityUtils;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.osgi.service.component.ComponentContext;
+import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Deactivate;
+import org.osgi.service.component.annotations.Reference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -98,6 +102,15 @@ import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+
+@Component(
+        immediate = true,
+        service = { TranscriptionService.class, MicrosoftAzureTranscriptionService.class },
+        property = {
+                "service.description=Microsoft Azure Transcription Service",
+                "provider=microsoft.azure"
+        }
+)
 
 public class NibityTranscriptionService extends AbstractJobProducer implements TranscriptionService {
 
@@ -330,7 +343,7 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
   }
 
   @Override
-  public Job startTranscription(String mpId, Track track, String language) throws TranscriptionServiceException {
+  public Job startTranscription(String mpId, Track track, String... args) throws TranscriptionServiceException {
     // Nibity API does not support language
     return startTranscription(mpId, track);
   }
@@ -400,6 +413,11 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
   @Override
   public String getLanguage() {
     return language;
+  }
+
+  @Override
+  public Map<String, Object> getReturnValues(String mpId, String jobId) throws TranscriptionServiceException {
+    throw new TranscriptionServiceException("Method not implemented");
   }
 
   // Called by workflow
@@ -838,7 +856,7 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
   }
 
   private String buildResultsFileName(String jobId, String extension) {
-    return PathSupport.toSafeName(jobId + "." + extension);
+    return workspace.toSafeName(jobId + "." + extension);
   }
 
   public void setServiceRegistry(ServiceRegistry serviceRegistry) {

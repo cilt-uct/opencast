@@ -125,7 +125,7 @@ public class NibityStartTranscriptionOperationHandler extends AbstractWorkflowOp
     Job job = null;
     for (Track track : elements) {
       try {
-        job = service.startTranscription(mediaPackage.getIdentifier().compact(), track);
+        job = service.startTranscription(mediaPackage.getIdentifier().toString(), track);
         // Only one job per media package
         break;
       } catch (TranscriptionServiceException e) {

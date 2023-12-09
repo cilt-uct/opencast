@@ -104,7 +104,7 @@ public class NibityTranscriptionRestService extends AbstractJobProducerEndpoint 
   @GET
   @Path("/submission/{fileName}")
   @RestQuery(name = "getSubmission", description = "Gets the file from the working repository under /collectionId/filename", returnDescription = "The file", pathParameters = {
-          @RestParameter(name = "fileName", description = "the file name", isRequired = true, type = STRING) }, reponses = {
+          @RestParameter(name = "fileName", description = "the file name", isRequired = true, type = STRING) }, responses = {
           @RestResponse(responseCode = SC_OK, description = "File returned"),
           @RestResponse(responseCode = SC_NOT_FOUND, description = "Not found") })
   public Response restGetSubmission(@PathParam("fileName") String fileName) throws NotFoundException {
