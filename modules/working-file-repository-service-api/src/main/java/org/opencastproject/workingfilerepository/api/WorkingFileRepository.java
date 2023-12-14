@@ -195,7 +195,7 @@ public interface WorkingFileRepository extends StorageUsage {
    *          The filename to retrieve
    * @return File to the data
    */
-   File getFileFromCollection(String collectionId, String fileName) throws NotFoundException, IllegalArgumentException;
+  File getFileFromCollection(String collectionId, String fileName) throws NotFoundException, IllegalArgumentException;
 
   /**
    * Removes a file from a collection
