@@ -108,6 +108,6 @@ A sample one can be found in `etc/workflows/retry-nibity-transcripts.xml`
 Workflow Operations
 -------------------
 
-* [nibity-start-transcription](../workflowoperationhandlers/nibity-start-transcription-woh.md)
-* [nibity-attach-transcription](../workflowoperationhandlers/nibity-attach-transcription-woh.md)
+* [nibity-start-transcription](../../workflowoperationhandlers/nibity-start-transcription-woh.md)
+* [nibity-attach-transcription](../../workflowoperationhandlers/nibity-attach-transcription-woh.md)
 
