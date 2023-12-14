@@ -28,13 +28,15 @@ import org.opencastproject.mediapackage.MediaPackageElementFlavor;
 import org.opencastproject.mediapackage.Track;
 import org.opencastproject.mediapackage.selector.AbstractMediaPackageElementSelector;
 import org.opencastproject.mediapackage.selector.TrackSelector;
+import org.opencastproject.serviceregistry.api.ServiceRegistry;
 import org.opencastproject.transcription.api.TranscriptionService;
 import org.opencastproject.transcription.api.TranscriptionServiceException;
 import org.opencastproject.workflow.api.AbstractWorkflowOperationHandler;
+import org.opencastproject.workflow.api.ConfiguredTagsAndFlavors;
 import org.opencastproject.workflow.api.WorkflowInstance;
 import org.opencastproject.workflow.api.WorkflowOperationException;
-import org.opencastproject.workflow.api.WorkflowOperationInstance;
 import org.opencastproject.workflow.api.WorkflowOperationHandler;
+import org.opencastproject.workflow.api.WorkflowOperationInstance;
 import org.opencastproject.workflow.api.WorkflowOperationResult;
 import org.opencastproject.workflow.api.WorkflowOperationResult.Action;
 
@@ -47,59 +49,52 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Collection;
-import java.util.SortedMap;
-import java.util.TreeMap;
+import java.util.List;
 
 @Component(
     immediate = true,
     service = WorkflowOperationHandler.class,
     property = {
-        "service.description=Nibity Transcription Workflow Operation Handler",
-        "workflow.operation=nibity-start-transcription"
+        "service.description=Start Google Speech Transcription Workflow Operation Handler",
+        "workflow.operation=google-speech-start-transcription"
     }
 )
+public class GoogleSpeechStartTranscriptionOperationHandler extends AbstractWorkflowOperationHandler {
 
-public class NibityStartTranscriptionOperationHandler extends AbstractWorkflowOperationHandler {
+  /**
+   * The logging facility
+   */
+  private static final Logger logger = LoggerFactory.getLogger(GoogleSpeechStartTranscriptionOperationHandler.class);
 
-  /** The logging facility */
-  private static final Logger logger = LoggerFactory.getLogger(NibityStartTranscriptionOperationHandler.class);
-
-  /** Workflow configuration option keys */
-  static final String SOURCE_FLAVOR = "source-flavor";
-  static final String SOURCE_TAG = "source-tag";
+  /**
+   * Workflow configuration option keys
+   */
+  static final String LANGUAGE_CODE = "language-code";
   static final String SKIP_IF_FLAVOR_EXISTS = "skip-if-flavor-exists";
 
-  /** The transcription service */
+  /**
+   * The transcription service
+   */
   private TranscriptionService service = null;
 
-  /** The configuration options for this handler */
-  private static final SortedMap<String, String> CONFIG_OPTIONS;
-
-  static {
-    CONFIG_OPTIONS = new TreeMap<String, String>();
-    CONFIG_OPTIONS.put(SOURCE_FLAVOR, "The \"flavor\" of the track to use as audio input");
-    CONFIG_OPTIONS.put(SOURCE_TAG, "The \"tag\" of the track to use as audio input");
-    CONFIG_OPTIONS.put(SKIP_IF_FLAVOR_EXISTS,
-      "If this \"flavor\" is already in the media package, skip this operation");
-  }
+  /**
+   * The language code
+   */
+  private String language = null;
 
   @Override
+  @Activate
   protected void activate(ComponentContext cc) {
     super.activate(cc);
+    logger.info("Registering google speech workflow operation handler");
   }
-
-  
-@Override
-public void activate(ComponentContext cc) {
-  super.activate(cc);
-  logger.info("Registering waveform workflow operation handler");
-}
 
   /**
    * {@inheritDoc}
    *
-   * @see org.opencastproject.workflow.api.WorkflowOperationHandler#start(org.opencastproject.workflow.api.WorkflowInstance,
-   *      JobContext)
+   * @see
+   * org.opencastproject.workflow.api.WorkflowOperationHandler#start(org.opencastproject.workflow.api.WorkflowInstance,
+   * JobContext)
    */
   @Override
   public WorkflowOperationResult start(final WorkflowInstance workflowInstance, JobContext context)
@@ -118,34 +113,44 @@ public void activate(ComponentContext cc) {
       }
     }
 
-    logger.debug("Start transcription for mediapackage {}", mediaPackage);
+    logger.debug("Start transcription for mediapackage {} started", mediaPackage);
+
+    // Get language code if configured
+    String langCode = operation.getConfiguration(LANGUAGE_CODE);
 
     // Check which tags have been configured
-    String sourceTagOption = StringUtils.trimToNull(operation.getConfiguration(SOURCE_TAG));
-    String sourceFlavorOption = StringUtils.trimToNull(operation.getConfiguration(SOURCE_FLAVOR));
+    ConfiguredTagsAndFlavors tagsAndFlavors = getTagsAndFlavors(
+        workflowInstance, Configuration.many, Configuration.many, Configuration.none, Configuration.none);
+    List<String> sourceTagOption = tagsAndFlavors.getSrcTags();
+    List<MediaPackageElementFlavor> sourceFlavorOption = tagsAndFlavors.getSrcFlavors();
 
     AbstractMediaPackageElementSelector<Track> elementSelector = new TrackSelector();
 
     // Make sure either one of tags or flavors are provided
-    if (StringUtils.isBlank(sourceTagOption) && StringUtils.isBlank(sourceFlavorOption))
+    if (sourceTagOption.isEmpty() && sourceFlavorOption.isEmpty()) {
       throw new WorkflowOperationException("No source tag or flavor have been specified!");
-
-    if (StringUtils.isNotBlank(sourceFlavorOption)) {
-      String flavor = StringUtils.trim(sourceFlavorOption);
-      try {
-        elementSelector.addFlavor(MediaPackageElementFlavor.parseFlavor(flavor));
-      } catch (IllegalArgumentException e) {
-        throw new WorkflowOperationException("Source flavor '" + flavor + "' is malformed");
-      }
     }
-    if (sourceTagOption != null)
-      elementSelector.addTag(sourceTagOption);
+
+    if (!sourceFlavorOption.isEmpty()) {
+      MediaPackageElementFlavor flavor = sourceFlavorOption.get(0);
+      elementSelector.addFlavor(flavor);
+    }
+    if (StringUtils.isNotBlank(langCode)) {
+      language = StringUtils.trim(langCode);
+    }
+    if (!sourceTagOption.isEmpty()) {
+      elementSelector.addTag(sourceTagOption.get(0));
+    }
 
     Collection<Track> elements = elementSelector.select(mediaPackage, false);
     Job job = null;
     for (Track track : elements) {
+      if (track.hasVideo()) {
+        logger.info("Skipping track {} since it contains a video stream", track);
+        continue;
+      }
       try {
-        job = service.startTranscription(mediaPackage.getIdentifier().toString(), track);
+        job = service.startTranscription(mediaPackage.getIdentifier().toString(), track, language);
         // Only one job per media package
         break;
       } catch (TranscriptionServiceException e) {
@@ -162,7 +167,7 @@ public void activate(ComponentContext cc) {
     if (!waitForStatus(job).isSuccess()) {
       throw new WorkflowOperationException("Transcription job did not complete successfully");
     }
-    // Return OK means that the transcription job was created, but not finished yet
+    // Return OK means that the Google speech job was created, but not finished yet
 
     logger.debug("External transcription job for mediapackage {} was created", mediaPackage);
 
@@ -170,8 +175,15 @@ public void activate(ComponentContext cc) {
     return createResult(Action.CONTINUE);
   }
 
+  @Reference(target = "(provider=google.speech)")
   public void setTranscriptionService(TranscriptionService service) {
     this.service = service;
+  }
+
+  @Reference
+  @Override
+  public void setServiceRegistry(ServiceRegistry serviceRegistry) {
+    super.setServiceRegistry(serviceRegistry);
   }
 
 }

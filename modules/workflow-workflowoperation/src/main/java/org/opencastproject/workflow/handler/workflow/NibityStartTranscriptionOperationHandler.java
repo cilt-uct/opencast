@@ -86,6 +86,7 @@ public class NibityStartTranscriptionOperationHandler extends AbstractWorkflowOp
   @Override
   protected void activate(ComponentContext cc) {
     super.activate(cc);
+    logger.info("Registering nibity workflow operation handler");
   }
 
   /**
