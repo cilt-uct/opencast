@@ -49,9 +49,11 @@ import javax.ws.rs.core.Response;
 
 
 @Path("/")
-@RestService(name = "NibityTranscriptionRestService", title = "Transcription Service REST Endpoint (uses Nibity services)", abstractText = "Uses external service to generate transcriptions of recordings.", notes = {
-  "All paths above are relative to the REST endpoint base (something like http://your.server/transcripts)"})
-
+@RestService(name = "NibityTranscriptionRestService",
+        title = "Transcription Service REST Endpoint (uses Nibity services)",
+        abstractText = "Uses external service to generate transcriptions of recordings.",
+        notes = "All paths above are relative to the REST endpoint base (something like http://your.server/transcripts)"
+)
 public class NibityTranscriptionRestService extends AbstractJobProducerEndpoint {
 
   /**
@@ -103,14 +105,22 @@ public class NibityTranscriptionRestService extends AbstractJobProducerEndpoint 
 
   @GET
   @Path("/submission/{fileName}")
-  @RestQuery(name = "getSubmission", description = "Gets the file from the working repository under /collectionId/filename", returnDescription = "The file", pathParameters = {
-          @RestParameter(name = "fileName", description = "the file name", isRequired = true, type = STRING) }, responses = {
-          @RestResponse(responseCode = SC_OK, description = "File returned"),
-          @RestResponse(responseCode = SC_NOT_FOUND, description = "Not found") })
+  @RestQuery(name = "getSubmission",
+        description = "Gets the file from the working repository under /collectionId/filename",
+        returnDescription = "The file",
+        pathParameters = {
+            @RestParameter(name = "fileName", description = "the file name", isRequired = true, type = STRING)
+        },
+        responses = {
+            @RestResponse(responseCode = SC_OK, description = "File returned"),
+            @RestResponse(responseCode = SC_NOT_FOUND, description = "Not found")
+        }
+  )
   public Response restGetSubmission(@PathParam("fileName") String fileName) throws NotFoundException {
     logger.debug("Submission media requested: {}", fileName);
-    return fileResponse(wfr.getFileFromCollection(NibityTranscriptionService.SUBMISSION_COLLECTION, fileName), getMimeType(fileName), some(fileName))
-            .build();
+    return fileResponse(wfr.getFileFromCollection(NibityTranscriptionService.SUBMISSION_COLLECTION, fileName),
+            getMimeType(fileName),
+            some(fileName)
+            ).build();
   }
-
 }
