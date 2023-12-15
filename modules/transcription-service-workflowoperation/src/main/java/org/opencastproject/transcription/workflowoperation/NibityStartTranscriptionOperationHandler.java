@@ -28,6 +28,7 @@ import org.opencastproject.mediapackage.MediaPackageElementFlavor;
 import org.opencastproject.mediapackage.Track;
 import org.opencastproject.mediapackage.selector.AbstractMediaPackageElementSelector;
 import org.opencastproject.mediapackage.selector.TrackSelector;
+import org.opencastproject.serviceregistry.api.ServiceRegistry;
 import org.opencastproject.transcription.api.TranscriptionService;
 import org.opencastproject.transcription.api.TranscriptionServiceException;
 import org.opencastproject.workflow.api.AbstractWorkflowOperationHandler;
@@ -40,7 +41,9 @@ import org.opencastproject.workflow.api.WorkflowOperationResult.Action;
 
 import org.apache.commons.lang3.StringUtils;
 import org.osgi.service.component.ComponentContext;
+import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -81,8 +84,10 @@ public class NibityStartTranscriptionOperationHandler extends AbstractWorkflowOp
   }
 
   @Override
+  @Activate
   protected void activate(ComponentContext cc) {
     super.activate(cc);
+    logger.info("Registering Nibity workflow operation handler");
   }
 
   /**
@@ -162,8 +167,15 @@ public class NibityStartTranscriptionOperationHandler extends AbstractWorkflowOp
     return createResult(Action.CONTINUE);
   }
 
+  @Reference(target = "(provider=waywithwords)")
   public void setTranscriptionService(TranscriptionService service) {
     this.service = service;
+  }
+
+  @Reference
+  @Override
+  public void setServiceRegistry(ServiceRegistry serviceRegistry) {
+    super.setServiceRegistry(serviceRegistry);
   }
 
 }
