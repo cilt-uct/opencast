@@ -85,7 +85,7 @@ the second workflow can retrieve it from the Asset Manager to attach the caption
 <!-- Start Nibity recognitions job -->
 
 <operation
-  id="start-nibity-transcription"
+  id="nibity-start-transcription"
   fail-on-error="true"
   exception-handler-workflow="partial-error"
   description="Start Nibity transcription job">
