@@ -57,10 +57,10 @@ import java.util.Collection;
         "workflow.operation=nibity-start-transcription"
     }
 )
-public class NibityStartTranscriptionOperationHandler extends AbstractWorkflowOperationHandler {
+public class NibityStartTranscriptionWorkflowOperationHandler extends AbstractWorkflowOperationHandler {
 
   /** The logging facility */
-  private static final Logger logger = LoggerFactory.getLogger(NibityStartTranscriptionOperationHandler.class);
+  private static final Logger logger = LoggerFactory.getLogger(NibityStartTranscriptionWorkflowOperationHandler.class);
 
   /** Workflow configuration option keys */
   static final String SKIP_IF_FLAVOR_EXISTS = "skip-if-flavor-exists";

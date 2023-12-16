@@ -86,6 +86,7 @@ public class GoogleSpeechStartTranscriptionOperationHandler extends AbstractWork
   @Activate
   protected void activate(ComponentContext cc) {
     super.activate(cc);
+    logger.info("Registering Google Speech workflow operation handler");
   }
 
   /**

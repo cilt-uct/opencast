@@ -1,14 +1,16 @@
-# Nibity Start Transcription Workflow Operation
+Nibity Start Transcription Workflow Operation
 ============================================================
 
 ID: `nibity-start-transcription`
 
-## Description
+Description
+-------------
 
 Nibity Start Transcription invokes the Nibity Transcription Service by submitting
 an audio or video file to be transcribed and captioned.
 
-## Parameter Table
+Parameter Table
+----------------
 
 |configuration keys|description|default value|example|
 |------------------|-------|-----------|-------------|
@@ -18,7 +20,8 @@ an audio or video file to be transcribed and captioned.
 
 **One of source-flavor or source-tag must be specified.**
 
-## Example
+Example
+--------
 
 ```xml
     <!-- Start Nibity transcription job -->

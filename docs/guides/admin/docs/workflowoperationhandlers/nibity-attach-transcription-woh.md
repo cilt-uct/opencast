@@ -1,14 +1,16 @@
-# Nibity Attach Transcription Workflow Operation
+Nibity Attach Transcription Workflow Operation
 ============================================================
 
 ID: `nibity-attach-transcription`
 
-## Description
+Description
+------------
 
 Nibity Attach Transcription attaches the results file received from the Nibity Transcription Service
 to the media package. If the results file includes a captions file, the captions are also attached.
 
-## Parameter Table
+Parameter Table
+----------------
 
 |configuration keys|description|default value|example|
 |------------------|-------|-----------|-------------|
@@ -17,7 +19,8 @@ to the media package. If the results file includes a captions file, the captions
 |target-tag|The tag to apply to the caption/transcription file generated. Optional.|EMPTY|archive|
 |target-caption-format|The caption format to be generated. Optional. If not entered, the raw resulting file will be attached to the media package.|EMPTY|vtt|
 
-## Example
+Example
+--------
 
 ```xml
     <!-- Attach caption/transcript -->
