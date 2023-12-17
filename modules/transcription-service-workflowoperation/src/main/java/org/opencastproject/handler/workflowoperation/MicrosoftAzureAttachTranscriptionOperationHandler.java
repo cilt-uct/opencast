@@ -18,15 +18,13 @@
  * the License.
  *
  */
-package org.opencastproject.transcription.workflowoperation;
 
-import org.opencastproject.caption.api.CaptionService;
-import org.opencastproject.job.api.Job;
+package org.opencastproject.handler.workflowoperation;
+
 import org.opencastproject.job.api.JobContext;
 import org.opencastproject.mediapackage.MediaPackage;
 import org.opencastproject.mediapackage.MediaPackageElement;
 import org.opencastproject.mediapackage.MediaPackageElementFlavor;
-import org.opencastproject.mediapackage.MediaPackageElementParser;
 import org.opencastproject.serviceregistry.api.ServiceRegistry;
 import org.opencastproject.transcription.api.TranscriptionService;
 import org.opencastproject.transcription.api.TranscriptionServiceException;
@@ -49,27 +47,32 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
+import java.util.Map;
 
 @Component(
-    immediate = true,
-    service = WorkflowOperationHandler.class,
-    property = {
-        "service.description=Attach Transcription Workflow Operation Handler (Amberscript)",
-        "workflow.operation=amberscript-attach-transcription"
-    }
+        immediate = true,
+        service = WorkflowOperationHandler.class,
+        property = {
+                "service.description=Microsoft Azure Attach Transcription Workflow Operation Handler",
+                "workflow.operation=microsoft-azure-attach-transcription"
+        }
 )
-public class AmberscriptAttachTranscriptionOperationHandler extends AbstractWorkflowOperationHandler {
+public class MicrosoftAzureAttachTranscriptionOperationHandler extends AbstractWorkflowOperationHandler {
 
-  private static final Logger logger = LoggerFactory.getLogger(AmberscriptAttachTranscriptionOperationHandler.class);
+  /** The logging facility */
+  private static final Logger logger = LoggerFactory.getLogger(MicrosoftAzureAttachTranscriptionOperationHandler.class);
 
   /** Workflow configuration option keys */
   static final String TRANSCRIPTION_JOB_ID = "transcription-job-id";
   static final String TARGET_CAPTION_FORMAT = "target-caption-format";
+  static final String OPT_LANGUAGE = "replace-with-language";
 
+  /** The transcription service */
   private TranscriptionService service = null;
-  private CaptionService captionService;
-
   private Workspace workspace;
+
+  private static final String REPLACE_THIS_WITH_LANGUAGE = "____";
+  private String autoDetectedLanguage = null;
 
   @Override
   @Activate
@@ -83,60 +86,62 @@ public class AmberscriptAttachTranscriptionOperationHandler extends AbstractWork
     MediaPackage mediaPackage = workflowInstance.getMediaPackage();
     WorkflowOperationInstance operation = workflowInstance.getCurrentOperation();
 
-    logger.debug("Attach transcription for mediapackage '{}' started.", mediaPackage);
+    logger.info("Attach transcription for mediapackage {} started", mediaPackage);
 
+    // Get job id.
     String jobId = StringUtils.trimToNull(operation.getConfiguration(TRANSCRIPTION_JOB_ID));
-    if (jobId == null) {
-      throw new WorkflowOperationException(TRANSCRIPTION_JOB_ID + " missing.");
+    if (StringUtils.isBlank(jobId)) {
+      throw new WorkflowOperationException(TRANSCRIPTION_JOB_ID + " missing");
     }
 
+    // Check which tags/flavors have been configured
     ConfiguredTagsAndFlavors tagsAndFlavors = getTagsAndFlavors(
-        workflowInstance, Configuration.none, Configuration.none, Configuration.many, Configuration.many);
-    List<MediaPackageElementFlavor> targetFlavorOption = tagsAndFlavors.getTargetFlavors();
-    List<String> targetTagOption = tagsAndFlavors.getTargetTags();
-    String captionFormatOption = StringUtils.trimToNull(operation.getConfiguration(TARGET_CAPTION_FORMAT));
-
-    MediaPackageElementFlavor flavor;
-    if (!targetFlavorOption.isEmpty()) {
-      flavor = targetFlavorOption.get(0);
-    } else {
-      // If the target format is not specified, we will leave it as is (srt).
-      String format = (captionFormatOption != null) ? captionFormatOption : "srt";
-      if (service.getLanguage() != null) {
-        flavor = new MediaPackageElementFlavor("captions", format + "+" + service.getLanguage());
-      } else {
-        flavor = new MediaPackageElementFlavor("captions", format);
-      }
-    }
+            workflowInstance, Configuration.none, Configuration.none, Configuration.many, Configuration.one);
+    List<String> targetTags = tagsAndFlavors.getTargetTags();
+    // Target flavor is mandatory
+    MediaPackageElementFlavor targetFlavor = tagsAndFlavors.getSingleTargetFlavor();
+    String language = StringUtils.trimToNull(operation.getConfiguration(OPT_LANGUAGE));
 
     try {
-      MediaPackageElement transcription
-          = service.getGeneratedTranscription(mediaPackage.getIdentifier().toString(), jobId);
+      // Get transcription file from the service
+      MediaPackageElement transcription = service.getGeneratedTranscription(mediaPackage.getIdentifier().toString(),
+              jobId);
 
-      MediaPackageElement convertedTranscription;
-      if (captionFormatOption != null) {
-        Job job = captionService.convert(transcription, "subrip", captionFormatOption, service.getLanguage());
-        if (!waitForStatus(job).isSuccess()) {
-          throw new WorkflowOperationException("Transcription format conversion job did not complete successfully.");
-        }
-        convertedTranscription = MediaPackageElementParser.getFromXml(job.getPayload());
-        workspace.delete(transcription.getURI());
+      // Get return values from the service
+      try {
+        Map<String, Object> returnValues = service.getReturnValues(mediaPackage.getIdentifier().toString(), jobId);
+        autoDetectedLanguage = (String) returnValues.get("autoDetectedLanguage");
+      } catch (NullPointerException e) {
+        logger.warn("Key missing in return values", e);
+      } catch (TranscriptionServiceException e) {
+        logger.warn("Something went wrong when trying to receive return values", e);
+      }
+
+      // Set the target flavor
+      if (language != null) {
+        targetFlavor = MediaPackageElementFlavor.parseFlavor(targetFlavor.toString()
+                .replace(REPLACE_THIS_WITH_LANGUAGE, language));
+      } else if (autoDetectedLanguage != null) {
+        targetFlavor = MediaPackageElementFlavor.parseFlavor(targetFlavor.toString()
+                .replace(REPLACE_THIS_WITH_LANGUAGE, autoDetectedLanguage));
       } else {
-        convertedTranscription = transcription;
+        targetFlavor = MediaPackageElementFlavor.parseFlavor(targetFlavor.toString()
+                .replace(REPLACE_THIS_WITH_LANGUAGE, ""));
       }
-      convertedTranscription.setFlavor(flavor);
-      for (String tag : targetTagOption) {
-        convertedTranscription.addTag(tag);
-      }
-      mediaPackage.add(convertedTranscription);
-      logger.info("Added transcription to the media package {}: {}", mediaPackage, convertedTranscription.getURI());
+      transcription.setFlavor(targetFlavor);
 
-    } catch (TranscriptionServiceException e) {
-      if (e.isCancel()) {
-        logger.warn(e.getMessage());
-        return createResult(mediaPackage, Action.SKIP);
+      // Add tags
+      for (String tag : targetTags) {
+        transcription.addTag(tag);
       }
-      throw new WorkflowOperationException(e);
+
+      // Add to media package
+      mediaPackage.add(transcription);
+
+      String uri = transcription.getURI().toString();
+      String ext = uri.substring(uri.lastIndexOf("."));
+      transcription.setURI(workspace.moveTo(transcription.getURI(), mediaPackage.getIdentifier().toString(),
+              transcription.getIdentifier(), "captions" + ext));
     } catch (Exception e) {
       throw new WorkflowOperationException(e);
     }
@@ -144,7 +149,7 @@ public class AmberscriptAttachTranscriptionOperationHandler extends AbstractWork
     return createResult(mediaPackage, Action.CONTINUE);
   }
 
-  @Reference(target = "(provider=amberscript)")
+  @Reference(target = "(provider=microsoft.azure)")
   public void setTranscriptionService(TranscriptionService service) {
     this.service = service;
   }
@@ -155,14 +160,8 @@ public class AmberscriptAttachTranscriptionOperationHandler extends AbstractWork
   }
 
   @Reference
-  public void setCaptionService(CaptionService service) {
-    this.captionService = service;
-  }
-
-  @Reference
   @Override
   public void setServiceRegistry(ServiceRegistry serviceRegistry) {
     super.setServiceRegistry(serviceRegistry);
   }
-
 }

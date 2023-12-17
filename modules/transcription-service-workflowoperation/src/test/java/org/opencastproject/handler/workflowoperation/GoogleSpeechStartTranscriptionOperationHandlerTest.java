@@ -18,8 +18,7 @@
  * the License.
  *
  */
-
-package org.opencastproject.transcription.workflowoperation;
+package org.opencastproject.handler.workflowoperation;
 
 import org.opencastproject.job.api.Job;
 import org.opencastproject.mediapackage.MediaPackage;
@@ -32,6 +31,7 @@ import org.opencastproject.workflow.api.WorkflowDefinitionImpl;
 import org.opencastproject.workflow.api.WorkflowInstance;
 import org.opencastproject.workflow.api.WorkflowOperationException;
 import org.opencastproject.workflow.api.WorkflowOperationInstance;
+import org.opencastproject.workflow.api.WorkflowOperationInstance.OperationState;
 import org.opencastproject.workflow.api.WorkflowOperationResult;
 import org.opencastproject.workflow.api.WorkflowOperationResult.Action;
 
@@ -46,12 +46,12 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-public class MicrosoftAzureStartTranscriptionOperationHandlerTest {
+public class GoogleSpeechStartTranscriptionOperationHandlerTest {
 
   /**
    * The operation handler to test
    */
-  private MicrosoftAzureStartTranscriptionOperationHandler operationHandler;
+  private GoogleSpeechStartTranscriptionOperationHandler operationHandler;
 
   /**
    * The transcription service
@@ -72,8 +72,8 @@ public class MicrosoftAzureStartTranscriptionOperationHandlerTest {
     MediaPackageBuilder builder = MediaPackageBuilderFactory.newInstance().newMediaPackageBuilder();
 
     // Media package set up
-    URI mediaPackageURI = MicrosoftAzureStartTranscriptionOperationHandlerTest.class.getResource("/mp_google.xml")
-            .toURI();
+    URI mediaPackageURI = GoogleSpeechStartTranscriptionOperationHandlerTest.class.getResource("/mp_google.xml")
+        .toURI();
     mediaPackage = builder.loadFromXml(mediaPackageURI.toURL().openStream());
 
     // Service registry set up
@@ -94,32 +94,31 @@ public class MicrosoftAzureStartTranscriptionOperationHandlerTest {
     service = EasyMock.createStrictMock(TranscriptionService.class);
     capturedTrack = Capture.newInstance();
     EasyMock
-            .expect(service.startTranscription(
-                    EasyMock.anyObject(String.class), EasyMock.capture(capturedTrack), EasyMock.anyObject(String.class),
-                    EasyMock.anyObject(String.class), EasyMock.anyObject(String.class))
-            )
-            .andReturn(null);
+        .expect(service.startTranscription(
+            EasyMock.anyObject(String.class), EasyMock.capture(capturedTrack), EasyMock.anyObject(String.class))
+        )
+        .andReturn(null);
     EasyMock.replay(service);
 
     // Workflow set up
     WorkflowDefinitionImpl def = new WorkflowDefinitionImpl();
-    def.setId("microsoft-azure-start-transcription");
+    def.setId("google-speech-start-transcription");
     workflowInstance = new WorkflowInstance(def, mediaPackage, null, null, null);
     workflowInstance.setId(1);
-    operation = new WorkflowOperationInstance("start-transcript", WorkflowOperationInstance.OperationState.RUNNING);
+    operation = new WorkflowOperationInstance("start-transcript", OperationState.RUNNING);
     List<WorkflowOperationInstance> operationList = new ArrayList<WorkflowOperationInstance>();
     operationList.add(operation);
     workflowInstance.setOperations(operationList);
 
     // Operation handler set up
-    operationHandler = new MicrosoftAzureStartTranscriptionOperationHandler();
+    operationHandler = new GoogleSpeechStartTranscriptionOperationHandler();
     operationHandler.setTranscriptionService(service);
     operationHandler.setServiceRegistry(serviceRegistry);
   }
 
   @Test
   public void testStartSelectByFlavor() throws Exception {
-    operation.setConfiguration(MicrosoftAzureStartTranscriptionOperationHandler.SOURCE_FLAVOR, "audio/flac");
+    operation.setConfiguration(GoogleSpeechStartTranscriptionOperationHandler.SOURCE_FLAVOR, "audio/flac");
 
     WorkflowOperationResult result = operationHandler.start(workflowInstance, null);
     Assert.assertEquals(Action.CONTINUE, result.getAction());
@@ -129,10 +128,10 @@ public class MicrosoftAzureStartTranscriptionOperationHandlerTest {
 
   @Test
   public void testStartSelectByTag() throws Exception {
-    operation.setConfiguration(MicrosoftAzureStartTranscriptionOperationHandler.SOURCE_TAG, "transcript");
+    operation.setConfiguration(GoogleSpeechStartTranscriptionOperationHandler.SOURCE_TAG, "transcript");
 
     WorkflowOperationResult result = operationHandler.start(workflowInstance, null);
-    Assert.assertEquals(WorkflowOperationResult.Action.CONTINUE, result.getAction());
+    Assert.assertEquals(Action.CONTINUE, result.getAction());
 
     Assert.assertEquals("audioTrack1", capturedTrack.getValue().getIdentifier());
   }
@@ -140,8 +139,7 @@ public class MicrosoftAzureStartTranscriptionOperationHandlerTest {
   @Test
   public void testStartSkipFlavor() throws Exception {
     // Make sure operation will be skipped if media package already contains the flavor passed
-    operation.setConfiguration(MicrosoftAzureStartTranscriptionOperationHandler.OPT_SKIP_IF_FLAVOR_EXISTS,
-            "audio/flac");
+    operation.setConfiguration(GoogleSpeechStartTranscriptionOperationHandler.SKIP_IF_FLAVOR_EXISTS, "audio/flac");
 
     WorkflowOperationResult result = operationHandler.start(workflowInstance, null);
     Assert.assertEquals(Action.SKIP, result.getAction());
@@ -149,10 +147,10 @@ public class MicrosoftAzureStartTranscriptionOperationHandlerTest {
 
   @Test
   public void testStartDontSkipFlavor() throws Exception {
-    operation.setConfiguration(MicrosoftAzureStartTranscriptionOperationHandler.SOURCE_TAG, "transcript");
+    operation.setConfiguration(GoogleSpeechStartTranscriptionOperationHandler.SOURCE_TAG, "transcript");
     // Make sure operation will NOT be skipped if media package does NOT contain the flavor passed
     operation.setConfiguration(
-            MicrosoftAzureStartTranscriptionOperationHandler.OPT_SKIP_IF_FLAVOR_EXISTS, "captions/timedtext");
+        GoogleSpeechStartTranscriptionOperationHandler.SKIP_IF_FLAVOR_EXISTS, "captions/timedtext");
 
     WorkflowOperationResult result = operationHandler.start(workflowInstance, null);
     Assert.assertEquals(Action.CONTINUE, result.getAction());

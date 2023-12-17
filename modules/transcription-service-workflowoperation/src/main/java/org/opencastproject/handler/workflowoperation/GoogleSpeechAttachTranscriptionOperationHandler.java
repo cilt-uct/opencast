@@ -18,16 +18,17 @@
  * the License.
  *
  */
+package org.opencastproject.handler.workflowoperation;
 
-package org.opencastproject.transcription.workflowoperation;
-
+import org.opencastproject.caption.api.CaptionService;
+import org.opencastproject.job.api.Job;
 import org.opencastproject.job.api.JobContext;
 import org.opencastproject.mediapackage.MediaPackage;
 import org.opencastproject.mediapackage.MediaPackageElement;
 import org.opencastproject.mediapackage.MediaPackageElementFlavor;
+import org.opencastproject.mediapackage.MediaPackageElementParser;
 import org.opencastproject.serviceregistry.api.ServiceRegistry;
 import org.opencastproject.transcription.api.TranscriptionService;
-import org.opencastproject.transcription.api.TranscriptionServiceException;
 import org.opencastproject.workflow.api.AbstractWorkflowOperationHandler;
 import org.opencastproject.workflow.api.ConfiguredTagsAndFlavors;
 import org.opencastproject.workflow.api.WorkflowInstance;
@@ -40,53 +41,62 @@ import org.opencastproject.workspace.api.Workspace;
 
 import org.apache.commons.lang3.StringUtils;
 import org.osgi.service.component.ComponentContext;
-import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
-import java.util.Map;
 
 @Component(
-        immediate = true,
-        service = WorkflowOperationHandler.class,
-        property = {
-                "service.description=Microsoft Azure Attach Transcription Workflow Operation Handler",
-                "workflow.operation=microsoft-azure-attach-transcription"
-        }
+    immediate = true,
+    service = WorkflowOperationHandler.class,
+    property = {
+        "service.description=Attach Google Speech Transcription Workflow Operation Handler",
+        "workflow.operation=google-speech-attach-transcription"
+    }
 )
-public class MicrosoftAzureAttachTranscriptionOperationHandler extends AbstractWorkflowOperationHandler {
+public class GoogleSpeechAttachTranscriptionOperationHandler extends AbstractWorkflowOperationHandler {
 
-  /** The logging facility */
-  private static final Logger logger = LoggerFactory.getLogger(MicrosoftAzureAttachTranscriptionOperationHandler.class);
+  /**
+   * The logging facility
+   */
+  private static final Logger logger = LoggerFactory.getLogger(GoogleSpeechAttachTranscriptionOperationHandler.class);
 
-  /** Workflow configuration option keys */
+  /**
+   * Workflow configuration option keys
+   */
   static final String TRANSCRIPTION_JOB_ID = "transcription-job-id";
   static final String TARGET_CAPTION_FORMAT = "target-caption-format";
-  static final String OPT_LANGUAGE = "replace-with-language";
+  static final String TRANSCRIPTION_LINE_SIZE = "line-size";
+  static final String DEFAULT_LINE_SIZE = "100";
 
-  /** The transcription service */
+  /**
+   * The transcription service
+   */
   private TranscriptionService service = null;
   private Workspace workspace;
-
-  private static final String REPLACE_THIS_WITH_LANGUAGE = "____";
-  private String autoDetectedLanguage = null;
+  private CaptionService captionService;
 
   @Override
-  @Activate
   protected void activate(ComponentContext cc) {
     super.activate(cc);
   }
 
+  /**
+   * {@inheritDoc}
+   *
+   * @see
+   * org.opencastproject.workflow.api.WorkflowOperationHandler#start(org.opencastproject.workflow.api.WorkflowInstance,
+   * JobContext)
+   */
   @Override
   public WorkflowOperationResult start(final WorkflowInstance workflowInstance, JobContext context)
           throws WorkflowOperationException {
     MediaPackage mediaPackage = workflowInstance.getMediaPackage();
     WorkflowOperationInstance operation = workflowInstance.getCurrentOperation();
 
-    logger.info("Attach transcription for mediapackage {} started", mediaPackage);
+    logger.debug("Attach transcription for mediapackage {} started", mediaPackage);
 
     // Get job id.
     String jobId = StringUtils.trimToNull(operation.getConfiguration(TRANSCRIPTION_JOB_ID));
@@ -96,42 +106,38 @@ public class MicrosoftAzureAttachTranscriptionOperationHandler extends AbstractW
 
     // Check which tags/flavors have been configured
     ConfiguredTagsAndFlavors tagsAndFlavors = getTagsAndFlavors(
-            workflowInstance, Configuration.none, Configuration.none, Configuration.many, Configuration.one);
-    List<String> targetTags = tagsAndFlavors.getTargetTags();
+        workflowInstance, Configuration.none, Configuration.none, Configuration.many, Configuration.one);
+    List<String> targetTagOption = tagsAndFlavors.getTargetTags();
     // Target flavor is mandatory
     MediaPackageElementFlavor targetFlavor = tagsAndFlavors.getSingleTargetFlavor();
-    String language = StringUtils.trimToNull(operation.getConfiguration(OPT_LANGUAGE));
+
+    String captionFormatOption = StringUtils.trimToNull(operation.getConfiguration(TARGET_CAPTION_FORMAT));
+
+    // Get line size if set
+    String lineSize = StringUtils.trimToNull(operation.getConfiguration(TRANSCRIPTION_LINE_SIZE));
+    if (StringUtils.isBlank(lineSize)) {
+      lineSize = DEFAULT_LINE_SIZE; // Use default line size
+    }
 
     try {
       // Get transcription file from the service
-      MediaPackageElement transcription = service.getGeneratedTranscription(mediaPackage.getIdentifier().toString(),
-              jobId);
+      MediaPackageElement original = service.getGeneratedTranscription(mediaPackage.getIdentifier().toString(), jobId);
+      MediaPackageElement transcription = original;
 
-      // Get return values from the service
-      try {
-        Map<String, Object> returnValues = service.getReturnValues(mediaPackage.getIdentifier().toString(), jobId);
-        autoDetectedLanguage = (String) returnValues.get("autoDetectedLanguage");
-      } catch (NullPointerException e) {
-        logger.warn("Key missing in return values", e);
-      } catch (TranscriptionServiceException e) {
-        logger.warn("Something went wrong when trying to receive return values", e);
+      // If caption format passed, convert to desired format
+      if (StringUtils.isNotBlank(captionFormatOption)) {
+        Job job = captionService.convert(transcription, "google-speech", captionFormatOption, lineSize);
+        if (!waitForStatus(job).isSuccess()) {
+          throw new WorkflowOperationException("Transcription format conversion job did not complete successfully");
+        }
+        transcription = MediaPackageElementParser.getFromXml(job.getPayload());
       }
 
       // Set the target flavor
-      if (language != null) {
-        targetFlavor = MediaPackageElementFlavor.parseFlavor(targetFlavor.toString()
-                .replace(REPLACE_THIS_WITH_LANGUAGE, language));
-      } else if (autoDetectedLanguage != null) {
-        targetFlavor = MediaPackageElementFlavor.parseFlavor(targetFlavor.toString()
-                .replace(REPLACE_THIS_WITH_LANGUAGE, autoDetectedLanguage));
-      } else {
-        targetFlavor = MediaPackageElementFlavor.parseFlavor(targetFlavor.toString()
-                .replace(REPLACE_THIS_WITH_LANGUAGE, ""));
-      }
       transcription.setFlavor(targetFlavor);
 
       // Add tags
-      for (String tag : targetTags) {
+      for (String tag : targetTagOption) {
         transcription.addTag(tag);
       }
 
@@ -141,7 +147,7 @@ public class MicrosoftAzureAttachTranscriptionOperationHandler extends AbstractW
       String uri = transcription.getURI().toString();
       String ext = uri.substring(uri.lastIndexOf("."));
       transcription.setURI(workspace.moveTo(transcription.getURI(), mediaPackage.getIdentifier().toString(),
-              transcription.getIdentifier(), "captions" + ext));
+              transcription.getIdentifier(), "captions." + ext));
     } catch (Exception e) {
       throw new WorkflowOperationException(e);
     }
@@ -149,7 +155,7 @@ public class MicrosoftAzureAttachTranscriptionOperationHandler extends AbstractW
     return createResult(mediaPackage, Action.CONTINUE);
   }
 
-  @Reference(target = "(provider=microsoft.azure)")
+  @Reference(target = "(provider=google.speech)")
   public void setTranscriptionService(TranscriptionService service) {
     this.service = service;
   }
@@ -160,8 +166,14 @@ public class MicrosoftAzureAttachTranscriptionOperationHandler extends AbstractW
   }
 
   @Reference
+  public void setCaptionService(CaptionService service) {
+    this.captionService = service;
+  }
+
+  @Reference
   @Override
   public void setServiceRegistry(ServiceRegistry serviceRegistry) {
     super.setServiceRegistry(serviceRegistry);
   }
+
 }

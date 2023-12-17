@@ -18,7 +18,7 @@
  * the License.
  *
  */
-package org.opencastproject.transcription.workflowoperation;
+package org.opencastproject.handler.workflowoperation;
 
 import org.opencastproject.caption.api.CaptionService;
 import org.opencastproject.job.api.Job;
@@ -29,6 +29,7 @@ import org.opencastproject.mediapackage.MediaPackageElementFlavor;
 import org.opencastproject.mediapackage.MediaPackageElementParser;
 import org.opencastproject.serviceregistry.api.ServiceRegistry;
 import org.opencastproject.transcription.api.TranscriptionService;
+import org.opencastproject.transcription.api.TranscriptionServiceException;
 import org.opencastproject.workflow.api.AbstractWorkflowOperationHandler;
 import org.opencastproject.workflow.api.ConfiguredTagsAndFlavors;
 import org.opencastproject.workflow.api.WorkflowInstance;
@@ -41,6 +42,7 @@ import org.opencastproject.workspace.api.Workspace;
 
 import org.apache.commons.lang3.StringUtils;
 import org.osgi.service.component.ComponentContext;
+import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 import org.slf4j.Logger;
@@ -52,102 +54,89 @@ import java.util.List;
     immediate = true,
     service = WorkflowOperationHandler.class,
     property = {
-        "service.description=Attach Google Speech Transcription Workflow Operation Handler",
-        "workflow.operation=google-speech-attach-transcription"
+        "service.description=Attach Transcription Workflow Operation Handler (Amberscript)",
+        "workflow.operation=amberscript-attach-transcription"
     }
 )
-public class GoogleSpeechAttachTranscriptionOperationHandler extends AbstractWorkflowOperationHandler {
+public class AmberscriptAttachTranscriptionOperationHandler extends AbstractWorkflowOperationHandler {
 
-  /**
-   * The logging facility
-   */
-  private static final Logger logger = LoggerFactory.getLogger(GoogleSpeechAttachTranscriptionOperationHandler.class);
+  private static final Logger logger = LoggerFactory.getLogger(AmberscriptAttachTranscriptionOperationHandler.class);
 
-  /**
-   * Workflow configuration option keys
-   */
+  /** Workflow configuration option keys */
   static final String TRANSCRIPTION_JOB_ID = "transcription-job-id";
   static final String TARGET_CAPTION_FORMAT = "target-caption-format";
-  static final String TRANSCRIPTION_LINE_SIZE = "line-size";
-  static final String DEFAULT_LINE_SIZE = "100";
 
-  /**
-   * The transcription service
-   */
   private TranscriptionService service = null;
-  private Workspace workspace;
   private CaptionService captionService;
 
+  private Workspace workspace;
+
   @Override
+  @Activate
   protected void activate(ComponentContext cc) {
     super.activate(cc);
   }
 
-  /**
-   * {@inheritDoc}
-   *
-   * @see
-   * org.opencastproject.workflow.api.WorkflowOperationHandler#start(org.opencastproject.workflow.api.WorkflowInstance,
-   * JobContext)
-   */
   @Override
   public WorkflowOperationResult start(final WorkflowInstance workflowInstance, JobContext context)
           throws WorkflowOperationException {
     MediaPackage mediaPackage = workflowInstance.getMediaPackage();
     WorkflowOperationInstance operation = workflowInstance.getCurrentOperation();
 
-    logger.debug("Attach transcription for mediapackage {} started", mediaPackage);
+    logger.debug("Attach transcription for mediapackage '{}' started.", mediaPackage);
 
-    // Get job id.
     String jobId = StringUtils.trimToNull(operation.getConfiguration(TRANSCRIPTION_JOB_ID));
-    if (StringUtils.isBlank(jobId)) {
-      throw new WorkflowOperationException(TRANSCRIPTION_JOB_ID + " missing");
+    if (jobId == null) {
+      throw new WorkflowOperationException(TRANSCRIPTION_JOB_ID + " missing.");
     }
 
-    // Check which tags/flavors have been configured
     ConfiguredTagsAndFlavors tagsAndFlavors = getTagsAndFlavors(
-        workflowInstance, Configuration.none, Configuration.none, Configuration.many, Configuration.one);
+        workflowInstance, Configuration.none, Configuration.none, Configuration.many, Configuration.many);
+    List<MediaPackageElementFlavor> targetFlavorOption = tagsAndFlavors.getTargetFlavors();
     List<String> targetTagOption = tagsAndFlavors.getTargetTags();
-    // Target flavor is mandatory
-    MediaPackageElementFlavor targetFlavor = tagsAndFlavors.getSingleTargetFlavor();
-
     String captionFormatOption = StringUtils.trimToNull(operation.getConfiguration(TARGET_CAPTION_FORMAT));
 
-    // Get line size if set
-    String lineSize = StringUtils.trimToNull(operation.getConfiguration(TRANSCRIPTION_LINE_SIZE));
-    if (StringUtils.isBlank(lineSize)) {
-      lineSize = DEFAULT_LINE_SIZE; // Use default line size
+    MediaPackageElementFlavor flavor;
+    if (!targetFlavorOption.isEmpty()) {
+      flavor = targetFlavorOption.get(0);
+    } else {
+      // If the target format is not specified, we will leave it as is (srt).
+      String format = (captionFormatOption != null) ? captionFormatOption : "srt";
+      if (service.getLanguage() != null) {
+        flavor = new MediaPackageElementFlavor("captions", format + "+" + service.getLanguage());
+      } else {
+        flavor = new MediaPackageElementFlavor("captions", format);
+      }
     }
 
     try {
-      // Get transcription file from the service
-      MediaPackageElement original = service.getGeneratedTranscription(mediaPackage.getIdentifier().toString(), jobId);
-      MediaPackageElement transcription = original;
+      MediaPackageElement transcription
+          = service.getGeneratedTranscription(mediaPackage.getIdentifier().toString(), jobId);
 
-      // If caption format passed, convert to desired format
-      if (StringUtils.isNotBlank(captionFormatOption)) {
-        Job job = captionService.convert(transcription, "google-speech", captionFormatOption, lineSize);
+      MediaPackageElement convertedTranscription;
+      if (captionFormatOption != null) {
+        Job job = captionService.convert(transcription, "subrip", captionFormatOption, service.getLanguage());
         if (!waitForStatus(job).isSuccess()) {
-          throw new WorkflowOperationException("Transcription format conversion job did not complete successfully");
+          throw new WorkflowOperationException("Transcription format conversion job did not complete successfully.");
         }
-        transcription = MediaPackageElementParser.getFromXml(job.getPayload());
+        convertedTranscription = MediaPackageElementParser.getFromXml(job.getPayload());
+        workspace.delete(transcription.getURI());
+      } else {
+        convertedTranscription = transcription;
       }
-
-      // Set the target flavor
-      transcription.setFlavor(targetFlavor);
-
-      // Add tags
+      convertedTranscription.setFlavor(flavor);
       for (String tag : targetTagOption) {
-        transcription.addTag(tag);
+        convertedTranscription.addTag(tag);
       }
+      mediaPackage.add(convertedTranscription);
+      logger.info("Added transcription to the media package {}: {}", mediaPackage, convertedTranscription.getURI());
 
-      // Add to media package
-      mediaPackage.add(transcription);
-
-      String uri = transcription.getURI().toString();
-      String ext = uri.substring(uri.lastIndexOf("."));
-      transcription.setURI(workspace.moveTo(transcription.getURI(), mediaPackage.getIdentifier().toString(),
-              transcription.getIdentifier(), "captions." + ext));
+    } catch (TranscriptionServiceException e) {
+      if (e.isCancel()) {
+        logger.warn(e.getMessage());
+        return createResult(mediaPackage, Action.SKIP);
+      }
+      throw new WorkflowOperationException(e);
     } catch (Exception e) {
       throw new WorkflowOperationException(e);
     }
@@ -155,7 +144,7 @@ public class GoogleSpeechAttachTranscriptionOperationHandler extends AbstractWor
     return createResult(mediaPackage, Action.CONTINUE);
   }
 
-  @Reference(target = "(provider=google.speech)")
+  @Reference(target = "(provider=amberscript)")
   public void setTranscriptionService(TranscriptionService service) {
     this.service = service;
   }

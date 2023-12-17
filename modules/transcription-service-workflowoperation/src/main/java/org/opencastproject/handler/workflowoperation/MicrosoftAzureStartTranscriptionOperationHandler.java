@@ -18,7 +18,8 @@
  * the License.
  *
  */
-package org.opencastproject.transcription.workflowoperation;
+
+package org.opencastproject.handler.workflowoperation;
 
 import org.opencastproject.job.api.Job;
 import org.opencastproject.job.api.JobContext;
@@ -32,6 +33,7 @@ import org.opencastproject.serviceregistry.api.ServiceRegistry;
 import org.opencastproject.transcription.api.TranscriptionService;
 import org.opencastproject.transcription.api.TranscriptionServiceException;
 import org.opencastproject.workflow.api.AbstractWorkflowOperationHandler;
+import org.opencastproject.workflow.api.ConfiguredTagsAndFlavors;
 import org.opencastproject.workflow.api.WorkflowInstance;
 import org.opencastproject.workflow.api.WorkflowOperationException;
 import org.opencastproject.workflow.api.WorkflowOperationHandler;
@@ -48,22 +50,26 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Collection;
+import java.util.List;
 
 @Component(
-    immediate = true,
-    service = WorkflowOperationHandler.class,
-    property = {
-        "service.description=Nibity Transcription Workflow Operation Handler",
-        "workflow.operation=nibity-start-transcription"
-    }
+        immediate = true,
+        service = WorkflowOperationHandler.class,
+        property = {
+                "service.description=Microsoft Azure Start Transcription Workflow Operation Handler",
+                "workflow.operation=microsoft-azure-start-transcription"
+        }
 )
-public class NibityStartTranscriptionWorkflowOperationHandler extends AbstractWorkflowOperationHandler {
+public class MicrosoftAzureStartTranscriptionOperationHandler extends AbstractWorkflowOperationHandler {
 
   /** The logging facility */
-  private static final Logger logger = LoggerFactory.getLogger(NibityStartTranscriptionWorkflowOperationHandler.class);
+  private static final Logger logger = LoggerFactory.getLogger(MicrosoftAzureStartTranscriptionOperationHandler.class);
 
   /** Workflow configuration option keys */
-  static final String SKIP_IF_FLAVOR_EXISTS = "skip-if-flavor-exists";
+  static final String OPT_LANGUAGE_CODE = "language-code";
+  static final String OPT_SKIP_IF_FLAVOR_EXISTS = "skip-if-flavor-exists";
+  static final String OPT_AUTO_DETECT_LANGUAGE = "auto-detect-language";
+  static final String OPT_AUTO_DETECT_LANGUAGES = "auto-detect-languages";
 
   /** The transcription service */
   private TranscriptionService service = null;
@@ -72,22 +78,15 @@ public class NibityStartTranscriptionWorkflowOperationHandler extends AbstractWo
   @Activate
   protected void activate(ComponentContext cc) {
     super.activate(cc);
-    logger.info("Registering Nibity workflow operation handler");
   }
 
-  /**
-   * {@inheritDoc}
-   *
-   * @see org.opencastproject.workflow.api.WorkflowOperationHandler
-   * #start(org.opencastproject.workflow.api.WorkflowInstance, JobContext)
-   */
   @Override
   public WorkflowOperationResult start(final WorkflowInstance workflowInstance, JobContext context)
           throws WorkflowOperationException {
     MediaPackage mediaPackage = workflowInstance.getMediaPackage();
     WorkflowOperationInstance operation = workflowInstance.getCurrentOperation();
 
-    String skipOption = StringUtils.trimToNull(operation.getConfiguration(SKIP_IF_FLAVOR_EXISTS));
+    String skipOption = StringUtils.trimToNull(operation.getConfiguration(OPT_SKIP_IF_FLAVOR_EXISTS));
     if (skipOption != null) {
       MediaPackageElement[] mpes = mediaPackage.getElementsByFlavor(MediaPackageElementFlavor.parseFlavor(skipOption));
       if (mpes != null && mpes.length > 0) {
@@ -98,36 +97,49 @@ public class NibityStartTranscriptionWorkflowOperationHandler extends AbstractWo
       }
     }
 
-    logger.debug("Start transcription for mediapackage {}", mediaPackage);
+    logger.debug("Start transcription for mediapackage {} started", mediaPackage);
 
     // Check which tags have been configured
-    String sourceTagOption = StringUtils.trimToNull(operation.getConfiguration(SOURCE_TAG));
-    String sourceFlavorOption = StringUtils.trimToNull(operation.getConfiguration(SOURCE_FLAVOR));
+    ConfiguredTagsAndFlavors tagsAndFlavors = getTagsAndFlavors(
+            workflowInstance, Configuration.many, Configuration.many, Configuration.none, Configuration.none);
+    List<String> sourceTagOption = tagsAndFlavors.getSrcTags();
+    List<MediaPackageElementFlavor> sourceFlavorOption = tagsAndFlavors.getSrcFlavors();
 
     AbstractMediaPackageElementSelector<Track> elementSelector = new TrackSelector();
 
     // Make sure either one of tags or flavors are provided
-    if (StringUtils.isBlank(sourceTagOption) && StringUtils.isBlank(sourceFlavorOption)) {
+    if (sourceTagOption.isEmpty() && sourceFlavorOption.isEmpty()) {
       throw new WorkflowOperationException("No source tag or flavor have been specified!");
     }
 
-    if (StringUtils.isNotBlank(sourceFlavorOption)) {
-      String flavor = StringUtils.trim(sourceFlavorOption);
-      try {
-        elementSelector.addFlavor(MediaPackageElementFlavor.parseFlavor(flavor));
-      } catch (IllegalArgumentException e) {
-        throw new WorkflowOperationException("Source flavor '" + flavor + "' is malformed");
-      }
+    if (!sourceFlavorOption.isEmpty()) {
+      MediaPackageElementFlavor flavor = sourceFlavorOption.get(0);
+      elementSelector.addFlavor(flavor);
     }
-    if (sourceTagOption != null) {
-      elementSelector.addTag(sourceTagOption);
+    if (!sourceTagOption.isEmpty()) {
+      elementSelector.addTag(sourceTagOption.get(0));
+    }
+
+    // Get language code if configured
+    String langCode = operation.getConfiguration(OPT_LANGUAGE_CODE);
+    if (StringUtils.isNotBlank(langCode)) {
+      langCode = StringUtils.trim(langCode);
+    }
+    String autoDetectLanguage = operation.getConfiguration(OPT_AUTO_DETECT_LANGUAGE);
+    if (StringUtils.isNotBlank(langCode)) {
+      langCode = StringUtils.trim(langCode);
+    }
+    String autoDetectLanguages = operation.getConfiguration(OPT_AUTO_DETECT_LANGUAGES);
+    if (StringUtils.isNotBlank(langCode)) {
+      langCode = StringUtils.trim(langCode);
     }
 
     Collection<Track> elements = elementSelector.select(mediaPackage, false);
     Job job = null;
     for (Track track : elements) {
       try {
-        job = service.startTranscription(mediaPackage.getIdentifier().toString(), track);
+        job = service.startTranscription(mediaPackage.getIdentifier().toString(), track, langCode, autoDetectLanguage,
+                autoDetectLanguages);
         // Only one job per media package
         break;
       } catch (TranscriptionServiceException e) {
@@ -144,7 +156,7 @@ public class NibityStartTranscriptionWorkflowOperationHandler extends AbstractWo
     if (!waitForStatus(job).isSuccess()) {
       throw new WorkflowOperationException("Transcription job did not complete successfully");
     }
-    // Return OK means that the transcription job was created, but not finished yet
+    // Return OK means that the microsoft azure job was created, but not finished yet
 
     logger.debug("External transcription job for mediapackage {} was created", mediaPackage);
 
@@ -152,7 +164,7 @@ public class NibityStartTranscriptionWorkflowOperationHandler extends AbstractWo
     return createResult(Action.CONTINUE);
   }
 
-  @Reference(target = "(provider=waywithwords)")
+  @Reference(target = "(provider=microsoft.azure)")
   public void setTranscriptionService(TranscriptionService service) {
     this.service = service;
   }

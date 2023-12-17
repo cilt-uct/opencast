@@ -18,7 +18,7 @@
  * the License.
  *
  */
-package org.opencastproject.transcription.workflowoperation;
+package org.opencastproject.handler.workflowoperation;
 
 import org.opencastproject.job.api.Job;
 import org.opencastproject.mediapackage.MediaPackage;
@@ -46,21 +46,15 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-public class GoogleSpeechStartTranscriptionOperationHandlerTest {
+public class StartTranscriptionOperationHandlerTest {
 
-  /**
-   * The operation handler to test
-   */
-  private GoogleSpeechStartTranscriptionOperationHandler operationHandler;
+  /** The operation handler to test */
+  private StartTranscriptionOperationHandler operationHandler;
 
-  /**
-   * The transcription service
-   */
+  /** The transcription service */
   private TranscriptionService service;
 
-  /**
-   * The operation instance
-   */
+  /** The operation instance */
   private WorkflowOperationInstance operation;
 
   private MediaPackage mediaPackage;
@@ -72,8 +66,7 @@ public class GoogleSpeechStartTranscriptionOperationHandlerTest {
     MediaPackageBuilder builder = MediaPackageBuilderFactory.newInstance().newMediaPackageBuilder();
 
     // Media package set up
-    URI mediaPackageURI = GoogleSpeechStartTranscriptionOperationHandlerTest.class.getResource("/mp_google.xml")
-        .toURI();
+    URI mediaPackageURI = StartTranscriptionOperationHandlerTest.class.getResource("/mp.xml").toURI();
     mediaPackage = builder.loadFromXml(mediaPackageURI.toURL().openStream());
 
     // Service registry set up
@@ -83,7 +76,7 @@ public class GoogleSpeechStartTranscriptionOperationHandlerTest {
     EasyMock.expect(job1.getStatus()).andReturn(Job.Status.FINISHED);
     EasyMock.expect(job1.getDateCreated()).andReturn(new Date());
     EasyMock.expect(job1.getDateStarted()).andReturn(new Date());
-    EasyMock.expect(job1.getQueueTime()).andReturn(0L);
+    EasyMock.expect(job1.getQueueTime()).andReturn(new Long(0));
     EasyMock.replay(job1);
 
     ServiceRegistry serviceRegistry = EasyMock.createNiceMock(ServiceRegistry.class);
@@ -93,16 +86,13 @@ public class GoogleSpeechStartTranscriptionOperationHandlerTest {
     // Transcription service set up
     service = EasyMock.createStrictMock(TranscriptionService.class);
     capturedTrack = Capture.newInstance();
-    EasyMock
-        .expect(service.startTranscription(
-            EasyMock.anyObject(String.class), EasyMock.capture(capturedTrack), EasyMock.anyObject(String.class))
-        )
-        .andReturn(null);
+    EasyMock.expect(service.startTranscription(EasyMock.anyObject(String.class), EasyMock.capture(capturedTrack)))
+            .andReturn(null);
     EasyMock.replay(service);
 
     // Workflow set up
     WorkflowDefinitionImpl def = new WorkflowDefinitionImpl();
-    def.setId("google-speech-start-transcription");
+    def.setId("DCE-start-transcription");
     workflowInstance = new WorkflowInstance(def, mediaPackage, null, null, null);
     workflowInstance.setId(1);
     operation = new WorkflowOperationInstance("start-transcript", OperationState.RUNNING);
@@ -111,14 +101,14 @@ public class GoogleSpeechStartTranscriptionOperationHandlerTest {
     workflowInstance.setOperations(operationList);
 
     // Operation handler set up
-    operationHandler = new GoogleSpeechStartTranscriptionOperationHandler();
+    operationHandler = new StartTranscriptionOperationHandler();
     operationHandler.setTranscriptionService(service);
     operationHandler.setServiceRegistry(serviceRegistry);
   }
 
   @Test
   public void testStartSelectByFlavor() throws Exception {
-    operation.setConfiguration(GoogleSpeechStartTranscriptionOperationHandler.SOURCE_FLAVOR, "audio/flac");
+    operation.setConfiguration(StartTranscriptionOperationHandler.SOURCE_FLAVOR, "audio/ogg");
 
     WorkflowOperationResult result = operationHandler.start(workflowInstance, null);
     Assert.assertEquals(Action.CONTINUE, result.getAction());
@@ -128,7 +118,7 @@ public class GoogleSpeechStartTranscriptionOperationHandlerTest {
 
   @Test
   public void testStartSelectByTag() throws Exception {
-    operation.setConfiguration(GoogleSpeechStartTranscriptionOperationHandler.SOURCE_TAG, "transcript");
+    operation.setConfiguration(StartTranscriptionOperationHandler.SOURCE_TAG, "transcript");
 
     WorkflowOperationResult result = operationHandler.start(workflowInstance, null);
     Assert.assertEquals(Action.CONTINUE, result.getAction());
@@ -139,7 +129,7 @@ public class GoogleSpeechStartTranscriptionOperationHandlerTest {
   @Test
   public void testStartSkipFlavor() throws Exception {
     // Make sure operation will be skipped if media package already contains the flavor passed
-    operation.setConfiguration(GoogleSpeechStartTranscriptionOperationHandler.SKIP_IF_FLAVOR_EXISTS, "audio/flac");
+    operation.setConfiguration(StartTranscriptionOperationHandler.SKIP_IF_FLAVOR_EXISTS, "audio/ogg");
 
     WorkflowOperationResult result = operationHandler.start(workflowInstance, null);
     Assert.assertEquals(Action.SKIP, result.getAction());
@@ -147,10 +137,9 @@ public class GoogleSpeechStartTranscriptionOperationHandlerTest {
 
   @Test
   public void testStartDontSkipFlavor() throws Exception {
-    operation.setConfiguration(GoogleSpeechStartTranscriptionOperationHandler.SOURCE_TAG, "transcript");
+    operation.setConfiguration(StartTranscriptionOperationHandler.SOURCE_TAG, "transcript");
     // Make sure operation will NOT be skipped if media package does NOT contain the flavor passed
-    operation.setConfiguration(
-        GoogleSpeechStartTranscriptionOperationHandler.SKIP_IF_FLAVOR_EXISTS, "captions/timedtext");
+    operation.setConfiguration(StartTranscriptionOperationHandler.SKIP_IF_FLAVOR_EXISTS, "captions/timedtext");
 
     WorkflowOperationResult result = operationHandler.start(workflowInstance, null);
     Assert.assertEquals(Action.CONTINUE, result.getAction());
