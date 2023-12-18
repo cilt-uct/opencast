@@ -146,7 +146,7 @@ public class NibityStartTranscriptionWorkflowOperationHandler extends AbstractWo
     return createResult(Action.CONTINUE);
   }
 
-  @Reference(target = "(provider=waywithwords)")
+  @Reference(target = "(provider=nibity)")
   public void setTranscriptionService(TranscriptionService service) {
     this.service = service;
   }

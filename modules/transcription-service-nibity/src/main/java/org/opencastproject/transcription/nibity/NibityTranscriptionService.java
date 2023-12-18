@@ -106,7 +106,7 @@ import java.util.concurrent.TimeUnit;
         service = { TranscriptionService.class, NibityTranscriptionService.class },
         property = {
                 "service.description=Nibity Transcription Service",
-                "provider=waywithwords"
+                "provider=nibity"
         }
 )
 
@@ -203,6 +203,7 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
 
   @Activate
   public void activate(ComponentContext cc) {
+    logger.info("Activating Nibity Transcription Service!");
 
     // Has this service been enabled?
     enabled = OsgiUtil.getOptCfgAsBoolean(cc.getProperties(), ENABLED_CONFIG).get();
