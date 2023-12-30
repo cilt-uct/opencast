@@ -237,10 +237,11 @@ public class LtiServlet extends HttpServlet {
       } else {
         String customTool = URLDecoder.decode(StringUtils.trimToEmpty(
                 req.getParameter(LTI_CUSTOM_TOOL)), StandardCharsets.UTF_8.displayName());
-        customTool = customTool.replaceAll(
-                "/?ltitools/(?<tool>[^/]*)/index.html\\??",
-                "/ltitools/index.html?subtool=${tool}&"
-        );
+        //remove the replace
+        //customTool = customTool.replaceAll(
+        //        "/?ltitools/(?<tool>[^/]*)/index.html\\??",
+        //        "/ltitools/index.html?subtool=${tool}&"
+        //);
         toolUri = new URI(customTool);
       }
 
