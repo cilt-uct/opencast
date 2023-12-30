@@ -66,6 +66,7 @@ public class LtiServlet extends HttpServlet {
 
   private static final String LTI_CUSTOM_PREFIX = "custom_";
   private static final String LTI_CUSTOM_TOOL = "custom_tool";
+  private static final String LTI_CUSTOM_DL_TOOL = "custom_dl_tool";
   private static final String LTI_CUSTOM_TEST = "custom_test";
 
   /** The logger */
@@ -218,13 +219,27 @@ public class LtiServlet extends HttpServlet {
     // The URL of the LTI tool. If no specific tool is passed we use the test tool
     UriBuilder builder;
     try {
-      String customTool = URLDecoder
-              .decode(StringUtils.trimToEmpty(req.getParameter(LTI_CUSTOM_TOOL)), StandardCharsets.UTF_8.displayName());
-      customTool = customTool.replaceAll(
-          "/?ltitools/(?<tool>[^/]*)/index.html\\??",
-          "/ltitools/index.html?subtool=${tool}&"
-      );
-      URI toolUri = new URI(customTool);
+      String messageType = StringUtils.trimToEmpty(req.getParameter(LTI_MESSAGE_TYPE));
+      URI toolUri;
+
+      if (messageType.equals("ContentItemSelectionRequest")) {
+        toolUri = new URI(URLDecoder.decode(StringUtils.trimToEmpty(
+                req.getParameter(LTI_CUSTOM_DL_TOOL)), "UTF-8"));
+      } else if (req.getRequestURI().startsWith("/lti/player/")) {
+        String mpID = req.getRequestURI().replace("/lti/player/", "");
+        String redirectUrl = "/engage/theodul/ui/core.html?id=" + mpID + "&ltimode=true";
+        logger.debug("Received LTI content play request for {}: redirecting to {}", mpID, redirectUrl);
+        resp.sendRedirect(redirectUrl);
+        return;
+      } else {
+        String customTool = URLDecoder
+                .decode(StringUtils.trimToEmpty(req.getParameter(LTI_CUSTOM_TOOL)), StandardCharsets.UTF_8.displayName());
+        customTool = customTool.replaceAll(
+                "/?ltitools/(?<tool>[^/]*)/index.html\\??",
+                "/ltitools/index.html?subtool=${tool}&"
+        );
+        toolUri = new URI(customTool);
+      }
 
       if (toolUri.getPath().isEmpty()) {
         throw new URISyntaxException(toolUri.toString(), "Provided 'custom_tool' has an empty path");
