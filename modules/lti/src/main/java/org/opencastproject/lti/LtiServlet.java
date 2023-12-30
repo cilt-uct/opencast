@@ -168,6 +168,9 @@ public class LtiServlet extends HttpServlet {
   /** See the LTI specification */
   public static final String COURSE_SECTION = "lis_course_section_sourcedid";
 
+  /** See the LTI specification */
+  public static final String CONTENT_ITEM_MESSAGE_TYPE = "ContentItemSelectionRequest";
+
   public static final SortedSet<String> LTI_CONSTANTS;
 
   static {
@@ -222,7 +225,7 @@ public class LtiServlet extends HttpServlet {
       String messageType = StringUtils.trimToEmpty(req.getParameter(LTI_MESSAGE_TYPE));
       URI toolUri;
 
-      if (messageType.equals("ContentItemSelectionRequest")) {
+      if (messageType.equals(CONTENT_ITEM_MESSAGE_TYPE)) {
         toolUri = new URI(URLDecoder.decode(StringUtils.trimToEmpty(
                 req.getParameter(LTI_CUSTOM_DL_TOOL)), "UTF-8"));
       } else if (req.getRequestURI().startsWith("/lti/player/")) {
@@ -232,8 +235,8 @@ public class LtiServlet extends HttpServlet {
         resp.sendRedirect(redirectUrl);
         return;
       } else {
-        String customTool = URLDecoder
-                .decode(StringUtils.trimToEmpty(req.getParameter(LTI_CUSTOM_TOOL)), StandardCharsets.UTF_8.displayName());
+        String customTool = URLDecoder.decode(StringUtils.trimToEmpty(
+                req.getParameter(LTI_CUSTOM_TOOL)), StandardCharsets.UTF_8.displayName());
         customTool = customTool.replaceAll(
                 "/?ltitools/(?<tool>[^/]*)/index.html\\??",
                 "/ltitools/index.html?subtool=${tool}&"
