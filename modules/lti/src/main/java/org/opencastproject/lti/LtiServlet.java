@@ -239,7 +239,9 @@ public class LtiServlet extends HttpServlet implements ManagedService {
     session.setAttribute(SESSION_ATTRIBUTE_KEY, getLtiValuesAsMap(req));
 
     // Send content item (deep linking) message back to LMS
+    logger.info("This is the request" + req.getRequestURI());
     if (CONTENT_ITEMS_URI.equals(req.getRequestURI())) {
+      logger.info("sendContentItem");
       sendContentItem(req, resp);
       return;
     }
