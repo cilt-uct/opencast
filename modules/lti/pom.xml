@@ -65,6 +65,29 @@
       <artifactId>org.osgi.service.component.annotations</artifactId>
       <scope>compile</scope>
     </dependency>
+    <dependency>
+      <groupId>org.tsugi</groupId>
+      <artifactId>tsugi-util</artifactId>
+      <version>0.2.1</version>
+      <exclusions>
+        <exclusion>
+          <groupId>javax.servlet</groupId>
+          <artifactId>servlet-api</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.opencastproject</groupId>
+      <artifactId>opencast-kernel</artifactId>
+      <version>${project.version}</version>
+      <scope>compile</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.osgi</groupId>
+      <artifactId>osgi.cmpn</artifactId>
+      <version>7.0.0</version>
+      <scope>provided</scope>
+    </dependency>
   </dependencies>
 
   <profiles>
