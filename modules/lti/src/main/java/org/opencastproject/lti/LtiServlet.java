@@ -238,17 +238,17 @@ public class LtiServlet extends HttpServlet implements ManagedService {
   protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
     // Store the LTI data as a map in the session
     HttpSession session = req.getSession(false);
-    session.setAttribute(SESSION_ATTRIBUTE_KEY, getLtiValuesAsMap(req));
+
+    // Always set the session cookie
+    resp.setHeader("Set-Cookie", "JSESSIONID=" + session.getId() + ";Path=/");
 
     // Send content item (deep linking) message back to LMS
-    logger.info("This is the request" + req.getRequestURI());
     if (CONTENT_ITEMS_URI.equals(req.getRequestURI())) {
-      logger.info("sendContentItem");
       sendContentItem(req, resp);
       return;
     }
 
-    // We must return a 200 for some OAuth client libraries to accept this as a valid response
+    session.setAttribute(SESSION_ATTRIBUTE_KEY, getLtiValuesAsMap(req));
 
     // The URL of the LTI tool. If no specific tool is passed we use the test tool
     UriBuilder builder;
@@ -321,9 +321,6 @@ public class LtiServlet extends HttpServlet implements ManagedService {
 
     // Build the final URL (as a string)
     String redirectUrl = builder.build().toString();
-
-    // Always set the session cookie
-    resp.setHeader("Set-Cookie", "JSESSIONID=" + session.getId() + ";Path=/");
 
     // The client can specify debug option by passing a value to test
     // if in test mode display details where we go
