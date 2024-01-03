@@ -28,6 +28,7 @@ import org.json.simple.JSONObject;
 import org.osgi.service.cm.ConfigurationException;
 import org.osgi.service.cm.ManagedService;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.http.whiteboard.propertytypes.HttpWhiteboardContextSelect;
 import org.osgi.service.http.whiteboard.propertytypes.HttpWhiteboardServletName;
 import org.osgi.service.http.whiteboard.propertytypes.HttpWhiteboardServletPattern;
@@ -35,6 +36,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.oauth.common.signature.SharedConsumerSecretImpl;
 import org.springframework.security.oauth.provider.ConsumerDetails;
+import org.springframework.security.oauth.provider.ConsumerDetailsService;
 import org.tsugi.basiclti.BasicLTIConstants;
 import org.tsugi.basiclti.BasicLTIUtil;
 
@@ -405,6 +407,17 @@ public class LtiServlet extends HttpServlet implements ManagedService {
       resp.setContentType("application/json");
       JSONObject.writeJSONString(ltiAttributes, resp.getWriter());
     }
+  }
+
+  /**
+   * Sets the consumer details service
+   *
+   * @param consumerDetailsService
+   *          the consumer details service to set
+   */
+  @Reference
+  public void setConsumerDetailsService(ConsumerDetailsService consumerDetailsService) {
+    this.consumerDetailsService = (OAuthConsumerDetailsService) consumerDetailsService;
   }
 
   @Override
