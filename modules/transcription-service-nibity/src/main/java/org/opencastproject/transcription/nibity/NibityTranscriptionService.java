@@ -179,6 +179,7 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
   public static final String CLEANUP_SUBMISSION = "cleanup.submission";
   public static final String NIBITY_CLIENT_ID = "nibity.client.id";
   public static final String NIBITY_CLIENT_KEY = "nibity.client.key";
+  public static final String NIBITY_CLIENT_TOKEN = "nibity.client.token";
 
   /**
    * Service configuration values
@@ -193,6 +194,7 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
   private boolean cleanupSubmission = true; // Remove submissions immediately
   private String nibityClientId;
   private String nibityClientKey;
+  private String nibityClientToken;
   private String systemAccount;
   private String serverUrl;
   private ScheduledExecutorService scheduledExecutor = null;
@@ -217,6 +219,7 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
     // Nibity API client ID and key (mandatory)
     nibityClientId = OsgiUtil.getComponentContextProperty(cc, NIBITY_CLIENT_ID);
     nibityClientKey = OsgiUtil.getComponentContextProperty(cc, NIBITY_CLIENT_KEY);
+    nibityClientToken = OsgiUtil.getComponentContextProperty(cc, NIBITY_CLIENT_TOKEN);
     logger.info("Nibity Transcription Service enabled with client id {}", nibityClientId);
 
     // Cleanup submissions
@@ -325,7 +328,7 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
     }
   }
 
-  // Called by Submission WOH
+    // Called by Submission WOH
   @Override
   public Job startTranscription(String mpId, Track track) throws TranscriptionServiceException {
     if (!enabled) {
@@ -454,12 +457,20 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
 
     String filename = addMediaFileToLocalStorage(mpId, track);
     String mediaUrl = serverUrl + SUBMISSION_PATH + filename;
+    Int serviceType = 252;
+    Int turnAround = 1;
+    String captionFormat = "vtt";
+    Int linesPerCaption = 2;
+    Int charsPerLine = 32;
+    Int lenExclPunctSpace = 0;
+    Int logging = 0;
+    String decLang = "eng";
 
     logger.info("Media URL in intermediate storage: {}", mediaUrl);
 
     CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
     credentialsProvider.setCredentials(AuthScope.ANY,
-        new UsernamePasswordCredentials(nibityClientKey, ""));
+        new UsernamePasswordCredentials(nibityClientToken, ""));
 
     // Timeout 3 hours (needs to include the time for the remote service
     // to fetch the media URL before sending final response)
@@ -474,13 +485,21 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
 
     CloseableHttpResponse response = null;
 
-    String submitUrl = NIBITY_BASE_URL + "/" + nibityClientId + "/submit-job";
+    String submitUrl = NIBITY_BASE_URL + "/submit-job";
 
     logger.debug("Submitting new transcription job to Nibity API at {}", submitUrl);
 
     List <NameValuePair> nvps = new ArrayList<NameValuePair>();
     nvps.add(new BasicNameValuePair("media[0][name]", mpId));
     nvps.add(new BasicNameValuePair("media[0][url]", mediaUrl));
+    nvps.add(new BasicNameValuePair("service_type", serviceType));
+    nvps.add(new BasicNameValuePair("turn_around", turnAround));
+    nvps.add(new BasicNameValuePair("caption_format", captionFormat));
+    nvps.add(new BasicNameValuePair("num_lines_per_caption", linesPerCaption));
+    nvps.add(new BasicNameValuePair("num_chars_per_line", charsPerLine));
+    nvps.add(new BasicNameValuePair("len_excl_punct_space", lenExclPunctSpace));
+    nvps.add(new BasicNameValuePair("logging", logging));
+    nvps.add(new BasicNameValuePair("dec_lang", decLang));
     // nvps.add(new BasicNameValuePair("ref", "Test submission reference"));
 
     // TODO possibly add a series and lecture title here
@@ -589,7 +608,7 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
     CloseableHttpClient httpClient = makeHttpClient();
     CloseableHttpResponse response = null;
 
-    String checkUrl = NIBITY_BASE_URL + "/" + nibityClientId + "/check";
+    String checkUrl = NIBITY_BASE_URL + "/check";
 
     List <NameValuePair> nvps = new ArrayList<NameValuePair>();
     nvps.add(new BasicNameValuePair("files[0]", jobId));
@@ -690,7 +709,7 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
     CloseableHttpClient httpClient = makeHttpClient();
     CloseableHttpResponse response = null;
 
-    String transcriptUrl = NIBITY_BASE_URL + "/" + nibityClientId + "/collect";
+    String transcriptUrl = NIBITY_BASE_URL + "/collect-job";
 
     List <NameValuePair> nvps = new ArrayList<NameValuePair>();
     nvps.add(new BasicNameValuePair("files[0]", jobId));
