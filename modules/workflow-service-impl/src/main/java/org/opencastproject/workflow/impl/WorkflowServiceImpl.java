@@ -409,8 +409,6 @@ public class WorkflowServiceImpl extends AbstractIndexProducer implements Workfl
       for (ServiceReference ref : refs) {
         WorkflowOperationHandler handler = (WorkflowOperationHandler) componentContext.getBundleContext().getService(
                 ref);
-        logger.info("****************" + (String) ref.getProperty(WORKFLOW_OPERATION_PROPERTY));
-        logger.info("****************" + handler.getId());
         set.add(new HandlerRegistration((String) ref.getProperty(WORKFLOW_OPERATION_PROPERTY), handler));
       }
     } else {

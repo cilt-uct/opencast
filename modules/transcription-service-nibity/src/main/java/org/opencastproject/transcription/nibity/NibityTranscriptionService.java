@@ -184,7 +184,7 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
   /**
    * Service configuration values
    */
-  private boolean enabled = false; // Disabled by default
+  private boolean enabled = true; // Disabled by default
   private String language = DEFAULT_LANGUAGE;
   private String workflowDefinitionId = DEFAULT_WF_DEF;
   private long workflowDispatchInterval = DEFAULT_DISPATCH_INTERVAL;
@@ -192,6 +192,13 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
   private String toEmailAddress;
   private int cleanupResultDays = DEFAULT_CLEANUP_RESULTS_DAYS;
   private boolean cleanupSubmission = true; // Remove submissions immediately
+  private String serviceType = "252";
+  private String turnAround = "1";
+  private String captionFormat = "vtt";
+  private String linesPerCaption = "2";
+  private String charsPerLine = "32";
+  private String lenExclPunctSpace = "0";
+  private String logging = "0";
   private String nibityClientId;
   private String nibityClientKey;
   private String nibityClientToken;
@@ -457,20 +464,12 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
 
     String filename = addMediaFileToLocalStorage(mpId, track);
     String mediaUrl = serverUrl + SUBMISSION_PATH + filename;
-    Int serviceType = 252;
-    Int turnAround = 1;
-    String captionFormat = "vtt";
-    Int linesPerCaption = 2;
-    Int charsPerLine = 32;
-    Int lenExclPunctSpace = 0;
-    Int logging = 0;
-    String decLang = "eng";
 
     logger.info("Media URL in intermediate storage: {}", mediaUrl);
 
     CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
     credentialsProvider.setCredentials(AuthScope.ANY,
-        new UsernamePasswordCredentials(nibityClientToken, ""));
+        new UsernamePasswordCredentials(nibityClientId, ""));
 
     // Timeout 3 hours (needs to include the time for the remote service
     // to fetch the media URL before sending final response)
@@ -499,7 +498,7 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
     nvps.add(new BasicNameValuePair("num_chars_per_line", charsPerLine));
     nvps.add(new BasicNameValuePair("len_excl_punct_space", lenExclPunctSpace));
     nvps.add(new BasicNameValuePair("logging", logging));
-    nvps.add(new BasicNameValuePair("dec_lang", decLang));
+     nvps.add(new BasicNameValuePair("dec_lang", language));
     // nvps.add(new BasicNameValuePair("ref", "Test submission reference"));
 
     // TODO possibly add a series and lecture title here
@@ -508,6 +507,7 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
 
     try {
       HttpPost httpPost = new HttpPost(submitUrl);
+      httpPost.addHeader("Authorization", "Bearer " + nibityClientToken);
       httpPost.setEntity(new UrlEncodedFormEntity(nvps, "UTF-8"));
 
       response = httpClient.execute(httpPost);
@@ -615,6 +615,7 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
 
     try {
       HttpPost httpPost = new HttpPost(checkUrl);
+      httpPost.addHeader("Authorization", "Bearer " + nibityClientToken);
       httpPost.setEntity(new UrlEncodedFormEntity(nvps, "UTF-8"));
 
       response = httpClient.execute(httpPost);
@@ -724,6 +725,7 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
 
     try {
       HttpPost httpPost = new HttpPost(transcriptUrl);
+      httpPost.addHeader("Authorization", "Bearer " + nibityClientToken);
       httpPost.setEntity(new UrlEncodedFormEntity(nvps, "UTF-8"));
 
       response = httpClient.execute(httpPost);
