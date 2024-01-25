@@ -27,11 +27,13 @@ import org.opencastproject.mediapackage.MediaPackageElement;
 import org.opencastproject.mediapackage.MediaPackageElementBuilder;
 import org.opencastproject.mediapackage.MediaPackageElementBuilderFactory;
 import org.opencastproject.mediapackage.MediaPackageElementFlavor;
+import org.opencastproject.serviceregistry.api.ServiceRegistry;
 import org.opencastproject.transcription.api.TranscriptionService;
 import org.opencastproject.util.MimeType;
 import org.opencastproject.workflow.api.AbstractWorkflowOperationHandler;
 import org.opencastproject.workflow.api.WorkflowInstance;
 import org.opencastproject.workflow.api.WorkflowOperationException;
+import org.opencastproject.workflow.api.WorkflowOperationHandler;
 import org.opencastproject.workflow.api.WorkflowOperationInstance;
 import org.opencastproject.workflow.api.WorkflowOperationResult;
 import org.opencastproject.workflow.api.WorkflowOperationResult.Action;
@@ -39,6 +41,9 @@ import org.opencastproject.workspace.api.Workspace;
 
 import org.apache.commons.lang3.StringUtils;
 import org.osgi.service.component.ComponentContext;
+import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,6 +52,15 @@ import java.net.URI;
 import java.util.UUID;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
+
+@Component(
+    immediate = true,
+    service = WorkflowOperationHandler.class,
+    property = {
+        "service.description=Nibity Attach Transcription Workflow Operation Handler",
+        "workflow.operation=nibity-attach-transcription"
+    }
+)
 
 public class NibityAttachTranscriptionOperationHandler extends AbstractWorkflowOperationHandler {
 
@@ -65,8 +79,10 @@ public class NibityAttachTranscriptionOperationHandler extends AbstractWorkflowO
   private Workspace workspace;
 
   @Override
+  @Activate
   protected void activate(ComponentContext cc) {
     super.activate(cc);
+    logger.info("Registering Nibity Attach Transcription workflow operation handler");
   }
 
   /**
@@ -158,14 +174,22 @@ public class NibityAttachTranscriptionOperationHandler extends AbstractWorkflowO
     return createResult(mediaPackage, Action.CONTINUE);
   }
 
+  @Reference(target = "(provider=nibity)")
   public void setTranscriptionService(TranscriptionService service) {
     this.service = service;
   }
 
+  @Reference
   public void setWorkspace(Workspace service) {
     this.workspace = service;
   }
 
+  @Reference
+  @Override
+  public void setServiceRegistry(ServiceRegistry serviceRegistry) {
+    super.setServiceRegistry(serviceRegistry);
+  }
+  
   public MediaPackage addTranscriptionElementToMediaPackage(InputStream zis, String captionMimeType,
                                                             String captionIdentifier, String captionFileType,
                                                             MediaPackage mediaPackage, MediaPackageElementFlavor flavor,

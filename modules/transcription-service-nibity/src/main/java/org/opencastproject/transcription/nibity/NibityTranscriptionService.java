@@ -70,12 +70,14 @@ import org.apache.http.client.CredentialsProvider;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
+import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.osgi.service.component.ComponentContext;
@@ -138,7 +140,8 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
 
   // Nibity API
   private static final String NIBITY_BASE_URL = "https://news.waywithwords.net/api/private";
-  private static final long NIBITY_STATUS_SUCCESS = 500;
+  private static final long NIBITY_STATUS_SUCCESS_200 = 200;
+  private static final long NIBITY_STATUS_SUCCESS_201 = 201;
 
   private static final String PROVIDER = "nibity";
 
@@ -374,7 +377,7 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
       // Expected: {"auth":504,"transcript_id":2227,"types":["transcript","srt","vtt"]}
 
       if (transcriptId != null) {
-        logger.info("Transcription done for mpId {}, transcript_id {}", mpId, transcriptId);
+        logger.info("Transcription done for mpId {}, job_id {}, transcript_id {}", mpId, jobId, transcriptId);
 
         // Save results in file system
         if (getAndSaveJobResult(jobId, transcriptId)) {
@@ -485,11 +488,12 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
     CloseableHttpResponse response = null;
 
     String submitUrl = NIBITY_BASE_URL + "/submit-job";
+    String mediaName = mpId + "." + FilenameUtils.getExtension(track.getURI().toString());
 
     logger.debug("Submitting new transcription job to Nibity API at {}", submitUrl);
 
     List <NameValuePair> nvps = new ArrayList<NameValuePair>();
-    nvps.add(new BasicNameValuePair("media[0][name]", mpId));
+    nvps.add(new BasicNameValuePair("media[0][name]", mediaName));
     nvps.add(new BasicNameValuePair("media[0][url]", mediaUrl));
     nvps.add(new BasicNameValuePair("service_type", serviceType));
     nvps.add(new BasicNameValuePair("turn_around", turnAround));
@@ -498,7 +502,7 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
     nvps.add(new BasicNameValuePair("num_chars_per_line", charsPerLine));
     nvps.add(new BasicNameValuePair("len_excl_punct_space", lenExclPunctSpace));
     nvps.add(new BasicNameValuePair("logging", logging));
-     nvps.add(new BasicNameValuePair("dec_lang", language));
+    nvps.add(new BasicNameValuePair("dec_lang", language));
     // nvps.add(new BasicNameValuePair("ref", "Test submission reference"));
 
     // TODO possibly add a series and lecture title here
@@ -522,21 +526,20 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
 
       switch (code) {
         case HttpStatus.SC_OK: // 200
+        case HttpStatus.SC_CREATED: // 201
 
           /**
            * Response returned is a json object:
-           * {"test-submission":
-           * {"file_id":"3074","file_type":"mp4","seconds":2633.677,"status":500,"deadline":"2019-02-25 11:28:42"}}
+           * {"data":{"job_id":13746,"estimated_delivery_date":"2024-01-19 21:33:16"},"status":true,"code":200}
            * Status codes other than 500 are an error.
            */
-          JSONObject result = (JSONObject) jsonObject.get(mpId);
+          JSONObject result = (JSONObject) jsonObject.get("data");
 
-          String jobId = (String) result.get("file_id");
-          String fileType = (String) result.get("file_type");
-          String deadline = (String) result.get("deadline");
-          long jobStatus = (Long) result.get("status");
+          String jobId = String.valueOf(result.get("job_id"));
+          String deadline = String.valueOf(result.get("estimated_delivery_date"));
+          long jobStatus = (Long) jsonObject.get("code");
 
-          if (jobStatus != NIBITY_STATUS_SUCCESS) {
+          if (jobStatus != NIBITY_STATUS_SUCCESS_200 && jobStatus != NIBITY_STATUS_SUCCESS_201) {
             throw new TranscriptionServiceException("Unable to submit job: API returned status " + jobStatus);
           }
 
@@ -553,10 +556,10 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
 
           // TODO how does this handle timezones?
 
-          logger.info("mp {} has been submitted to nibity: file id: {} status {} type {}",
-                mpId, jobId, jobStatus, fileType);
+          logger.info("mp {} has been submitted to nibity: file id: {} status {}",
+                mpId, jobId, jobStatus);
 
-          if (jobStatus == 500) {
+          if (jobStatus == 200 || jobStatus == 201) {
             database.storeJobControl(mpId, track.getIdentifier(), jobId,
                   TranscriptionJobControl.Status.InProgress.name(),
                   track.getDuration() == null ? 0 : track.getDuration().longValue(), expectedDate, PROVIDER);
@@ -600,25 +603,20 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
    *
    * Called by WorkflowDispatcher.run() every WorkflowDispatchInterval
    */
-  boolean checkJobResults(String jobId) throws TranscriptionServiceException, IOException {
+  boolean checkJobResults(String jobId, String mpId) throws TranscriptionServiceException, IOException {
 
-    String mpId = "unknown";
     String captionsVtt = null;
 
     CloseableHttpClient httpClient = makeHttpClient();
     CloseableHttpResponse response = null;
 
-    String checkUrl = NIBITY_BASE_URL + "/check";
-
-    List <NameValuePair> nvps = new ArrayList<NameValuePair>();
-    nvps.add(new BasicNameValuePair("files[0]", jobId));
+    String checkUrl = NIBITY_BASE_URL + "/check/" + jobId;
 
     try {
-      HttpPost httpPost = new HttpPost(checkUrl);
-      httpPost.addHeader("Authorization", "Bearer " + nibityClientToken);
-      httpPost.setEntity(new UrlEncodedFormEntity(nvps, "UTF-8"));
+      HttpGet httpGet = new HttpGet(checkUrl);
+      httpGet.addHeader("Authorization", "Bearer " + nibityClientToken);
 
-      response = httpClient.execute(httpPost);
+      response = httpClient.execute(httpGet);
       int code = response.getStatusLine().getStatusCode();
 
       HttpEntity entity = response.getEntity();
@@ -628,8 +626,37 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
 
       logger.debug("Nibity API {} http response {}, JSON response: {}", checkUrl, code, jsonString);
 
-      // Expected for not-ready: {"3074":{"auth":504,"transcript_id":null}}
-      // Expected for ready: {"3074":{"auth":504,"transcript_id":2227,"types":["transcript","srt","vtt"]}}
+      // Expected for not-ready:
+      /**
+       * {
+       *   "data": [
+       *     {
+       *       "file_id": 22172,
+       *       "file_name": "d6c833f5-b99c-4248-aed7-106f3cf87403.mp4",
+       *       "status": "Approved",
+       *       "captioning_status": "Submitted"
+       *     }
+       *   ],
+       *   "status": true,
+       *   "code": 200
+       * }
+      */
+
+      //Expected for ready:
+      /**
+       * {
+       *   "data": [
+       *     {
+       *       "file_id": 22181,
+       *       "file_name": "eef8988e-70ca-46db-bfc8-ef4e89ab7e9f.mp4",
+       *       "status": "Sent to client",
+       *       "captioning_status": "Completed"
+       *     }
+       *   ],
+       *   "status": true,
+       *   "code": 200
+       * }
+      */
 
       switch (code) {
         case HttpStatus.SC_OK: // 200
@@ -640,13 +667,18 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
           JSONParser jsonParser = new JSONParser();
           JSONObject jsonObject = (JSONObject) jsonParser.parse(jsonString);
 
-          JSONObject result = (JSONObject) jsonObject.get(jobId);
+          JSONArray resultArray = (JSONArray) jsonObject.get("data");
+          JSONObject result = (JSONObject) resultArray.get(0);
 
-          long auth = (Long) result.get("auth");
-          Long transcriptId = (Long) result.get("transcript_id");
+          Long transcriptId = (Long) result.get("file_id");
+          String fileName = String.valueOf(result.get("file_name"));
+          String submissionStatus = String.valueOf(result.get("status"));
+          String captioningStatus = String.valueOf(result.get("captioning_status"));
 
-          if ((auth == 504) && (transcriptId != null)) {
-            logger.info("Captions job {} has finished, auth {}, transcript id {}", jobId, auth, transcriptId);
+          if ("Completed".equals(captioningStatus) && transcriptId != null
+                && "Sent to client".equals(submissionStatus)) {
+            logger.info("Captions job {} has finished, transcript id {}, mp_id {}, status {}",
+                jobId, transcriptId, mpId, captioningStatus);
 
             TranscriptionJobControl jc = database.findByJob(jobId);
             if (jc != null) {
@@ -710,25 +742,15 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
     CloseableHttpClient httpClient = makeHttpClient();
     CloseableHttpResponse response = null;
 
-    String transcriptUrl = NIBITY_BASE_URL + "/collect-job";
-
-    List <NameValuePair> nvps = new ArrayList<NameValuePair>();
-    nvps.add(new BasicNameValuePair("files[0]", jobId));
-    nvps.add(new BasicNameValuePair("transcripts[0][transcript_id]", Long.toString(transcriptId)));
-    nvps.add(new BasicNameValuePair("transcripts[0][type]", "transcript"));
-    nvps.add(new BasicNameValuePair("transcripts[1][transcript_id]", Long.toString(transcriptId)));
-    nvps.add(new BasicNameValuePair("transcripts[1][type]", "txt"));
-    nvps.add(new BasicNameValuePair("transcripts[2][transcript_id]", Long.toString(transcriptId)));
-    nvps.add(new BasicNameValuePair("transcripts[2][type]", "vtt"));
+    String transcriptUrl = NIBITY_BASE_URL + "/collect/" + jobId + "/" + transcriptId;
 
     boolean done = false;
 
     try {
-      HttpPost httpPost = new HttpPost(transcriptUrl);
-      httpPost.addHeader("Authorization", "Bearer " + nibityClientToken);
-      httpPost.setEntity(new UrlEncodedFormEntity(nvps, "UTF-8"));
+      HttpGet httpGet = new HttpGet(transcriptUrl);
+      httpGet.addHeader("Authorization", "Bearer " + nibityClientToken);
 
-      response = httpClient.execute(httpPost);
+      response = httpClient.execute(httpGet);
       int code = response.getStatusLine().getStatusCode();
 
       logger.debug("Nibity API {} http response {}", transcriptUrl, code);
@@ -797,7 +819,7 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
         try {
           logger.info("Results not saved: getting from service for jobId {}", jobId);
           // Not saved yet so call the transcription service to get the results
-          checkJobResults(jobId);
+          checkJobResults(jobId, mpId);
         } catch (IOException ex) {
           logger.error("Unable to retrieve transcription job, error: {}", ex.toString());
         }
@@ -1008,11 +1030,11 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
             // If job should already have been completed, try to get the results.
             if (j.getDateExpected().getTime() < System.currentTimeMillis()) {
               try {
-                if (!checkJobResults(jobId)) {
+                if (!checkJobResults(jobId, mpId)) {
                   // Job still running, not finished, so check if it should have finished more than N seconds ago
                   if (j.getDateExpected().getTime() + maxProcessingSeconds * 1000 < System.currentTimeMillis()) {
                     // Processing for too long, mark job as canceled and don't check anymore
-                    database.updateJobControl(jobId, TranscriptionJobControl.Status.Canceled.name());
+                    database.updateJobControl(jobId, TranscriptionJobControl.Status.Cancelled.name());
 
                     // Send notification email
                     sendEmail("Transcription ERROR", String.format(

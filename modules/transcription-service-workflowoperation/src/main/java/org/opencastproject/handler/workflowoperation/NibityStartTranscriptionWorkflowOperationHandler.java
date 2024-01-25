@@ -53,7 +53,7 @@ import java.util.Collection;
     immediate = true,
     service = WorkflowOperationHandler.class,
     property = {
-        "service.description=Nibity Transcription Workflow Operation Handler",
+        "service.description=Nibity Start Transcription Workflow Operation Handler",
         "workflow.operation=nibity-start-transcription"
     }
 )
@@ -72,7 +72,7 @@ public class NibityStartTranscriptionWorkflowOperationHandler extends AbstractWo
   @Override
   protected void activate(ComponentContext cc) {
     super.activate(cc);
-    logger.info("Registering Nibity workflow operation handler");
+    logger.info("Registering Nibity Start Transcription workflow operation handler");
   }
 
   @Override
