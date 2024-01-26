@@ -1118,7 +1118,7 @@ function personalEventEditable(id, has_preview) {
 
     if (has_preview) {
         str += '<a type="button" style="padding: 0.5rem;" href="/admin-ng/index.html#!/events/events/' + id + '/tools/editor' +
-                '?ltimode=true&callback_url=' + encodeURIComponent('/ltitools/manage?sid=' + ocManager.series.id + '&type=personal') + '" title="Edit recording">' +
+                '?ltimode=true&callback_url=' + encodeURIComponent('manage?sid=' + ocManager.series.id + '&type=personal') + '" title="Edit recording">' +
                 '  <i class="fa fa-scissors"></i></a>'
     }
 
