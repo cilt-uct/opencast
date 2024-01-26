@@ -1034,7 +1034,7 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
                   // Job still running, not finished, so check if it should have finished more than N seconds ago
                   if (j.getDateExpected().getTime() + maxProcessingSeconds * 1000 < System.currentTimeMillis()) {
                     // Processing for too long, mark job as canceled and don't check anymore
-                    database.updateJobControl(jobId, TranscriptionJobControl.Status.Cancelled.name());
+                    database.updateJobControl(jobId, TranscriptionJobControl.Status.Canceled.name());
 
                     // Send notification email
                     sendEmail("Transcription ERROR", String.format(

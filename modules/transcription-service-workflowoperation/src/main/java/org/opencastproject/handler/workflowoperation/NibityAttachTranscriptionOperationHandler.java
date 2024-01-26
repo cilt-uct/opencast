@@ -189,7 +189,7 @@ public class NibityAttachTranscriptionOperationHandler extends AbstractWorkflowO
   public void setServiceRegistry(ServiceRegistry serviceRegistry) {
     super.setServiceRegistry(serviceRegistry);
   }
-  
+
   public MediaPackage addTranscriptionElementToMediaPackage(InputStream zis, String captionMimeType,
                                                             String captionIdentifier, String captionFileType,
                                                             MediaPackage mediaPackage, MediaPackageElementFlavor flavor,
