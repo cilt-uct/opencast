@@ -159,7 +159,7 @@ class TranslatedSeries extends React.Component<SeriesProps, SeriesState> {
         if (typeof qs.series_name === "string")
             seriesSuffix = "&series_name=" + qs.series_name;
         const debugSuffix = typeof qs.debug === "string" ? "&debug=" + qs.debug : "";
-        window.location.href = "/ltitools/index.html?subtool=upload&episode_id=" + id + seriesSuffix + debugSuffix;
+        window.location.href = "/ltitools/uct/index.html?subtool=upload&episode_id=" + id + seriesSuffix + debugSuffix;
     }
 
     deleteEventCallback(id: string) {

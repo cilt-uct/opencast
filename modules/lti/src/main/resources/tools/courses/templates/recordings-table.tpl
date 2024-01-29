@@ -88,11 +88,11 @@
 
                                                 $("#recordingsTable > tbody > tr > td:nth-child(5)").children().each(function(){
                                                     var images = {
-                                                    "Published" : "/ltitools/shared/img/icons/published.png",
-                                                    "On Hold" : "/ltitools/shared/img/icons/on_hold.png",
-                                                    "Capturing" : "/ltitools/shared/img/icons/capturing.png",
-                                                    "Processing" : "/ltitools/shared/img/icons/process.png",
-                                                    "Upcoming" : "/ltitools/shared/img/icons/upcoming.png"
+                                                    "Published" : "/ltitools/uct/shared/img/icons/published.png",
+                                                    "On Hold" : "/ltitools/uct/shared/img/icons/on_hold.png",
+                                                    "Capturing" : "/ltitools/uct/shared/img/icons/capturing.png",
+                                                    "Processing" : "/ltitools/uct/shared/img/icons/process.png",
+                                                    "Upcoming" : "/ltitools/uct/shared/img/icons/upcoming.png"
                                                     };
 
                                                     if( images[$.trim( $(this).text() )] ){

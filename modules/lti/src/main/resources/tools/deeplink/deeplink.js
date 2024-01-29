@@ -205,7 +205,7 @@ function loadSeriesTab(page, q) {
   axios.get(url)
   .then((response) => {
     let data = response.data['search-results'],
-        seriestool = 'ltitools/series/index.html?series=',
+        seriestool = 'ltitools/uct/series/index.html?series=',
         rendered = '',
         results = [],
         total = parseInt(data.total);

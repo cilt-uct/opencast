@@ -2358,7 +2358,7 @@
   }
   
   th.currentSort[data-sortdir=desc]:after {
-    background-image: url(/ltitools/shared/img/sortascending.gif);
+    background-image: url(/ltitools/uct/shared/img/sortascending.gif);
     background-size: 11px 11px;
     content: '';
     display: inline-block;
@@ -2367,7 +2367,7 @@
     margin-left: 0.5rem;
   }
   th.currentSort[data-sortdir=asc]:after {
-    background-image: url(/ltitools/shared/img/sortdescending.gif);
+    background-image: url(/ltitools/uct/shared/img/sortdescending.gif);
     background-size: 11px 11px;
     content: '';
     display: inline-block;
