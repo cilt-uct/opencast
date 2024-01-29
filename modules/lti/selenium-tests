@@ -86,7 +86,7 @@ def wait_for(driver, element, timeout=20):
 
 def check_overview_page():
     header('Testing Overview Page')
-    navigate('/ltitools')
+    navigate('/ltitools/uct')
     elem = driver.find_element(By.TAG_NAME, 'h1')
     assert 'Welcome to the LTI Module' == elem.text
 
