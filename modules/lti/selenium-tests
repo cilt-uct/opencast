@@ -86,7 +86,7 @@ def wait_for(driver, element, timeout=20):
 
 def check_overview_page():
     header('Testing Overview Page')
-    navigate('/ltitools/uct')
+    navigate('/ltitools/')
     elem = driver.find_element(By.TAG_NAME, 'h1')
     assert 'Welcome to the LTI Module' == elem.text
 
@@ -100,7 +100,7 @@ def check_series_tool(edit=False, deletion=False):
     params = '&'.join(['subtool=series',
                        f'edit={edit}',
                        f'deletion={deletion}'])
-    navigate(f'/ltitools/uct/index.html?{params}')
+    navigate(f'/ltitools/index.html?{params}')
     wait_for(driver, (By.TAG_NAME, 'header'))
 
     # Check for results in series
@@ -120,7 +120,7 @@ def check_series_tool(edit=False, deletion=False):
 
 def check_upload_tool(edit=False, deletion=False):
     header('Testing Upload Tools')
-    navigate('/ltitools/uct/index.html?subtool=upload&series=')
+    navigate('/ltitools/index.html?subtool=upload&series=')
     wait_for(driver, (By.TAG_NAME, 'form'))
 
     # Check that header is present
@@ -141,7 +141,7 @@ def check_i18next():
     header('Testing Internationalization')
 
     # Probe German translation of the series tool
-    navigate('/ltitools/uct/index.html?subtool=series&lng=de')
+    navigate('/ltitools/index.html?subtool=series&lng=de')
     wait_for(driver, (By.TAG_NAME, 'header'))
 
     # Check for a translated results header
