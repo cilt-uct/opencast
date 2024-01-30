@@ -148,7 +148,8 @@ public class TranscriptionDatabaseImpl implements TranscriptionDatabase {
   }
 
   @Override
-  public TranscriptionJobControl findByJobAndMediaPackage(String jobId, String mpId) throws TranscriptionDatabaseException {
+  public TranscriptionJobControl findByJobAndMediaPackage(String jobId, String mpId)
+          throws TranscriptionDatabaseException {
     try {
       return db.exec(TranscriptionJobControlDto.findByJobAndMediaPackageQuery(jobId, mpId))
           .map(TranscriptionJobControlDto::toTranscriptionJobControl)

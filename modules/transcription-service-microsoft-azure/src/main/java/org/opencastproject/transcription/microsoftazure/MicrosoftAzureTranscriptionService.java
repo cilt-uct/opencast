@@ -1104,7 +1104,8 @@ public class MicrosoftAzureTranscriptionService extends AbstractJobProducer impl
                     ,mpId, getRemainingTranscriptionExpireTimeInMin(jobId), jobId);
       } else {
         // Close transcription job and email admin
-        cancelTranscription(jobId, mpId, " Microsoft Azure Transcription job canceled, archived media package not found");
+        cancelTranscription(jobId, mpId, " Microsoft Azure Transcription job canceled, archived media package "
+                + "not found");
         logger.info("Microsoft Azure Transcription job {} has been canceled. Email notification sent", jobId);
       }
       return null;
@@ -1144,7 +1145,7 @@ public class MicrosoftAzureTranscriptionService extends AbstractJobProducer impl
     return null;
   }
 
-  private boolean hasTranscriptionRequestExpired(String jobId) {
+  private boolean hasTranscriptionRequestExpired(String jobId, String mpId) {
     try {
       // set a time limit based on video duration and maximum processing time
       if (database.findByJob(jobId).getDateCreated().getTime() + database.findByJob(jobId).getTrackDuration()

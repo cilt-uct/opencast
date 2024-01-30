@@ -182,19 +182,20 @@ public class TranscriptionJobControlDto implements Serializable {
     return namedQuery.findAll(
         "TranscriptionJobControl.findByMediaPackage",
         TranscriptionJobControlDto.class,
-        Pair.of("mediaPackageId", mediaPackageId)
+        Pair.of("mediaPackageId", mpId)
     );
   }
 
   /**
    * Find a job control by its number and mediapackage id.
    */
-  public static Function<EntityManager, Optional<TranscriptionJobControlDto>> findByJobAndMediaPackageQuery(String jobId, String mpId) {
+  public static Function<EntityManager, Optional<TranscriptionJobControlDto>> findByJobAndMediaPackageQuery(
+      String jobId, String mpId) {
     return namedQuery.findOpt(
         "TranscriptionJobControl.findByJobAndMediaPackage",
         TranscriptionJobControlDto.class,
         Pair.of("transcriptionJobId", jobId),
-        Pair.of("mediaPackageId", mediaPackageId)
+        Pair.of("mediaPackageId", mpId)
     );
   }
 
