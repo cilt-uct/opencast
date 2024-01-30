@@ -178,7 +178,7 @@ public class TranscriptionDatabaseTest {
     long created = j.getDateCreated().getTime();
     Assert.assertTrue(dt1 <= created && created <= dt2);
 
-    database.updateJobControl(JOB_ID, STATUS2);
+    database.updateJobControl(JOB_ID, MP_ID, STATUS2);
 
     j = database.findByJob(JOB_ID);
     Assert.assertNotNull(j);
@@ -199,7 +199,7 @@ public class TranscriptionDatabaseTest {
     Assert.assertNull(j.getDateCompleted());
 
     long dt1 = System.currentTimeMillis();
-    database.updateJobControl(JOB_ID, TranscriptionJobControl.Status.TranscriptionComplete.name());
+    database.updateJobControl(JOB_ID, MP_ID, TranscriptionJobControl.Status.TranscriptionComplete.name());
     long dt2 = System.currentTimeMillis();
 
     j = database.findByJob(JOB_ID);
