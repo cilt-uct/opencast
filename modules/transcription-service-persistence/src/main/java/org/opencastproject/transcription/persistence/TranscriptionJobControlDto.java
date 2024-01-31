@@ -178,7 +178,7 @@ public class TranscriptionJobControlDto implements Serializable {
    * Find all job controls by media package.
    */
   public static Function<EntityManager, List<TranscriptionJobControlDto>> findByMediaPackageQuery(
-      final String mediaPackageId) {
+      final String mpId) {
     return namedQuery.findAll(
         "TranscriptionJobControl.findByMediaPackage",
         TranscriptionJobControlDto.class,
