@@ -72,10 +72,11 @@ Series.prototype = {
   },
   setDetails: function() {
     $.ajax({
-           url: '/series/series.json?seriesId=' + this.id,
+           url: '/api/series/series.json?seriesId=' + this.id,
       dataType: 'json'
     })
     .then(function(res) {
+      this.details = res;
       if (res.catalogs[0]) {
         var details = res.catalogs[0]['http://purl.org/dc/terms/'];
         for (var key in details) {
