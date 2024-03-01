@@ -123,28 +123,29 @@ button {
   --main-outline-color: #f200f2;
 }
 
-.captions-canvas.visible-ui .text-container {
-  bottom: 65px !important;
-}
-
 .captions-canvas.size-s .text-container {
-  font-size: 14px !important;
+  font-size: 0.875rem !important;
+  bottom: 12% !important;
 }
 
 .captions-canvas.size-m .text-container {
-  font-size: 16px !important;
+  font-size: 1rem !important;
+  bottom: 12% !important;
 }
 
 .captions-canvas.size-l .text-container {
-  font-size: 20px !important;
+  font-size: 1.25rem !important;
+  bottom: 8% !important;
 }
 
 .captions-canvas.size-xl .text-container {
-  font-size: 24px !important;
+  font-size: 1.5rem !important;
+  bottom: 8% !important;
 }
 
 .captions-canvas.size-xxl .text-container {
-  font-size: 28px !important;
+  font-size: 1.75rem !important;
+  bottom: 8% !important;
 }
 
 .playback-bar {
