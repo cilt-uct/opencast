@@ -458,7 +458,7 @@ public class IBMWatsonTranscriptionService extends AbstractJobProducer implement
       // Update state in database
       // If there's an optimistic lock exception here, it's ok because the workflow dispatcher
       // may be doing the same thing
-      database.updateJobControl(jobId, TranscriptionJobControl.Status.TranscriptionComplete.name());
+      database.updateJobControl(jobId, mpId, TranscriptionJobControl.Status.TranscriptionComplete.name());
 
       // Save results in file system if there
       if (jsonObj.get("results") != null) {
@@ -831,11 +831,11 @@ public class IBMWatsonTranscriptionService extends AbstractJobProducer implement
             .size();
     if (attempts < maxAttempts) {
       // Update state in database to retry
-      database.updateJobControl(jobId, TranscriptionJobControl.Status.Retry.name());
+      database.updateJobControl(jobId, mpId, TranscriptionJobControl.Status.Retry.name());
       logger.info("Will retry transcription for media package {}, track {}", mpId, trackId);
     } else {
       // Update state in database to error
-      database.updateJobControl(jobId, TranscriptionJobControl.Status.Error.name());
+      database.updateJobControl(jobId, mpId, TranscriptionJobControl.Status.Error.name());
       // Send error notification email
       logger.error("{} transcription attempts exceeded maximum of {} for media package {}, track {}.", attempts,
               maxAttempts, mpId, trackId);
@@ -1001,7 +1001,7 @@ public class IBMWatsonTranscriptionService extends AbstractJobProducer implement
               } catch (TranscriptionServiceException e) {
                 if (e.getCode() == 404) {
                   // Job not found there, update job state to canceled
-                  database.updateJobControl(jobId, TranscriptionJobControl.Status.Canceled.name());
+                  database.updateJobControl(jobId, mpId, TranscriptionJobControl.Status.Canceled.name());
                   // Send notification email
                   sendEmail("Transcription ERROR",
                           String.format("Transcription job was not found (media package %s, job id %s).", mpId, jobId));
@@ -1024,7 +1024,7 @@ public class IBMWatsonTranscriptionService extends AbstractJobProducer implement
               continue;
             }
             // Update state in the database
-            database.updateJobControl(jobId, TranscriptionJobControl.Status.Closed.name());
+            database.updateJobControl(jobId, mpId, TranscriptionJobControl.Status.Closed.name());
             logger.info("Attach transcription workflow {} scheduled for mp {}, watson job {}",
                     wfId, mpId, jobId);
           } catch (Exception e) {
@@ -1053,7 +1053,7 @@ public class IBMWatsonTranscriptionService extends AbstractJobProducer implement
             }
             logger.info("Retry transcription workflow {} scheduled for mp {}.", wfId, mpId);
             // Retry was submitted, update previously failed job state to error
-            database.updateJobControl(jobId, TranscriptionJobControl.Status.Error.name());
+            database.updateJobControl(jobId, mpId, TranscriptionJobControl.Status.Error.name());
           }
         }
       } catch (TranscriptionDatabaseException e) {

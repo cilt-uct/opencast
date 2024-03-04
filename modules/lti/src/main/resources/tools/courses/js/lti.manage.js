@@ -2443,11 +2443,12 @@ $(document).ready(function() {
 
   $('#ttScheduleModal form').on('submit', function(e) {
     e.preventDefault();
+    var _series = ocManager.series.details[0];
     var schedules = $('#ttCourses li[data-course] li:not(.conflict) input:checked')
                      .toArray()
                      .map(function(input) {
                        var schedule = JSON.parse(input.value);
-                       schedule.creator = ocManager.series.creator;
+                       schedule.creator = _series.creator;
                        return schedule;
                      });
 

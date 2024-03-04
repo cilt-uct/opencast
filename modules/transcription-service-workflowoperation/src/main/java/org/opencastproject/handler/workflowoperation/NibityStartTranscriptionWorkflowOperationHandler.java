@@ -18,7 +18,7 @@
  * the License.
  *
  */
-package org.opencastproject.transcription.workflowoperation;
+package org.opencastproject.handler.workflowoperation;
 
 import org.opencastproject.job.api.Job;
 import org.opencastproject.job.api.JobContext;
@@ -32,7 +32,6 @@ import org.opencastproject.serviceregistry.api.ServiceRegistry;
 import org.opencastproject.transcription.api.TranscriptionService;
 import org.opencastproject.transcription.api.TranscriptionServiceException;
 import org.opencastproject.workflow.api.AbstractWorkflowOperationHandler;
-import org.opencastproject.workflow.api.ConfiguredTagsAndFlavors;
 import org.opencastproject.workflow.api.WorkflowInstance;
 import org.opencastproject.workflow.api.WorkflowOperationException;
 import org.opencastproject.workflow.api.WorkflowOperationHandler;
@@ -49,54 +48,35 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Collection;
-import java.util.List;
 
 @Component(
     immediate = true,
     service = WorkflowOperationHandler.class,
     property = {
-        "service.description=Start Google Speech Transcription Workflow Operation Handler",
-        "workflow.operation=google-speech-start-transcription"
+        "service.description=Nibity Start Transcription Workflow Operation Handler",
+        "workflow.operation=nibity-start-transcription"
     }
 )
-public class GoogleSpeechStartTranscriptionOperationHandler extends AbstractWorkflowOperationHandler {
+public class NibityStartTranscriptionWorkflowOperationHandler extends AbstractWorkflowOperationHandler {
 
-  /**
-   * The logging facility
-   */
-  private static final Logger logger = LoggerFactory.getLogger(GoogleSpeechStartTranscriptionOperationHandler.class);
+  /** The logging facility */
+  private static final Logger logger = LoggerFactory.getLogger(NibityStartTranscriptionWorkflowOperationHandler.class);
 
-  /**
-   * Workflow configuration option keys
-   */
-  static final String LANGUAGE_CODE = "language-code";
+  /** Workflow configuration option keys */
   static final String SKIP_IF_FLAVOR_EXISTS = "skip-if-flavor-exists";
 
-  /**
-   * The transcription service
-   */
+  /** The transcription service */
   private TranscriptionService service = null;
 
-  /**
-   * The language code
-   */
-  private String language = null;
-
-  @Override
   @Activate
+  @Override
   protected void activate(ComponentContext cc) {
     super.activate(cc);
+    logger.info("Registering Nibity Start Transcription workflow operation handler");
   }
 
-  /**
-   * {@inheritDoc}
-   *
-   * @see
-   * org.opencastproject.workflow.api.WorkflowOperationHandler#start(org.opencastproject.workflow.api.WorkflowInstance,
-   * JobContext)
-   */
   @Override
-  public WorkflowOperationResult start(final WorkflowInstance workflowInstance, JobContext context)
+  public WorkflowOperationResult start(WorkflowInstance workflowInstance, JobContext context)
           throws WorkflowOperationException {
     MediaPackage mediaPackage = workflowInstance.getMediaPackage();
     WorkflowOperationInstance operation = workflowInstance.getCurrentOperation();
@@ -112,44 +92,36 @@ public class GoogleSpeechStartTranscriptionOperationHandler extends AbstractWork
       }
     }
 
-    logger.debug("Start transcription for mediapackage {} started", mediaPackage);
-
-    // Get language code if configured
-    String langCode = operation.getConfiguration(LANGUAGE_CODE);
+    logger.debug("Start transcription for mediapackage {}", mediaPackage);
 
     // Check which tags have been configured
-    ConfiguredTagsAndFlavors tagsAndFlavors = getTagsAndFlavors(
-        workflowInstance, Configuration.many, Configuration.many, Configuration.none, Configuration.none);
-    List<String> sourceTagOption = tagsAndFlavors.getSrcTags();
-    List<MediaPackageElementFlavor> sourceFlavorOption = tagsAndFlavors.getSrcFlavors();
+    String sourceTagOption = StringUtils.trimToNull(operation.getConfiguration(SOURCE_TAG));
+    String sourceFlavorOption = StringUtils.trimToNull(operation.getConfiguration(SOURCE_FLAVOR));
 
     AbstractMediaPackageElementSelector<Track> elementSelector = new TrackSelector();
 
     // Make sure either one of tags or flavors are provided
-    if (sourceTagOption.isEmpty() && sourceFlavorOption.isEmpty()) {
+    if (StringUtils.isBlank(sourceTagOption) && StringUtils.isBlank(sourceFlavorOption)) {
       throw new WorkflowOperationException("No source tag or flavor have been specified!");
     }
 
-    if (!sourceFlavorOption.isEmpty()) {
-      MediaPackageElementFlavor flavor = sourceFlavorOption.get(0);
-      elementSelector.addFlavor(flavor);
+    if (StringUtils.isNotBlank(sourceFlavorOption)) {
+      String flavor = StringUtils.trim(sourceFlavorOption);
+      try {
+        elementSelector.addFlavor(MediaPackageElementFlavor.parseFlavor(flavor));
+      } catch (IllegalArgumentException e) {
+        throw new WorkflowOperationException("Source flavor '" + flavor + "' is malformed");
+      }
     }
-    if (StringUtils.isNotBlank(langCode)) {
-      language = StringUtils.trim(langCode);
-    }
-    if (!sourceTagOption.isEmpty()) {
-      elementSelector.addTag(sourceTagOption.get(0));
+    if (sourceTagOption != null) {
+      elementSelector.addTag(sourceTagOption);
     }
 
     Collection<Track> elements = elementSelector.select(mediaPackage, false);
     Job job = null;
     for (Track track : elements) {
-      if (track.hasVideo()) {
-        logger.info("Skipping track {} since it contains a video stream", track);
-        continue;
-      }
       try {
-        job = service.startTranscription(mediaPackage.getIdentifier().toString(), track, language);
+        job = service.startTranscription(mediaPackage.getIdentifier().toString(), track);
         // Only one job per media package
         break;
       } catch (TranscriptionServiceException e) {
@@ -166,7 +138,7 @@ public class GoogleSpeechStartTranscriptionOperationHandler extends AbstractWork
     if (!waitForStatus(job).isSuccess()) {
       throw new WorkflowOperationException("Transcription job did not complete successfully");
     }
-    // Return OK means that the Google speech job was created, but not finished yet
+    // Return OK means that the transcription job was created, but not finished yet
 
     logger.debug("External transcription job for mediapackage {} was created", mediaPackage);
 
@@ -174,7 +146,7 @@ public class GoogleSpeechStartTranscriptionOperationHandler extends AbstractWork
     return createResult(Action.CONTINUE);
   }
 
-  @Reference(target = "(provider=google.speech)")
+  @Reference(target = "(provider=nibity)")
   public void setTranscriptionService(TranscriptionService service) {
     this.service = service;
   }

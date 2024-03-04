@@ -117,9 +117,9 @@ public class TranscriptionDatabaseImpl implements TranscriptionDatabase {
   }
 
   @Override
-  public void updateJobControl(String jobId, String jobStatus) throws TranscriptionDatabaseException {
+  public void updateJobControl(String jobId, String mpId, String jobStatus) throws TranscriptionDatabaseException {
     try {
-      db.execTx(TranscriptionJobControlDto.updateStatusQuery(jobId, jobStatus));
+      db.execTx(TranscriptionJobControlDto.updateStatusQuery(jobId, mpId, jobStatus));
     } catch (Exception e) {
       throw new TranscriptionDatabaseException(e);
     }
@@ -142,6 +142,18 @@ public class TranscriptionDatabaseImpl implements TranscriptionDatabase {
       return db.exec(TranscriptionJobControlDto.findByMediaPackageQuery(mpId)).stream()
           .map(TranscriptionJobControlDto::toTranscriptionJobControl)
           .collect(Collectors.toList());
+    } catch (Exception e) {
+      throw new TranscriptionDatabaseException(e);
+    }
+  }
+
+  @Override
+  public TranscriptionJobControl findByJobAndMediaPackage(String jobId, String mpId)
+          throws TranscriptionDatabaseException {
+    try {
+      return db.exec(TranscriptionJobControlDto.findByJobAndMediaPackageQuery(jobId, mpId))
+          .map(TranscriptionJobControlDto::toTranscriptionJobControl)
+          .orElse(null);
     } catch (Exception e) {
       throw new TranscriptionDatabaseException(e);
     }

@@ -495,7 +495,7 @@ public class MicrosoftAzureTranscriptionService extends AbstractJobProducer impl
     try {
       jobId = (String) obj;
       // Update state in database
-      database.updateJobControl(jobId, TranscriptionJobControl.Status.Error.name());
+      database.updateJobControl(jobId, mpId, TranscriptionJobControl.Status.Error.name());
       TranscriptionJobControl jobControl = database.findByJob(jobId);
       logger.warn("Error received for media package {}, job id {}",
               jobControl.getMediaPackageId(), jobId);
@@ -675,7 +675,7 @@ public class MicrosoftAzureTranscriptionService extends AbstractJobProducer impl
         // Update state in database
         // If there's an optimistic lock exception here, it's ok because the workflow dispatcher
         // may be doing the same thing
-        database.updateJobControl(jobId, TranscriptionJobControl.Status.TranscriptionComplete.name());
+        database.updateJobControl(jobId, mpId, TranscriptionJobControl.Status.TranscriptionComplete.name());
       } catch (InterruptedException | TranscriptionDatabaseException | ExecutionException ex) {
         errorCallback("Could not save transcription results file: " + ex, speechRecognizer, jobId, mpId);
       }
@@ -1073,7 +1073,7 @@ public class MicrosoftAzureTranscriptionService extends AbstractJobProducer impl
               continue;
             }
             // Update state in the database
-            database.updateJobControl(jobId, TranscriptionJobControl.Status.Closed.name());
+            database.updateJobControl(jobId, mpId, TranscriptionJobControl.Status.Closed.name());
             logger.info("Attach transcription workflow {} scheduled for mp {}, microsoft azure job {}",
                     wfId, mpId, jobId);
           } catch (Exception e) {
@@ -1097,14 +1097,15 @@ public class MicrosoftAzureTranscriptionService extends AbstractJobProducer impl
     final AQueryBuilder q = assetManager.createQuery();
     final AResult r = q.select(q.snapshot()).where(q.mediaPackageId(mpId).and(q.version().isLatest())).run();
     if (r.getSize() == 0) {
-      if (!hasTranscriptionRequestExpired(jobId)) {
+      if (!hasTranscriptionRequestExpired(jobId, mpId)) {
         // Media package not archived but still within completion time? Skip until next time.
         logger.warn("Media package {} has not been archived yet or has been deleted. Will keep trying for {} "
                 + "more minutes before cancelling transcription job {}."
                     ,mpId, getRemainingTranscriptionExpireTimeInMin(jobId), jobId);
       } else {
         // Close transcription job and email admin
-        cancelTranscription(jobId, " Microsoft Azure Transcription job canceled, archived media package not found");
+        cancelTranscription(jobId, mpId, " Microsoft Azure Transcription job canceled, archived media package "
+                + "not found");
         logger.info("Microsoft Azure Transcription job {} has been canceled. Email notification sent", jobId);
       }
       return null;
@@ -1144,7 +1145,7 @@ public class MicrosoftAzureTranscriptionService extends AbstractJobProducer impl
     return null;
   }
 
-  private boolean hasTranscriptionRequestExpired(String jobId) {
+  private boolean hasTranscriptionRequestExpired(String jobId, String mpId) {
     try {
       // set a time limit based on video duration and maximum processing time
       if (database.findByJob(jobId).getDateCreated().getTime() + database.findByJob(jobId).getTrackDuration()
@@ -1176,9 +1177,9 @@ public class MicrosoftAzureTranscriptionService extends AbstractJobProducer impl
     return 0;
   }
 
-  private void cancelTranscription(String jobId, String message) {
+  private void cancelTranscription(String jobId, String mediapackageId, String message) {
     try {
-      database.updateJobControl(jobId, TranscriptionJobControl.Status.Canceled.name());
+      database.updateJobControl(jobId, mediapackageId, TranscriptionJobControl.Status.Canceled.name());
       String mpId = database.findByJob(jobId).getMediaPackageId();
 
       sendEmail("Transcription ERROR", String.format("%s(media package %s, job id %s).", message, mpId, jobId));

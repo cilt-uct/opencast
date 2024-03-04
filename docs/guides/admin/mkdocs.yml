@@ -168,6 +168,7 @@ nav:
       - Microsoft Azure: 'modules/transcription.modules/microsoftazuretranscripts.md'
       - Vosk: 'modules/transcription.modules/vosk.md'
       - Whisper: 'modules/transcription.modules/whisper.md'
+      - Transcripts (Nibity): 'modules/transcription.modules/nibitytranscripts.md'
    - Video Editor:
       - Setup: 'modules/videoeditor.setup.md'
       - Architecture: 'modules/videoeditor.architecture.md'
@@ -228,6 +229,8 @@ nav:
    - Microsoft Azure Attach Transcription: 'workflowoperationhandlers/microsoft-azure-attach-transcription-woh.md'
    - Microsoft Azure Start Transcription: 'workflowoperationhandlers/microsoft-azure-start-transcription-woh.md'
    - Multiencode: 'workflowoperationhandlers/multiencode-woh.md'
+   - Nibity Attach Transcription: 'workflowoperationhandlers/nibity-attach-transcription-woh.md'
+   - Nibity Start Transcription: 'workflowoperationhandlers/nibity-start-transcription-woh.md'
    - Normalize Audio: 'workflowoperationhandlers/normalizeaudio-woh.md'
    - Partial Import: 'workflowoperationhandlers/partial-import-woh.md'
    - Post Media Package: 'workflowoperationhandlers/postmediapackage-woh.md'

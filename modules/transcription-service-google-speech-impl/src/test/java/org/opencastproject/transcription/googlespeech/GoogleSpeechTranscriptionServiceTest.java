@@ -418,7 +418,7 @@ public class GoogleSpeechTranscriptionServiceTest {
         TranscriptionJobControl.Status.InProgress.name(), TRACK_DURATION, DATE_EXPECTED, PROVIDER);
     database.storeJobControl(MP_ID, "audioTrack2", "jobId2",
         TranscriptionJobControl.Status.InProgress.name(), TRACK_DURATION, DATE_EXPECTED, PROVIDER);
-    database.updateJobControl(JOB_ID, TranscriptionJobControl.Status.TranscriptionComplete.name());
+    database.updateJobControl(JOB_ID, MP_ID, TranscriptionJobControl.Status.TranscriptionComplete.name());
 
     URI uri = new URI("http://ADMIN_SERVER/collection/" + GoogleSpeechTranscriptionService.TRANSCRIPT_COLLECTION + "/"
             + JOB_ID + ".json");
@@ -483,7 +483,7 @@ public class GoogleSpeechTranscriptionServiceTest {
         TranscriptionJobControl.Status.InProgress.name(), TRACK_DURATION, DATE_EXPECTED, PROVIDER);
     database.storeJobControl("mpId2", "audioTrack2", "jobId2",
         TranscriptionJobControl.Status.InProgress.name(), TRACK_DURATION, DATE_EXPECTED, PROVIDER);
-    database.updateJobControl(JOB_ID, TranscriptionJobControl.Status.TranscriptionComplete.name());
+    database.updateJobControl(JOB_ID, MP_ID, TranscriptionJobControl.Status.TranscriptionComplete.name());
 
     Capture<Set<String>> capturedMpIds = mockAssetManagerAndWorkflow(GoogleSpeechTranscriptionService.DEFAULT_WF_DEF,
             true);

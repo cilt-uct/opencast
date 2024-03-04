@@ -71,6 +71,11 @@ import javax.xml.bind.annotation.XmlAttribute;
         query = "SELECT jc FROM TranscriptionJobControl jc "
             + "WHERE jc.status IN :status"
     ),
+    @NamedQuery(
+        name = "TranscriptionJobControl.findByJobAndMediaPackage",
+        query = "SELECT jc FROM TranscriptionJobControl jc "
+            + "WHERE jc.transcriptionJobId = :transcriptionJobId AND jc.mediaPackageId = :mediaPackageId"
+    ),
 })
 public class TranscriptionJobControlDto implements Serializable {
 
@@ -173,11 +178,24 @@ public class TranscriptionJobControlDto implements Serializable {
    * Find all job controls by media package.
    */
   public static Function<EntityManager, List<TranscriptionJobControlDto>> findByMediaPackageQuery(
-      final String mediaPackageId) {
+      final String mpId) {
     return namedQuery.findAll(
         "TranscriptionJobControl.findByMediaPackage",
         TranscriptionJobControlDto.class,
-        Pair.of("mediaPackageId", mediaPackageId)
+        Pair.of("mediaPackageId", mpId)
+    );
+  }
+
+  /**
+   * Find a job control by its number and mediapackage id.
+   */
+  public static Function<EntityManager, Optional<TranscriptionJobControlDto>> findByJobAndMediaPackageQuery(
+      String jobId, String mpId) {
+    return namedQuery.findOpt(
+        "TranscriptionJobControl.findByJobAndMediaPackage",
+        TranscriptionJobControlDto.class,
+        Pair.of("transcriptionJobId", jobId),
+        Pair.of("mediaPackageId", mpId)
     );
   }
 
@@ -214,9 +232,9 @@ public class TranscriptionJobControlDto implements Serializable {
   /**
    * Update job status
    */
-  public static Consumer<EntityManager> updateStatusQuery(String jobId, String status) {
+  public static Consumer<EntityManager> updateStatusQuery(String jobId, String mpId, String status) {
     return em -> {
-      TranscriptionJobControlDto dto = findByJobQuery(jobId).apply(em)
+      TranscriptionJobControlDto dto = findByJobAndMediaPackageQuery(jobId, mpId).apply(em)
           .orElseThrow(NoResultException::new);
       dto.setStatus(status);
       if (TranscriptionJobControl.Status.TranscriptionComplete.name().equals(status)) {
