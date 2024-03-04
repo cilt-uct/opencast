@@ -2776,7 +2776,7 @@ function getCaptions(id) {
         var attachments = response["search-results"]["result"]["mediapackage"]["attachments"]["attachment"];
         for(var i = 0; i < attachments.length; i++) {
             if(attachments[i].mimetype === "text/vtt" && attachments[i].tags["tag"].indexOf("engage-download") >= 0) {
-              if(attachments[i].type == "captions/timedtext") {
+              if(attachments[i].type == "captions/timedtext+en-us") {
                   providerArray.push({"id" : id, "mediatype" : attachments[i].type, "url" : attachments[i].url});
                   $('#dlGoogleCaptions').attr('href', attachments[i].url + "/download/" + attachments[i].url.substring(attachments[i].url.lastIndexOf('/') + 1));
                   $('#rmGoogleCaptions').attr('data-provider', "googleTranscript");
@@ -2784,7 +2784,7 @@ function getCaptions(id) {
                   $('#downloadGoogleCaptions').show();
                   $("#removeGoogleCaptions").show();
                   $("#removeCaptionsList").show();
-              }else if(attachments[i].type == "captions/vtt") {
+              }else if(attachments[i].type == "captions/vtt+en-us") {
                   providerArray.push({"id" : id, "mediatype" : attachments[i].type, "url" : attachments[i].url});
                   $('#dlNibityCaptions').attr('href', attachments[i].url + "/download/" + attachments[i].url.substring(attachments[i].url.lastIndexOf('/') + 1));
                   $('#rmNibityCaptions').attr('data-provider',"nibityTranscript");
@@ -2808,8 +2808,8 @@ function getCaptions(id) {
               provider = "Uploaded";
               vttURL = providerArray[i].url;
               mediaType = providerArray[i].mediatype;
-            } else if(providerArray[i].mediatype == "captions/vtt" || providerArray[i].mediatype == "captions/timedtext") {
-              if(providerArray[i].mediatype == "captions/vtt") {
+            } else if(providerArray[i].mediatype == "captions/vtt+en-us" || providerArray[i].mediatype == "captions/timedtext+en-us") {
+              if(providerArray[i].mediatype == "captions/vtt+en-us") {
                 provider = "Way with Words";
                 vttURL = providerArray[i].url;
                 mediaType = providerArray[i].mediatype;
