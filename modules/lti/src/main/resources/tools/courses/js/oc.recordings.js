@@ -1375,16 +1375,16 @@ ocRecordings = new (function() {
       var state = recording.state;
 
       if (state === 'Upcoming'){
-          links.push('<a title="Edit this recording" href="../schedule/index.html?sid='+ seriesID + '&upload=' + uploadSetting +  '&eventId=' + id + '&edit=true"><img src="/ltitools/shared/img/icons/edit.png"></img></a>');
+          links.push('<a title="Edit this recording" href="../schedule/index.html?sid='+ seriesID + '&upload=' + uploadSetting +  '&eventId=' + id + '&edit=true"><img alt="Edit icon" src="/ltitools/uct/shared/img/icons/edit.png"></img></a>');
       }else{
-          links.push('<span class="greyed_out" title="Cannot be edited"><img src="/ltitools/shared/img/icons/edit.png"></img></span>');
+          links.push('<span class="greyed_out" title="Cannot be edited"><img alt="Edit icon" src="/ltitools/uct/shared/img/icons/edit.png"></img></span>');
       }
 
       if (state === 'Upcoming'){
           //TO DO : links.push('<a title="Remove this Recording from UI only" href="javascript:ocRecordings.stopWorkflow(\'' + id + '\')">Ignore</a>');
-          links.push('<a title="Delete this recording" href="javascript:ocRecordings.removeRecording(\'' + id + '\')"><img src="/ltitools/shared/img/icons/delete.png"></img></a>');
+          links.push('<a title="Delete this recording" href="javascript:ocRecordings.removeRecording(\'' + id + '\')"><img alt="Delete icon" src="/ltitools/uct/shared/img/icons/delete.png"></img></a>');
       }else{
-          links.push('<span class="greyed_out" title="Cannot be deleted"><img src="/ltitools/shared/img/icons/delete.png"></img></span>');
+          links.push('<span class="greyed_out" title="Cannot be deleted"><img alt="Delete icon" src="/ltitools/uct/shared/img/icons/delete.png"></img></span>');
       }
       return links.join(' \n');
   }
