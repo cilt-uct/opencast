@@ -18,7 +18,7 @@
  * the License.
  *
  */
-package org.opencastproject.transcription.workflowoperation;
+package org.opencastproject.handler.workflowoperation;
 
 import org.opencastproject.job.api.Job;
 import org.opencastproject.job.api.JobContext;
@@ -55,27 +55,47 @@ import java.util.List;
     immediate = true,
     service = WorkflowOperationHandler.class,
     property = {
-        "service.description=Start Transcription Workflow Operation Handler",
-        "workflow.operation=start-watson-transcription"
+        "service.description=Start Google Speech Transcription Workflow Operation Handler",
+        "workflow.operation=google-speech-start-transcription"
     }
 )
-public class StartTranscriptionOperationHandler extends AbstractWorkflowOperationHandler {
+public class GoogleSpeechStartTranscriptionOperationHandler extends AbstractWorkflowOperationHandler {
 
-  /** The logging facility */
-  private static final Logger logger = LoggerFactory.getLogger(StartTranscriptionOperationHandler.class);
+  /**
+   * The logging facility
+   */
+  private static final Logger logger = LoggerFactory.getLogger(GoogleSpeechStartTranscriptionOperationHandler.class);
 
-  /** Workflow configuration option keys */
+  /**
+   * Workflow configuration option keys
+   */
+  static final String LANGUAGE_CODE = "language-code";
   static final String SKIP_IF_FLAVOR_EXISTS = "skip-if-flavor-exists";
 
-  /** The transcription service */
+  /**
+   * The transcription service
+   */
   private TranscriptionService service = null;
+
+  /**
+   * The language code
+   */
+  private String language = null;
 
   @Override
   @Activate
   protected void activate(ComponentContext cc) {
     super.activate(cc);
+    logger.info("Registering Google Speech workflow operation handler");
   }
 
+  /**
+   * {@inheritDoc}
+   *
+   * @see
+   * org.opencastproject.workflow.api.WorkflowOperationHandler#start(org.opencastproject.workflow.api.WorkflowInstance,
+   * JobContext)
+   */
   @Override
   public WorkflowOperationResult start(final WorkflowInstance workflowInstance, JobContext context)
           throws WorkflowOperationException {
@@ -95,6 +115,9 @@ public class StartTranscriptionOperationHandler extends AbstractWorkflowOperatio
 
     logger.debug("Start transcription for mediapackage {} started", mediaPackage);
 
+    // Get language code if configured
+    String langCode = operation.getConfiguration(LANGUAGE_CODE);
+
     // Check which tags have been configured
     ConfiguredTagsAndFlavors tagsAndFlavors = getTagsAndFlavors(
         workflowInstance, Configuration.many, Configuration.many, Configuration.none, Configuration.none);
@@ -112,6 +135,9 @@ public class StartTranscriptionOperationHandler extends AbstractWorkflowOperatio
       MediaPackageElementFlavor flavor = sourceFlavorOption.get(0);
       elementSelector.addFlavor(flavor);
     }
+    if (StringUtils.isNotBlank(langCode)) {
+      language = StringUtils.trim(langCode);
+    }
     if (!sourceTagOption.isEmpty()) {
       elementSelector.addTag(sourceTagOption.get(0));
     }
@@ -124,7 +150,7 @@ public class StartTranscriptionOperationHandler extends AbstractWorkflowOperatio
         continue;
       }
       try {
-        job = service.startTranscription(mediaPackage.getIdentifier().toString(), track);
+        job = service.startTranscription(mediaPackage.getIdentifier().toString(), track, language);
         // Only one job per media package
         break;
       } catch (TranscriptionServiceException e) {
@@ -141,7 +167,7 @@ public class StartTranscriptionOperationHandler extends AbstractWorkflowOperatio
     if (!waitForStatus(job).isSuccess()) {
       throw new WorkflowOperationException("Transcription job did not complete successfully");
     }
-    // Return OK means that the ibm watson job was created, but not finished yet
+    // Return OK means that the Google speech job was created, but not finished yet
 
     logger.debug("External transcription job for mediapackage {} was created", mediaPackage);
 
@@ -149,7 +175,7 @@ public class StartTranscriptionOperationHandler extends AbstractWorkflowOperatio
     return createResult(Action.CONTINUE);
   }
 
-  @Reference(target = "(provider=ibm.watson)")
+  @Reference(target = "(provider=google.speech)")
   public void setTranscriptionService(TranscriptionService service) {
     this.service = service;
   }

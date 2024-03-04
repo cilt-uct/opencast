@@ -419,7 +419,7 @@ public class GoogleSpeechTranscriptionService extends AbstractJobProducer implem
       // Update state in database
       // If there's an optimistic lock exception here, it's ok because the workflow dispatcher
       // may be doing the same thing
-      database.updateJobControl(jobId, TranscriptionJobControl.Status.TranscriptionComplete.name());
+      database.updateJobControl(jobId, mpId, TranscriptionJobControl.Status.TranscriptionComplete.name());
 
       // Delete audio file from Google storage
       deleteStorageFile(mpId, token);
@@ -462,7 +462,7 @@ public class GoogleSpeechTranscriptionService extends AbstractJobProducer implem
       jsonObj = (JSONObject) obj;
       jobId = (String) jsonObj.get("name");
       // Update state in database
-      database.updateJobControl(jobId, TranscriptionJobControl.Status.Error.name());
+      database.updateJobControl(jobId, mpId, TranscriptionJobControl.Status.Error.name());
       TranscriptionJobControl jobControl = database.findByJob(jobId);
       logger.warn("Error received for media package {}, job id {}",
               jobControl.getMediaPackageId(), jobId);
@@ -650,9 +650,9 @@ public class GoogleSpeechTranscriptionService extends AbstractJobProducer implem
     } catch (TranscriptionServiceException e) {
       throw e;
     } catch (Exception e) {
-      if (hasTranscriptionRequestExpired(jobId)) {
+      if (hasTranscriptionRequestExpired(jobId, mpId)) {
         // Cancel the job and inform admin
-        cancelTranscription(jobId, "Google Transcription job canceled due to errors");
+        cancelTranscription(jobId, mpId, "Google Transcription job canceled due to errors");
         logger.info("Google Transcription job {} has been canceled. Email notification sent", jobId);
       }
       String msg = String.format("Exception when calling the recognitions endpoint for media package %s, job id %s",
@@ -916,9 +916,9 @@ public class GoogleSpeechTranscriptionService extends AbstractJobProducer implem
     }
   }
 
-  private void cancelTranscription(String jobId, String message) {
+  private void cancelTranscription(String jobId, String mediapackageId, String message) {
     try {
-      database.updateJobControl(jobId, TranscriptionJobControl.Status.Canceled.name());
+      database.updateJobControl(jobId, mediapackageId, TranscriptionJobControl.Status.Canceled.name());
       String mpId = database.findByJob(jobId).getMediaPackageId();
       try {
         // Delete file stored on Google storage
@@ -935,7 +935,7 @@ public class GoogleSpeechTranscriptionService extends AbstractJobProducer implem
     }
   }
 
-  private boolean hasTranscriptionRequestExpired(String jobId) {
+  private boolean hasTranscriptionRequestExpired(String jobId, String mpId) {
     try {
       // set a time limit based on video duration and maximum processing time
       if (database.findByJob(jobId).getDateCreated().getTime() + database.findByJob(jobId).getTrackDuration()
@@ -1087,9 +1087,9 @@ public class GoogleSpeechTranscriptionService extends AbstractJobProducer implem
               try {
                 if (!getAndSaveJobResults(jobId)) {
                   // Job still running, not finished, so check if it should have finished more than N seconds ago
-                  if (hasTranscriptionRequestExpired(jobId)) {
+                  if (hasTranscriptionRequestExpired(jobId, mpId)) {
                     // Processing for too long, mark job as cancelled and don't check anymore
-                    database.updateJobControl(jobId, TranscriptionJobControl.Status.Canceled.name());
+                    database.updateJobControl(jobId, mpId, TranscriptionJobControl.Status.Canceled.name());
                     // Delete file stored on Google storage
                     String token = getRefreshAccessToken();
                     deleteStorageFile(mpId, token);
@@ -1105,7 +1105,7 @@ public class GoogleSpeechTranscriptionService extends AbstractJobProducer implem
               } catch (TranscriptionServiceException e) {
                 if (e.getCode() == 404) {
                   // Job not found there, update job state to canceled
-                  database.updateJobControl(jobId, TranscriptionJobControl.Status.Canceled.name());
+                  database.updateJobControl(jobId, mpId, TranscriptionJobControl.Status.Canceled.name());
                   // Send notification email
                   sendEmail(TRANSCRIPTION_ERROR,
                           String.format("Transcription job was not found (media package %s, job id %s).", mpId, jobId));
@@ -1132,7 +1132,7 @@ public class GoogleSpeechTranscriptionService extends AbstractJobProducer implem
               continue;
             }
             // Update state in the database
-            database.updateJobControl(jobId, TranscriptionJobControl.Status.Closed.name());
+            database.updateJobControl(jobId, mpId, TranscriptionJobControl.Status.Closed.name());
             logger.info("Attach transcription workflow {} scheduled for mp {}, google speech job {}",
                     wfId, mpId, jobId);
           } catch (Exception e) {
@@ -1155,14 +1155,14 @@ public class GoogleSpeechTranscriptionService extends AbstractJobProducer implem
     final AQueryBuilder q = assetManager.createQuery();
     final AResult r = q.select(q.snapshot()).where(q.mediaPackageId(mpId).and(q.version().isLatest())).run();
     if (r.getSize() == 0) {
-      if (!hasTranscriptionRequestExpired(jobId)) {
+      if (!hasTranscriptionRequestExpired(jobId, mpId)) {
         // Media package not archived but still within completion time? Skip until next time.
         logger.warn("Media package {} has not been archived yet or has been deleted. Will keep trying for {} "
             + "more minutes before cancelling transcription job {}.",
             mpId, getRemainingTranscriptionExpireTimeInMin(jobId), jobId);
       } else {
         // Close transcription job and email admin
-        cancelTranscription(jobId, " Google Transcription job canceled, archived media package not found");
+        cancelTranscription(jobId, mpId, " Google Transcription job canceled, archived media package not found");
         logger.info("Google Transcription job {} has been canceled. Email notification sent", jobId);
       }
       return null;

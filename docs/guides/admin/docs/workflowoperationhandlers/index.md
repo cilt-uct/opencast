@@ -72,6 +72,8 @@ The following table contains the workflow operations that are available in an ou
 | microsoft-azure-start-transcription  | Starts automated transcription provided by Microsoft Azure                                | [Documentation](microsoft-azure-start-transcription-woh.md)  |
 | move-storage                         | Move files between asset manager storage systems                                          | [Documentation](move-storage-woh.md)                         |
 | multiencode                          | Encode to multiple profiles in one operation                                              | [Documentation](multiencode-woh.md)                          |
+| nibity-attach-transcription          | Attaches transcripts to mediapackage                                                      | [Documentation](nibity-attach-transcription-woh.md)          |
+| nibity-start-transcription           | Starts transcription provided by Nibity                                                   | [Documentation](nibity-start-transcription-woh.md)           |
 | normalize-audio                      | Normalize first audio stream                                                              | [Documentation](normalizeaudio-woh.md)                       |
 | partial-import                       | Import partial tracks and process according to a SMIL document                            | [Documentation](partial-import-woh.md)                       |
 | post-mediapackage                    | Send mediapackage to remote service                                                       | [Documentation](postmediapackage-woh.md)                     |
@@ -105,7 +107,7 @@ The following table contains the workflow operations that are available in an ou
 | series                               | Apply series to the mediapackage                                                          | [Documentation](series-woh.md)                               |
 | silence                              | Silence detection on audio of the mediapackage                                            | [Documentation](silence-woh.md)                              |
 | snapshot                             | Archive the current state of the mediapackage                                             | [Documentation](snapshot-woh.md)                             |
-| speechtotext                         | Create subtitles for video and audio sources                                              | [Documentation](speechtotext-woh.md)                       |
+| speechtotext                         | Create subtitles for video and audio sources                                              | [Documentation](speechtotext-woh.md)                         |
 | start-watson-transcription           | Starts automated transcription provided by IBM Watson                                     | [Documentation](start-watson-transcription-woh.md)           |
 | start-workflow                       | Start a new workflow for given media package ID                                           | [Documentation](start-workflow-woh.md)                       |
 | statistics-writer                    | Log statistical data about the video                                                      | [Documentation](statistics-writer.md)                        |

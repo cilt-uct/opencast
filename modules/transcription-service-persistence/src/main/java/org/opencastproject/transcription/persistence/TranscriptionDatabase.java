@@ -47,7 +47,7 @@ public interface TranscriptionDatabase {
   /*
    * Update transcription job
    */
-  void updateJobControl(String jobId, String jobStatus) throws TranscriptionDatabaseException;
+  void updateJobControl(String jobId, String mpId, String jobStatus) throws TranscriptionDatabaseException;
 
   /*
    * Get transcription job by job Id
@@ -58,6 +58,11 @@ public interface TranscriptionDatabase {
    * Get transcription service job list by mediapackage Id
    */
   List<TranscriptionJobControl> findByMediaPackage(String mpId) throws TranscriptionDatabaseException;
+
+   /*
+   * Get transcription job by job Id and mediapackage Id
+   */
+  TranscriptionJobControl findByJobAndMediaPackage(String jobId, String mpId) throws TranscriptionDatabaseException;
 
   /*
    * Get transcription service job list by transcription status

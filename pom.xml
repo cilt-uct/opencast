@@ -252,6 +252,7 @@
     <module>modules/transcription-service-google-speech-impl</module>
     <module>modules/transcription-service-ibm-watson-impl</module>
     <module>modules/transcription-service-microsoft-azure</module>
+    <module>modules/transcription-service-nibity</module>
     <module>modules/transcription-service-persistence</module>
     <module>modules/transcription-service-workflowoperation</module>
     <module>modules/urlsigning-common</module>
@@ -968,6 +969,21 @@
         <version>1</version>
       </dependency>
       <dependency>
+        <groupId>javax.activation</groupId>
+        <artifactId>activation</artifactId>
+        <version>1.1.1</version>
+      </dependency>
+      <dependency>
+        <groupId>javax.mail</groupId>
+        <artifactId>mail</artifactId>
+        <version>1.4.7</version>
+      </dependency>
+      <dependency>
+        <groupId>javax.ws.rs</groupId>
+        <artifactId>jsr311-api</artifactId>
+        <version>1.1.1</version>
+      </dependency>
+      <dependency>
         <groupId>jakarta.ws.rs</groupId>
         <artifactId>jakarta.ws.rs-api</artifactId>
         <version>2.1.6</version>
@@ -1007,6 +1023,11 @@
         <groupId>org.eclipse.persistence</groupId>
         <artifactId>jakarta.persistence</artifactId>
         <version>2.2.3</version>
+      </dependency>
+      <dependency>
+        <groupId>org.eclipse.persistence</groupId>
+        <artifactId>javax.persistence</artifactId>
+        <version>2.1.0</version>
       </dependency>
       <!-- CXF -->
       <dependency>

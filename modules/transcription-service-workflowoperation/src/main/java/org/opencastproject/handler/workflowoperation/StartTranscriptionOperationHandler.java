@@ -18,7 +18,7 @@
  * the License.
  *
  */
-package org.opencastproject.transcription.workflowoperation;
+package org.opencastproject.handler.workflowoperation;
 
 import org.opencastproject.job.api.Job;
 import org.opencastproject.job.api.JobContext;
@@ -55,22 +55,16 @@ import java.util.List;
     immediate = true,
     service = WorkflowOperationHandler.class,
     property = {
-        "service.description=Start Transcription Workflow Operation Handler (Amberscript)",
-        "workflow.operation=amberscript-start-transcription"
+        "service.description=Start Transcription Workflow Operation Handler",
+        "workflow.operation=start-watson-transcription"
     }
 )
-public class AmberscriptStartTranscriptionOperationHandler extends AbstractWorkflowOperationHandler {
+public class StartTranscriptionOperationHandler extends AbstractWorkflowOperationHandler {
 
-  private static final Logger logger = LoggerFactory.getLogger(AmberscriptStartTranscriptionOperationHandler.class);
+  /** The logging facility */
+  private static final Logger logger = LoggerFactory.getLogger(StartTranscriptionOperationHandler.class);
 
   /** Workflow configuration option keys */
-  static final String LANGUAGE = "language";
-  static final String JOBTYPE = "jobtype";
-  static final String SPEAKER = "speaker";
-  static final String TRANSCRIPTIONTYPE = "transcriptiontype";
-  static final String GLOSSARY = "glossary";
-  static final String TRANSCRIPTIONSTYLE = "transcriptionstyle";
-  static final String TARGETLANGUAGE = "targetlanguage";
   static final String SKIP_IF_FLAVOR_EXISTS = "skip-if-flavor-exists";
 
   /** The transcription service */
@@ -93,30 +87,19 @@ public class AmberscriptStartTranscriptionOperationHandler extends AbstractWorkf
       MediaPackageElement[] mpes = mediaPackage.getElementsByFlavor(MediaPackageElementFlavor.parseFlavor(skipOption));
       if (mpes != null && mpes.length > 0) {
         logger.info(
-            "Start transcription operation will be skipped because flavor '{}' already exists in the media package.",
-            skipOption);
+                "Start transcription operation will be skipped because flavor {} already exists in the media package",
+                skipOption);
         return createResult(Action.SKIP);
       }
     }
 
-    logger.debug("Start transcription for mediapackage '{}'.", mediaPackage);
+    logger.debug("Start transcription for mediapackage {} started", mediaPackage);
 
     // Check which tags have been configured
     ConfiguredTagsAndFlavors tagsAndFlavors = getTagsAndFlavors(
         workflowInstance, Configuration.many, Configuration.many, Configuration.none, Configuration.none);
     List<String> sourceTagOption = tagsAndFlavors.getSrcTags();
     List<MediaPackageElementFlavor> sourceFlavorOption = tagsAndFlavors.getSrcFlavors();
-    String language = StringUtils.trimToEmpty(operation.getConfiguration(LANGUAGE));
-    String jobType = StringUtils.trimToEmpty(operation.getConfiguration(JOBTYPE));
-    String speaker = StringUtils.trimToEmpty(operation.getConfiguration(SPEAKER));
-    String transcriptionType = StringUtils.trimToEmpty(operation.getConfiguration(TRANSCRIPTIONTYPE));
-    // Note that specifying `""` is different from not specifying a glossary at all!
-    // The former will override the default with not using a glossary for this operation,
-    // while the latter will fall back to said default. Hence, no `trimToEmpty` here.
-    String glossary = StringUtils.trim(operation.getConfiguration(GLOSSARY));
-    String transcriptionStyle = StringUtils.trimToEmpty(operation.getConfiguration(TRANSCRIPTIONSTYLE));
-    // See glossary comment above
-    String targetLanguage = StringUtils.trim(operation.getConfiguration(TARGETLANGUAGE));
 
     AbstractMediaPackageElementSelector<Track> elementSelector = new TrackSelector();
 
@@ -126,7 +109,8 @@ public class AmberscriptStartTranscriptionOperationHandler extends AbstractWorkf
     }
 
     if (!sourceFlavorOption.isEmpty()) {
-      elementSelector.addFlavor(sourceFlavorOption.get(0));
+      MediaPackageElementFlavor flavor = sourceFlavorOption.get(0);
+      elementSelector.addFlavor(flavor);
     }
     if (!sourceTagOption.isEmpty()) {
       elementSelector.addTag(sourceTagOption.get(0));
@@ -135,9 +119,12 @@ public class AmberscriptStartTranscriptionOperationHandler extends AbstractWorkf
     Collection<Track> elements = elementSelector.select(mediaPackage, false);
     Job job = null;
     for (Track track : elements) {
+      if (track.hasVideo()) {
+        logger.info("Skipping track {} since it contains a video stream", track);
+        continue;
+      }
       try {
-        job = service.startTranscription(mediaPackage.getIdentifier().toString(), track, language, jobType, speaker,
-            transcriptionType, glossary, transcriptionStyle, targetLanguage);
+        job = service.startTranscription(mediaPackage.getIdentifier().toString(), track);
         // Only one job per media package
         break;
       } catch (TranscriptionServiceException e) {
@@ -146,23 +133,23 @@ public class AmberscriptStartTranscriptionOperationHandler extends AbstractWorkf
     }
 
     if (job == null) {
-      logger.info("No matching tracks found.");
+      logger.info("No matching tracks found");
       return createResult(mediaPackage, Action.CONTINUE);
     }
 
     // Wait for the jobs to return
     if (!waitForStatus(job).isSuccess()) {
-      throw new WorkflowOperationException("Transcription job did not complete successfully.");
+      throw new WorkflowOperationException("Transcription job did not complete successfully");
     }
-    // Return OK means that the transcription job was created, but not finished yet
+    // Return OK means that the ibm watson job was created, but not finished yet
 
-    logger.debug("External transcription job for mediapackage '{}' was created.", mediaPackage);
+    logger.debug("External transcription job for mediapackage {} was created", mediaPackage);
 
     // Results are empty, we should get a callback when transcription is done
     return createResult(Action.CONTINUE);
   }
 
-  @Reference(target = "(provider=amberscript)")
+  @Reference(target = "(provider=ibm.watson)")
   public void setTranscriptionService(TranscriptionService service) {
     this.service = service;
   }
