@@ -2776,7 +2776,7 @@ function getCaptions(id) {
         var attachments = response["search-results"]["result"]["mediapackage"]["attachments"]["attachment"];
         for(var i = 0; i < attachments.length; i++) {
             if(attachments[i].mimetype === "text/vtt" && attachments[i].tags["tag"].indexOf("engage-download") >= 0) {
-              if(attachments[i].type == "captions/timedtext+en-us") {
+              if(attachments[i].type.indexOf("captions/timedtext") >= 0) {
                   providerArray.push({"id" : id, "mediatype" : attachments[i].type, "url" : attachments[i].url});
                   $('#dlGoogleCaptions').attr('href', attachments[i].url + "/download/" + attachments[i].url.substring(attachments[i].url.lastIndexOf('/') + 1));
                   $('#rmGoogleCaptions').attr('data-provider', "googleTranscript");
@@ -2784,7 +2784,7 @@ function getCaptions(id) {
                   $('#downloadGoogleCaptions').show();
                   $("#removeGoogleCaptions").show();
                   $("#removeCaptionsList").show();
-              }else if(attachments[i].type == "captions/vtt+en-us") {
+              }else if(attachments[i].type.indexOf("captions/vtt") >= 0) {
                   providerArray.push({"id" : id, "mediatype" : attachments[i].type, "url" : attachments[i].url});
                   $('#dlNibityCaptions').attr('href', attachments[i].url + "/download/" + attachments[i].url.substring(attachments[i].url.lastIndexOf('/') + 1));
                   $('#rmNibityCaptions').attr('data-provider',"nibityTranscript");
@@ -2792,7 +2792,7 @@ function getCaptions(id) {
                   $('#downloadNibityCaptions').show();
                   $("#removeNibityCaptions").show();
                   $("#removeCaptionsList").show();
-              }else if(attachments[i].type == "text/vtt") {
+              }else if(attachments[i].type.indexOf("text/vtt") >= 0) {
                   providerArray.push({"id" : id, "mediatype" : attachments[i].type, "url" : attachments[i].url});
                   $('#dlUploadedCaptions').attr('href', attachments[i].url + "/download/" + attachments[i].url.substring(attachments[i].url.lastIndexOf('/') + 1));
                   $('#rmUploadedCaptions').attr('data-provider', "uploadedTranscript");
@@ -2804,12 +2804,12 @@ function getCaptions(id) {
            }
         }
         for(var i=0;i<providerArray.length;i++) {
-            if(providerArray[i].mediatype == "text/vtt") {
+            if(providerArray[i].mediatype.indexOf("text/vtt") >= 0) {
               provider = "Uploaded";
               vttURL = providerArray[i].url;
               mediaType = providerArray[i].mediatype;
-            } else if(providerArray[i].mediatype == "captions/vtt+en-us" || providerArray[i].mediatype == "captions/timedtext+en-us") {
-              if(providerArray[i].mediatype == "captions/vtt+en-us") {
+            } else if(providerArray[i].mediatype.indexOf("captions/vtt") >= 0 || providerArray[i].mediatype.indexOf("captions/timedtext") >= 0) {
+              if(providerArray[i].mediatype.indexOf("captions/vtt") >= 0) {
                 provider = "Way with Words";
                 vttURL = providerArray[i].url;
                 mediaType = providerArray[i].mediatype;
