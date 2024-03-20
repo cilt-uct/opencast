@@ -65,12 +65,21 @@
             "presentation/preview": "presentation",
             "presenter/preview": "presenter",
             "presentation2/delivery": "presentation2",
-            "presentation2/preview": "presentation2"
+            "presentation2/preview": "presentation2",
+            "pic-in-pic1/delivery": "pic-in-pic1",
+            "pic-in-pic1/preview": "pic-in-pic1",
+            "pic-in-pic2/delivery": "pic-in-pic2",
+            "pic-in-pic2/preview": "pic-in-pic2",
+            "composite/delivery": "side-by-side",
+            "composite/preview": "side-by-side"
         },
         "videoPreviewAttachment": [
             "presenter/player+preview",
             "presentation/player+preview",
-            "presentation2/player+preview"
+            "presentation2/player+preview",
+            "pic-in-pic1/player+preview",
+            "pic-in-pic2/player+preview",
+            "side-bys-de/player+preview"
         ],
         "theme": "custom_theme"
     },
@@ -130,6 +139,30 @@
                     ],
                     "icon": "present-mode-1.svg",
                     "title": "Presentation2"
+                },
+                {
+                    "id": "pic-in-pic1",
+                    "content": [
+                        "pic-in-pic1"
+                    ],
+                    "icon": "present-mode-3.svg",
+                    "title": "Pic-in-pic"
+                },
+                {
+                    "id": "pic-in-pic2",
+                    "content": [
+                        "pic-in-pic2"
+                    ],
+                    "icon": "present-mode-3.svg",
+                    "title": "Pic-in-pic2"
+                },
+                {
+                    "id": "composite",
+                    "content": [
+                        "side-by-side"
+                    ],
+                    "icon": "present-mode-4.svg",
+                    "title": "Side-by-side"
                 }
             ],
             "dualVideoContentIds": [
