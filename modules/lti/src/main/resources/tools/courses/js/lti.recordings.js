@@ -400,7 +400,7 @@ function listEpisode(info) {
 }
 
 var limit = 10000,
-    url = "/search/episode.json?sid=" + (courseID || '') + "&limit=" + limit + "&sort=DATE_PUBLISHED_DESC";
+    url = "/search/episode.json?sid=" + (courseID || '') + "&limit=" + limit + "&sort=DATE_MODIFIED_DESC";
 
 xhr({url: url, responseType: 'json'},
     function(json) {
