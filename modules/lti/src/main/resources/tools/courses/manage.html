@@ -177,6 +177,7 @@
       <div class="modal-dialog" role="document">
         <form class="modal-content">
           <div class="modal-header">
+            <h2 id="modalTitle" name="modalTitle"></h2>
             <button type="button" class="close" data-dismiss="modal" aria-label="close">
               <span aria-hidden="true" title="Close Popup">&times;</span>
             </button>
@@ -548,6 +549,7 @@
         <div class="modal-dialog" role="document">
           <form class="modal-content">
             <div class="modal-header">
+              <h2 id="ecModalTitle" name="ecModalTitle"></h2>
               <button type="button" class="close" data-dismiss="modal" aria-label="close">
                 <span aria-hidden="true" title="Close Popup">&times;</span>
               </button>
@@ -596,11 +598,13 @@
         <div class="modal-dialog" role="document">
             <form class="modal-content">
                 <div class="modal-header">
+                    <h2 id="rcModalTitle" name="rcModalTitle"></h2>
                     <button type="button" class="close" data-dismiss="modal" aria-label="close">
                         <span aria-hidden="true" title="Close Popup">&times;</span>
                     </button>
                 </div>
                 <div class="modal-body" id="rcModalBody">
+                    Title: <b><span id="rcModalSubTitle" name="rcModalSubTitle"></span></b><br/><br/>
                     <p><span style="color:#e45253;padding-right:5px"><b>PLEASE NOTE:</b></span>
                         By clicking "<i>Yes, Remove Captions</i>" the current published captions will be removed (i.e. a remove
                         process will run) and unavailable for playback.</p>
@@ -827,17 +831,17 @@
               <h5 class="list-group-item-heading"><b>Download Captions</b></h5>
               <ul class="list-group">
                 <li class="list-group-item list-group-item-action borderless" style="display:none;" id="downloadNibityCaptions">
-                  <a href="#" class="list-group-item-action" title="Nibity Captions" id="dlNibityCaptions">
-                    <i class="fa fa-download"></i>Way with Words Captions
+                  <a href="#" class="list-group-item-action" title="WayWithWords Captions" style="display:none;" id="dlNibityCaptions">
+                    <i class="fa fa-download"></i>WayWithWords Captions
                   </a>
                 </li>
                 <li class="list-group-item list-group-item-action borderless" style="display:none;" id="downloadGoogleCaptions">
-                  <a href="#" class="list-group-item-action" title="Google Captions" id="dlGoogleCaptions">
+                  <a href="#" class="list-group-item-action" title="Google Captions" style="display:none;" id="dlGoogleCaptions">
                     <i class="fa fa-download"></i>Automated Captions
                   </a>
                 </li>
                 <li class="list-group-item list-group-item-action borderless" style="display:none;" id="downloadUploadedCaptions">
-                  <a href="#" title="Uploaded Captions" id="dlUploadedCaptions">
+                  <a href="#" class="list-group-item-action" title="Uploaded Captions" style="display:none;" id="dlUploadedCaptions">
                     <i class="fa fa-download"></i>Uploaded Captions
                   </a>
                 </li>
@@ -846,7 +850,7 @@
             <div class="list-group-item">
               <h5 class="list-group-item-heading"><b>Upload New Captions</b></h5>
               <input autocomplete="off" type="checkbox" id="populatedPresVtt" class="filePopulated" />
-              <span class="fileContainer form-control" data-mediatype="text/vtt" data-title="Choose *.vtt ..." style="display:inline-block;">
+              <span class="fileContainer form-control" data-mediatype="captions/upload+en-US" data-title="Choose *.vtt ..." style="display:inline-block;">
               <input autocomplete="off" type="file" name="text/vtt" id="attachment_captions_webvtt" data-mediatype="vtt" accept=".vtt"/>
                   <progress min="0" value=0 max="100"></progress>
               </span>
@@ -857,12 +861,12 @@
                 correct the errors indicated. Then copy and paste the corrected text back to your file and upload it again.
               </span>
             </div>
-            <div class="list-group-item">
-                <h5 class="list-group-item-heading"><b>Request a Transcript</b></h5>
+            <div class="list-group-item" id="requestBetterCaptionsGroup">
+                <h5 class="list-group-item-heading"><b>Request Captions</b></h5>
                 <ul class="list-group">
                     <li class="list-group-item list-group-item-action borderless" id="requestBetterCaptions">
-                      <a href="#" onclick="$('#editPublishedModal').modal('hide')" class="list-group-item-action" title="Way with Words Transcription" id="rqCaptions" data-toggle="modal" data-target="#requestTranscriptModal">
-                          <i class="fa fa-paper-plane"></i>Request better captions
+                      <a href="#" onclick="$('#editPublishedModal').modal('hide')" class="list-group-item-action" title="WayWithWords Transcription" id="rqCaptions" data-toggle="modal" data-target="#requestTranscriptModal">
+                          <i class="fa fa-paper-plane"></i>Request WayWithWords captions
                       </a>
                     </li>
                 </ul>
@@ -871,8 +875,8 @@
                 <h5 class="list-group-item-heading"><b>Remove Captions</b></h5>
                 <ul class="list-group">
                     <li class="list-group-item list-group-item-action borderless" style="display:none;" id="removeNibityCaptions">
-                      <a href="#" class="list-group-item-action" title="Nibity Captions" id="rmNibityCaptions" data-toggle="modal" data-target="#removeCaptionsModal">
-                        <i class="fa fa-remove" style="color:red;"></i>Way with Words Captions
+                      <a href="#" class="list-group-item-action" title="WayWithWords Captions" id="rmNibityCaptions" data-toggle="modal" data-target="#removeCaptionsModal">
+                        <i class="fa fa-remove" style="color:red;"></i>WayWithWords Captions
                       </a>
                     </li>
                     <li class="list-group-item list-group-item-action borderless" style="display:none;" id="removeGoogleCaptions">
@@ -881,7 +885,7 @@
                       </a>
                     </li>
                     <li class="list-group-item list-group-item-action borderless" style="display:none;" id="removeUploadedCaptions">
-                      <a href="#" title="Uploaded Captions" id="rmUploadedCaptions" data-toggle="modal" data-target="#removeCaptionsModal">
+                      <a href="#" class="list-group-item-action" title="Uploaded Captions" id="rmUploadedCaptions" data-toggle="modal" data-target="#removeCaptionsModal">
                         <i class="fa fa-remove" style="color:red;"></i>Uploaded Captions
                       </a>
                     </li>
