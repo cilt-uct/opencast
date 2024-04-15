@@ -607,29 +607,12 @@
 
         "/* user event tracking plugins */": "*********************************************************",
         "es.upv.paella.userEventTracker": {
-            "enabled": false,
+            "enabled": true,
             "context": "userTracking",
             "events": [
                 "PLAY",
-                "PAUSE",
-                "STOP",
-                "ENDED",
-                "SEEK",
-                "FULLSCREEN_CHANGED",
-                "VOLUME_CHANGED",
-                "CAPTIONS_CHANGED",
-                "BUTTON_PRESS",
-                "SHOW_POPUP",
-                "HIDE_POPUP",
-                "ENTER_FULLSCREEN",
-                "EXIT_FULLSCREEN",
-                "VOLUME_CHANGED",
                 "CAPTIONS_ENABLED",
-                "CAPTIONS_DISABLED",
-                "LAYOUT_CHANGED",
-                "PLAYBACK_RATE_CHANGED",
-                "VIDEO_QUALITY_CHANGED",
-                "RESIZE_END"
+                "CAPTIONS_DISABLED"
             ]
         },
         "es.upv.paella.debug.userTrackingDataPlugin": {
@@ -648,7 +631,7 @@
             ]
         },
         "org.opencast.paella.opencast.userTrackingDataPlugin": {
-            "enabled": false,
+            "enabled": true,
             "context": [
                 "userTracking"
             ]

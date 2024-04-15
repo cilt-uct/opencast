@@ -177,21 +177,21 @@ const initParams = {
 
     // userracking service removed from opencast?
     // Load stats
-    // const loadStats = async () => {
-    //   const videoId = await this.getVideoId(config,player);
-    //   const response = await fetch(getUrlFromOpencastServer(`/usertracking/stats.json?id=${videoId}`));
-    //   if (response.ok) {
-    //     const data = await response.json();
-    //     return data.stats;
-    //   }
-    //   else {
-    //     null;
-    //   }
-    // };
-    // const stats = await loadStats();
-    // if (stats) {
-    //   data.metadata.views = stats.views;
-    // }
+    const loadStats = async () => {
+      const videoId = await this.getVideoId(config,player);
+      const response = await fetch(getUrlFromOpencastServer(`/usertracking/stats.json?id=${videoId}`));
+      if (response.ok) {
+        const data = await response.json();
+        return data.stats;
+      }
+      else {
+        null;
+      }
+    };
+    const stats = await loadStats();
+    if (stats) {
+      data.metadata.views = stats.views;
+    }
 
     return data;
   },

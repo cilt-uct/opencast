@@ -77,12 +77,14 @@ export default class OpencastUserTrackingDataPlugin extends DataPlugin {
       opencastLog.type += '-' + data.plugin;
       break;
     default:
-      opencastLog.type += params;
+      opencastLog.type += data.params;
     }
 
     const params = (new URLSearchParams(opencastLog)).toString();
-    const requestUrl = `/usertracking/?_method=PUT&${ params }`;
-    const result = await fetch(getUrlFromOpencastServer(requestUrl));
+    const requestUrl = `/usertracking/?${ params }`;
+    const result = await fetch(getUrlFromOpencastServer(requestUrl), {
+      method: 'PUT'
+    });
     if (!result.ok) {
       this.player.log.error('Error in user data log');
     }
