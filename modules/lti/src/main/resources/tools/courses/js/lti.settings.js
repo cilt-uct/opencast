@@ -30,9 +30,12 @@ $(document).ready(function(){
                 $('#series_captions  option[value=none]').attr('selected','selected');
             } else if(ext[j].value == "google") {
                 $('#series_captions  option[value=google]').attr('selected','selected');
+            } else if(ext[j].value == "nibity") {
+                $('#series_captions  option[value=WayWithWords]').attr('selected','selected');
             } else if(ext[j].value == "") {
                 $('#series_captions  option[value=no_selection]').attr('selected','selected');
             }
+            
         }
         if(ext[j].id == "series-locked") {
             if(ext[j].value == false) {
