@@ -2809,24 +2809,22 @@ function getCaptions(id) {
         var vttURL = "";
         var mediaType = "";
       
-        if (providerArray[i].mediatype.indexOf("captions/upload") >= 0) {
+        if (providerArray[i].mediatype.indexOf("captions/upload") >= 0 || providerArray[i].mediatype.indexOf("captions/upload+en-us") >= 0) {
           provider = "Uploaded";
           vttURL = providerArray[i].url;
           mediaType = providerArray[i].mediatype;
           $('#downloadUploadedCaptions, #removeUploadedCaptions, #removeCaptionsList').show();
-        } else if (providerArray[i].mediatype.indexOf("captions/vtt") >= 0 || providerArray[i].mediatype.indexOf("captions/timedtext") >= 0) {
-          if (providerArray[i].mediatype.indexOf("captions/vtt") >= 0) {
-            provider = "WayWithWords";
-            vttURL = providerArray[i].url;
-            mediaType = providerArray[i].mediatype;
-            $('#downloadNibityCaptions, #removeNibityCaptions, #removeCaptionsList').show();
-            $('#requestBetterCaptionsGroup').hide();
-          } else {
-            provider = "Automated";
-            vttURL = providerArray[i].url;
-            mediaType = providerArray[i].mediatype;
-            $('#downloadGoogleCaptions, #removeGoogleCaptions, #removeCaptionsList').show();
-          }
+        } else if (providerArray[i].mediatype.indexOf("captions/vtt") >= 0 || providerArray[i].mediatype.indexOf("captions/vtt+en-us") >= 0) {
+          provider = "WayWithWords";
+          vttURL = providerArray[i].url;
+          mediaType = providerArray[i].mediatype;
+          $('#downloadNibityCaptions, #removeNibityCaptions, #removeCaptionsList').show();
+          $('#requestBetterCaptionsGroup').hide();
+        } else if (providerArray[i].mediatype.indexOf("captions/timedtext") >= 0 || providerArray[i].mediatype.indexOf("captions/timedtext+en-us") >= 0){
+          provider = "Automated";
+          vttURL = providerArray[i].url;
+          mediaType = providerArray[i].mediatype;
+          $('#downloadGoogleCaptions, #removeGoogleCaptions, #removeCaptionsList').show();
         }
       }
 
