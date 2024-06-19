@@ -159,7 +159,7 @@ User.prototype = {
   getAvailableSeries: function() {
     return $.Deferred(function(d) {
       $.ajax({
-             url: '/series/series.json?edit=true&fuzzyMatch=false&count=100',
+             url: '/api/series/series.json?edit=true&fuzzyMatch=false&count=100',
         dataType: 'json'
       }).done(function(json) {
         d.resolve(

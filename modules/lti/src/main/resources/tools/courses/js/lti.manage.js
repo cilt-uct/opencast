@@ -1124,10 +1124,11 @@ function personalEventEditable(id, has_preview) {
 
     str += '<button type="button" id="btnDetails" data-toggle="modal" data-event="' + id + '" data-target="#editPublishedModal" title="Edit recording details">' +
             '  <i class="fa fa-pencil"></i></button>';
-    str += '&nbsp;&nbsp;<button type="button" data-event="' + id + '"  data-target="#delModal" title="Remove recording">' +
+    str += '&nbsp;&nbsp;<button type="button" data-event="' + id + '" data-target="#delModal" title="Remove recording">' +
             '  <i class="fa fa-times-circle"></i></button>';
-    str += '&nbsp;&nbsp;<button type="button" id="btnCaptions_' + id + '" style="display:none;" data-toggle="modal" data-event="' + id + '" data-target="#editPublishedModal">' +
+    str += '&nbsp;&nbsp;<button type="button" id="btnCaptions_' + id + '" style="display:none;" data-toggle="modal" data-event="' + id + '" data-target="#editPublishedModal"  title="Edit recording captions">' +
            '  <i class="fa fa-cc"></i></button>';
+    checkCaptions(id);
     return '<div style="display:flex; justify-content: space-between;">'+ str + '</div>';
 }
 
@@ -1393,17 +1394,19 @@ $(document).ready(function() {
         if (ocManager.isPersonalSeries) {
           var $seriesList = $(target).find('.seriesList .filterList');
           $seriesList.empty();
-          ocManager.user.availableSeries
-            .map(function(series) {
-              var $item = $('<li/>', {
-                            'data-ref': series.id,
-                            text: series.title
-                          });
-              return $item;
-          })
-          .forEach(function($seriesItem) {
-            $seriesList.append($seriesItem);
-          });
+          if (ocManager.user && ocManager.user.availableSeries) {
+            ocManager.user.availableSeries
+              .map(function(series) {
+                var $item = $('<li/>', {
+                              'data-ref': series.id,
+                              text: series.title
+                            });
+                return $item;
+            })
+            .forEach(function($seriesItem) {
+              $seriesList.append($seriesItem);
+            });
+          }
         }
         $('#hiddenEvent').attr('data-event', event.id);
         $('#hiddenEvent').attr('data-title', event.title);
@@ -2848,7 +2851,7 @@ function getProviderInfo(type) {
   } else if (type.indexOf("captions/upload") >= 0) {
     return {provider: "uploadedTranscript", downloadElementId: "dlUploadedCaptions", removeElementId: "rmUploaded"};
   }
-    return null;
+  return null;
 }  
 
 function closeSeries() {
