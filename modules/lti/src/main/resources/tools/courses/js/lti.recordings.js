@@ -400,7 +400,7 @@ function listEpisode(info) {
 }
 
 var limit = 10000,
-    url = "/search/episode.json?sid=" + (courseID || '') + "&limit=" + limit + "&sort=DATE_MODIFIED_DESC";
+    url = "/search/episode.json?sid=" + (courseID || '') + "&limit=" + limit + "&sort=modified%20desc";
 
 xhr({url: url, responseType: 'json'},
     function(json) {
@@ -445,7 +445,7 @@ xhr({url: url, responseType: 'json'},
     }
 );
 
-var latestEpisodesURL = '/search/episode.json?sid=' + (courseID || '') + '&limit=3&sort=DATE_CREATED_DESC';         //fetch latest 3 (max) episodes for series
+var latestEpisodesURL = '/search/episode.json?sid=' + (courseID || '') + '&limit=3&sort=modified%20desc';         //fetch latest 3 (max) episodes for series
 
 xhr({url: latestEpisodesURL, responseType: 'json'},
   function(response) {
