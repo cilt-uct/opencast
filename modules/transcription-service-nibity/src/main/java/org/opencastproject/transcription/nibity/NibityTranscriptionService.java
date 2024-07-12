@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to The Apereo Foundation under one or more contributor license
  * agreements. See the NOTICE file distributed with this work for additional
  * information regarding copyright ownership.
@@ -384,7 +384,7 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
           // Update state in database
           // If there's an optimistic lock exception here, it's ok because the workflow dispatcher
           // may be doing the same thing
-          database.updateJobControl(jobId, mpId, TranscriptionJobControl.Status.TranscriptionComplete.name());
+          database.updateJobControl(jobId, TranscriptionJobControl.Status.TranscriptionComplete.name());
         } else {
           logger.debug("Unable to get and save the transcription result for mpId {}", mpId);
         }
@@ -410,7 +410,7 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
       jsonObj = (JSONObject) obj;
       jobId = (String) jsonObj.get("name");
       // Update state in database
-      database.updateJobControl(jobId, mpId, TranscriptionJobControl.Status.Error.name());
+      database.updateJobControl(jobId, TranscriptionJobControl.Status.Error.name());
       TranscriptionJobControl jobControl = database.findByJob(jobId);
       logger.warn(String.format("Error received for media package %s, job id %s",
               jobControl.getMediaPackageId(), jobId));
@@ -788,7 +788,7 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
 
   @Override
   // Called by the attach workflow operation
-  public MediaPackageElement getGeneratedTranscription(String mpId, String jobId)
+  public MediaPackageElement getGeneratedTranscription(String mpId, String jobId, MediaPackageElement.Type type)
           throws TranscriptionServiceException {
     try {
       // If jobId is unknown, look for all jobs associated to that mpId
@@ -1034,7 +1034,7 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
                   // Job still running, not finished, so check if it should have finished more than N seconds ago
                   if (j.getDateExpected().getTime() + maxProcessingSeconds * 1000 < System.currentTimeMillis()) {
                     // Processing for too long, mark job as canceled and don't check anymore
-                    database.updateJobControl(jobId, mpId, TranscriptionJobControl.Status.Canceled.name());
+                    database.updateJobControl(jobId, TranscriptionJobControl.Status.Canceled.name());
 
                     // Send notification email
                     sendEmail("Transcription ERROR", String.format(
@@ -1048,7 +1048,7 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
               } catch (TranscriptionServiceException e) {
                 if (e.getCode() == 404) {
                   // Job not found there, update job state to canceled
-                  database.updateJobControl(jobId, mpId, TranscriptionJobControl.Status.Canceled.name());
+                  database.updateJobControl(jobId, TranscriptionJobControl.Status.Canceled.name());
                   // Send notification email
                   sendEmail("Transcription ERROR",
                           String.format("Transcription job was not found (media package %s, job id %s).", mpId, jobId));
@@ -1077,7 +1077,7 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
               continue;
             }
 
-            String org = Enrichments.enrich(r).getSnapshots().head2().getOrganizationId();
+            String org = Enrichments.enrich(r).getSnapshots().stream().findFirst().get().getOrganizationId();
             Organization organization = organizationDirectoryService.getOrganization(org);
             if (organization == null) {
               logger.warn("Media package {} has an unknown organization {}. Skipped.", mpId, org);
@@ -1100,7 +1100,7 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
             String wfId = wfList.size() > 0 ? Long.toString(wfList.get(0).getId()) : "Unknown";
 
             // Update state in the database
-            database.updateJobControl(jobId, mpId, TranscriptionJobControl.Status.Closed.name());
+            database.updateJobControl(jobId, TranscriptionJobControl.Status.Closed.name());
             logger.info("Attach transcription workflow {} scheduled for mp {}, transcription service job {}",
                 new String[]{wfId, mpId, jobId});
           } catch (Exception e) {

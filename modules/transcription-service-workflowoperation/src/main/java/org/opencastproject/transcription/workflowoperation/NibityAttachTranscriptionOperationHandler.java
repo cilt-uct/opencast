@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to The Apereo Foundation under one or more contributor license
  * agreements. See the NOTICE file distributed with this work for additional
  * information regarding copyright ownership.
@@ -18,7 +18,7 @@
  * the License.
  *
  */
-package org.opencastproject.handler.workflowoperation;
+package org.opencastproject.transcription.workflowoperation;
 
 import org.opencastproject.job.api.JobContext;
 import org.opencastproject.mediapackage.Attachment;
@@ -27,6 +27,7 @@ import org.opencastproject.mediapackage.MediaPackageElement;
 import org.opencastproject.mediapackage.MediaPackageElementBuilder;
 import org.opencastproject.mediapackage.MediaPackageElementBuilderFactory;
 import org.opencastproject.mediapackage.MediaPackageElementFlavor;
+import org.opencastproject.mediapackage.Track;
 import org.opencastproject.serviceregistry.api.ServiceRegistry;
 import org.opencastproject.transcription.api.TranscriptionService;
 import org.opencastproject.util.MimeType;
@@ -70,6 +71,7 @@ public class NibityAttachTranscriptionOperationHandler extends AbstractWorkflowO
   /** Workflow configuration option keys */
   static final String TRANSCRIPTION_JOB_ID = "transcription-job-id";
   static final String TARGET_CAPTION_FORMAT = "target-caption-format";
+  static final String TARGET_TYPE = "target-element-type";
   static final String HAS_VTT = "has-vtt";
 
   /** The transcription service */
@@ -109,7 +111,23 @@ public class NibityAttachTranscriptionOperationHandler extends AbstractWorkflowO
     String targetFlavorOption = StringUtils.trimToNull(operation.getConfiguration(TARGET_FLAVOR));
     String targetTagOption = StringUtils.trimToNull(operation.getConfiguration(TARGET_TAG));
     String captionFormatOption = StringUtils.trimToNull(operation.getConfiguration(TARGET_CAPTION_FORMAT));
-
+    String typeUnparsed = StringUtils.trimToEmpty(operation.getConfiguration(TARGET_TYPE));
+    MediaPackageElement.Type type = null;
+    if (!typeUnparsed.isEmpty()) {
+      // Case insensitive matching between user input (workflow config key) and enum value
+      for (MediaPackageElement.Type t : MediaPackageElement.Type.values()) {
+        if (t.name().equalsIgnoreCase(typeUnparsed)) {
+          type = t;
+        }
+      }
+      if (type == null || (type != Track.TYPE && type != Attachment.TYPE)) {
+        throw new IllegalArgumentException(String.format("The given type '%s' for mediapackage %s was illegal. Please"
+                + "check the operations' configuration keys.", type, mediaPackage.getIdentifier()));
+      }
+    } else {
+      type = Track.TYPE;
+    }
+    
     // Target flavor is mandatory if target-caption-format was NOT informed and no conversion is done
     if (targetFlavorOption == null && captionFormatOption == null) {
       throw new WorkflowOperationException(TARGET_FLAVOR + " missing");
@@ -125,7 +143,7 @@ public class NibityAttachTranscriptionOperationHandler extends AbstractWorkflowO
     try {
       // Get transcription result zip file from the service
       MediaPackageElement transcription = service.
-            getGeneratedTranscription(mediaPackage.getIdentifier().toString(), jobId);
+            getGeneratedTranscription(mediaPackage.getIdentifier().toString(), jobId, type);
 
       String captionsZipNameVtt = mediaPackage + ".vtt";
       String captionsZipNameDocx = mediaPackage + ".docx";
