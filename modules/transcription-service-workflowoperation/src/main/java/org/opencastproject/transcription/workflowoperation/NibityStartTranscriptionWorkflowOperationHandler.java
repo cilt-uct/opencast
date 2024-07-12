@@ -18,7 +18,7 @@
  * the License.
  *
  */
-package org.opencastproject.transcription.workflowoperation;
+package org.opencastproject.handler.workflowoperation;
 
 import org.opencastproject.job.api.Job;
 import org.opencastproject.job.api.JobContext;
@@ -28,61 +28,55 @@ import org.opencastproject.mediapackage.MediaPackageElementFlavor;
 import org.opencastproject.mediapackage.Track;
 import org.opencastproject.mediapackage.selector.AbstractMediaPackageElementSelector;
 import org.opencastproject.mediapackage.selector.TrackSelector;
+import org.opencastproject.serviceregistry.api.ServiceRegistry;
 import org.opencastproject.transcription.api.TranscriptionService;
 import org.opencastproject.transcription.api.TranscriptionServiceException;
 import org.opencastproject.workflow.api.AbstractWorkflowOperationHandler;
 import org.opencastproject.workflow.api.WorkflowInstance;
 import org.opencastproject.workflow.api.WorkflowOperationException;
+import org.opencastproject.workflow.api.WorkflowOperationHandler;
 import org.opencastproject.workflow.api.WorkflowOperationInstance;
 import org.opencastproject.workflow.api.WorkflowOperationResult;
 import org.opencastproject.workflow.api.WorkflowOperationResult.Action;
 
 import org.apache.commons.lang3.StringUtils;
 import org.osgi.service.component.ComponentContext;
+import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Collection;
-import java.util.SortedMap;
-import java.util.TreeMap;
 
-public class NibityStartTranscriptionOperationHandler extends AbstractWorkflowOperationHandler {
+@Component(
+    immediate = true,
+    service = WorkflowOperationHandler.class,
+    property = {
+        "service.description=Nibity Start Transcription Workflow Operation Handler",
+        "workflow.operation=nibity-start-transcription"
+    }
+)
+public class NibityStartTranscriptionWorkflowOperationHandler extends AbstractWorkflowOperationHandler {
 
   /** The logging facility */
-  private static final Logger logger = LoggerFactory.getLogger(NibityStartTranscriptionOperationHandler.class);
+  private static final Logger logger = LoggerFactory.getLogger(NibityStartTranscriptionWorkflowOperationHandler.class);
 
   /** Workflow configuration option keys */
-  static final String SOURCE_FLAVOR = "source-flavor";
-  static final String SOURCE_TAG = "source-tag";
   static final String SKIP_IF_FLAVOR_EXISTS = "skip-if-flavor-exists";
 
   /** The transcription service */
   private TranscriptionService service = null;
 
-  /** The configuration options for this handler */
-  private static final SortedMap<String, String> CONFIG_OPTIONS;
-
-  static {
-    CONFIG_OPTIONS = new TreeMap<String, String>();
-    CONFIG_OPTIONS.put(SOURCE_FLAVOR, "The \"flavor\" of the track to use as audio input");
-    CONFIG_OPTIONS.put(SOURCE_TAG, "The \"tag\" of the track to use as audio input");
-    CONFIG_OPTIONS.put(SKIP_IF_FLAVOR_EXISTS,
-      "If this \"flavor\" is already in the media package, skip this operation");
-  }
-
+  @Activate
   @Override
   protected void activate(ComponentContext cc) {
     super.activate(cc);
+    logger.info("Registering Nibity Start Transcription workflow operation handler");
   }
 
-  /**
-   * {@inheritDoc}
-   *
-   * @see org.opencastproject.workflow.api.WorkflowOperationHandler#start(org.opencastproject.workflow.api.WorkflowInstance,
-   *      JobContext)
-   */
   @Override
-  public WorkflowOperationResult start(final WorkflowInstance workflowInstance, JobContext context)
+  public WorkflowOperationResult start(WorkflowInstance workflowInstance, JobContext context)
           throws WorkflowOperationException {
     MediaPackage mediaPackage = workflowInstance.getMediaPackage();
     WorkflowOperationInstance operation = workflowInstance.getCurrentOperation();
@@ -107,8 +101,9 @@ public class NibityStartTranscriptionOperationHandler extends AbstractWorkflowOp
     AbstractMediaPackageElementSelector<Track> elementSelector = new TrackSelector();
 
     // Make sure either one of tags or flavors are provided
-    if (StringUtils.isBlank(sourceTagOption) && StringUtils.isBlank(sourceFlavorOption))
+    if (StringUtils.isBlank(sourceTagOption) && StringUtils.isBlank(sourceFlavorOption)) {
       throw new WorkflowOperationException("No source tag or flavor have been specified!");
+    }
 
     if (StringUtils.isNotBlank(sourceFlavorOption)) {
       String flavor = StringUtils.trim(sourceFlavorOption);
@@ -118,14 +113,15 @@ public class NibityStartTranscriptionOperationHandler extends AbstractWorkflowOp
         throw new WorkflowOperationException("Source flavor '" + flavor + "' is malformed");
       }
     }
-    if (sourceTagOption != null)
+    if (sourceTagOption != null) {
       elementSelector.addTag(sourceTagOption);
+    }
 
     Collection<Track> elements = elementSelector.select(mediaPackage, false);
     Job job = null;
     for (Track track : elements) {
       try {
-        job = service.startTranscription(mediaPackage.getIdentifier().compact(), track);
+        job = service.startTranscription(mediaPackage.getIdentifier().toString(), track);
         // Only one job per media package
         break;
       } catch (TranscriptionServiceException e) {
@@ -150,8 +146,15 @@ public class NibityStartTranscriptionOperationHandler extends AbstractWorkflowOp
     return createResult(Action.CONTINUE);
   }
 
+  @Reference(target = "(provider=nibity)")
   public void setTranscriptionService(TranscriptionService service) {
     this.service = service;
+  }
+
+  @Reference
+  @Override
+  public void setServiceRegistry(ServiceRegistry serviceRegistry) {
+    super.setServiceRegistry(serviceRegistry);
   }
 
 }

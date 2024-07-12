@@ -18,7 +18,7 @@
  * the License.
  *
  */
-package org.opencastproject.transcription.workflowoperation;
+package org.opencastproject.handler.workflowoperation;
 
 import org.opencastproject.job.api.JobContext;
 import org.opencastproject.mediapackage.Attachment;
@@ -27,11 +27,13 @@ import org.opencastproject.mediapackage.MediaPackageElement;
 import org.opencastproject.mediapackage.MediaPackageElementBuilder;
 import org.opencastproject.mediapackage.MediaPackageElementBuilderFactory;
 import org.opencastproject.mediapackage.MediaPackageElementFlavor;
+import org.opencastproject.serviceregistry.api.ServiceRegistry;
 import org.opencastproject.transcription.api.TranscriptionService;
 import org.opencastproject.util.MimeType;
 import org.opencastproject.workflow.api.AbstractWorkflowOperationHandler;
 import org.opencastproject.workflow.api.WorkflowInstance;
 import org.opencastproject.workflow.api.WorkflowOperationException;
+import org.opencastproject.workflow.api.WorkflowOperationHandler;
 import org.opencastproject.workflow.api.WorkflowOperationInstance;
 import org.opencastproject.workflow.api.WorkflowOperationResult;
 import org.opencastproject.workflow.api.WorkflowOperationResult.Action;
@@ -39,16 +41,26 @@ import org.opencastproject.workspace.api.Workspace;
 
 import org.apache.commons.lang3.StringUtils;
 import org.osgi.service.component.ComponentContext;
+import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.InputStream;
 import java.net.URI;
-import java.util.SortedMap;
-import java.util.TreeMap;
 import java.util.UUID;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
+
+@Component(
+    immediate = true,
+    service = WorkflowOperationHandler.class,
+    property = {
+        "service.description=Nibity Attach Transcription Workflow Operation Handler",
+        "workflow.operation=nibity-attach-transcription"
+    }
+)
 
 public class NibityAttachTranscriptionOperationHandler extends AbstractWorkflowOperationHandler {
 
@@ -57,8 +69,6 @@ public class NibityAttachTranscriptionOperationHandler extends AbstractWorkflowO
 
   /** Workflow configuration option keys */
   static final String TRANSCRIPTION_JOB_ID = "transcription-job-id";
-  static final String TARGET_FLAVOR = "target-flavor";
-  static final String TARGET_TAG = "target-tag";
   static final String TARGET_CAPTION_FORMAT = "target-caption-format";
   static final String HAS_VTT = "has-vtt";
 
@@ -68,28 +78,18 @@ public class NibityAttachTranscriptionOperationHandler extends AbstractWorkflowO
   /** Workspace service */
   private Workspace workspace;
 
-  /** The configuration options for this handler */
-  private static final SortedMap<String, String> CONFIG_OPTIONS;
-
-  static {
-    CONFIG_OPTIONS = new TreeMap<String, String>();
-    CONFIG_OPTIONS.put(TRANSCRIPTION_JOB_ID, "The job id that identifies the file to be attached");
-    CONFIG_OPTIONS.put(TARGET_FLAVOR, "The target \"flavor\" of the transcription file");
-    CONFIG_OPTIONS.put(TARGET_TAG, "The target \"tag\" of the transcription file");
-    CONFIG_OPTIONS.put(TARGET_CAPTION_FORMAT, "The target caption format of the transcription file (dfxp, etc)");
-    CONFIG_OPTIONS.put(HAS_VTT, "The type of transcription file");
-  }
-
   @Override
+  @Activate
   protected void activate(ComponentContext cc) {
     super.activate(cc);
+    logger.info("Registering Nibity Attach Transcription workflow operation handler");
   }
 
   /**
    * {@inheritDoc}
    *
-   * @see org.opencastproject.workflow.api.WorkflowOperationHandler#start(org.opencastproject.workflow.api.WorkflowInstance,
-   *      JobContext)
+   * @see org.opencastproject.workflow.api.WorkflowOperationHandler
+   * #start(org.opencastproject.workflow.api.WorkflowInstance, JobContext)
    */
   @Override
   public WorkflowOperationResult start(WorkflowInstance workflowInstance, JobContext context)
@@ -124,7 +124,8 @@ public class NibityAttachTranscriptionOperationHandler extends AbstractWorkflowO
 
     try {
       // Get transcription result zip file from the service
-      MediaPackageElement transcription = service.getGeneratedTranscription(mediaPackage.getIdentifier().compact(), jobId);
+      MediaPackageElement transcription = service.
+            getGeneratedTranscription(mediaPackage.getIdentifier().toString(), jobId);
 
       String captionsZipNameVtt = mediaPackage + ".vtt";
       String captionsZipNameDocx = mediaPackage + ".docx";
@@ -173,17 +174,26 @@ public class NibityAttachTranscriptionOperationHandler extends AbstractWorkflowO
     return createResult(mediaPackage, Action.CONTINUE);
   }
 
+  @Reference(target = "(provider=nibity)")
   public void setTranscriptionService(TranscriptionService service) {
     this.service = service;
   }
 
+  @Reference
   public void setWorkspace(Workspace service) {
     this.workspace = service;
   }
 
-  public MediaPackage addTranscriptionElementToMediaPackage(InputStream zis, String captionMimeType, String captionIdentifier,
-                                                            String captionFileType, MediaPackage mediaPackage,
-                                                            MediaPackageElementFlavor flavor, String targetTagOption)
+  @Reference
+  @Override
+  public void setServiceRegistry(ServiceRegistry serviceRegistry) {
+    super.setServiceRegistry(serviceRegistry);
+  }
+
+  public MediaPackage addTranscriptionElementToMediaPackage(InputStream zis, String captionMimeType,
+                                                            String captionIdentifier, String captionFileType,
+                                                            MediaPackage mediaPackage, MediaPackageElementFlavor flavor,
+                                                            String targetTagOption)
           throws WorkflowOperationException {
     try {
       MediaPackageElementBuilder builder = MediaPackageElementBuilderFactory.newInstance().newElementBuilder();
