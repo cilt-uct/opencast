@@ -79,7 +79,7 @@ public class BrightspaceUserProviderFactory implements ManagedServiceFactory {
 
   private static final String CACHE_SIZE_KEY = "org.opencastproject.userdirectory.brightspace.cache.size";
   private static final String CACHE_EXPIRATION_KEY = "org.opencastproject.userdirectory.brightspace.cache.expiration";
-  private static final String BRIGHTSPACE_NAME = "org.opencastproject.userdirectory.brightspace";
+  private static final String BRIGHTSPACE_NAME = "brightspace";
   private static final int DEFAULT_CACHE_SIZE_VALUE = 1000;
   private static final int DEFAULT_CACHE_EXPIRATION_VALUE = 60;
 
@@ -91,8 +91,15 @@ public class BrightspaceUserProviderFactory implements ManagedServiceFactory {
   private static final String IGNORED_USERNAMES_KEY = "org.opencastproject.userdirectory.brightspace.ignored.usernames";
   private static final String DEFAULT_IGNORED_USERNAMES = "admin,anonymous";
 
+  /** The key to look up the regular expression used to validate users */
+  private static final String USER_PATTERN_KEY = "org.opencastproject.userdirectory.brightspace.user.pattern";
+
+  /** The key to look up the regular expression used to validate sites (org unit ids) */
+  private static final String SITE_PATTERN_KEY = "org.opencastproject.userdirectory.brightspace.site.pattern";
+
   protected BundleContext bundleContext;
-  private Map<String, ServiceRegistration> providerRegistrations = new ConcurrentHashMap<>();
+  private Map<String, ServiceRegistration> userProviderRegistrations = new ConcurrentHashMap<>();
+  private Map<String, ServiceRegistration> roleProviderRegistrations = new ConcurrentHashMap<>();
   private OrganizationDirectoryService orgDirectory;
   private int cacheSize;
   private int cacheExpiration;
@@ -145,7 +152,7 @@ public class BrightspaceUserProviderFactory implements ManagedServiceFactory {
    */
   @Override
   public void updated(String pid, Dictionary properties) throws ConfigurationException {
-    logger.debug("updated BrightspaceUserProviderFactory");
+    logger.debug("updated BrightspaceUserProviderFactory pid={}", pid);
     String adminUserName = StringUtils.trimToNull(
         bundleContext.getProperty(SecurityConstants.GLOBAL_ADMIN_USER_PROPERTY));
     String organization = (String) properties.get(ORGANIZATION_KEY);
@@ -154,6 +161,9 @@ public class BrightspaceUserProviderFactory implements ManagedServiceFactory {
     String systemUserKey = (String) properties.get(BRIGHTSPACE_USER_KEY);
     final String applicationId = (String) properties.get(BRIGHTSPACE_APP_ID);
     final String applicationKey = (String) properties.get(BRIGHTSPACE_APP_KEY);
+
+    String userPattern = (String) properties.get(USER_PATTERN_KEY);
+    String sitePattern = (String) properties.get(SITE_PATTERN_KEY);
 
     String cacheSizeStr = (String) properties.get(CACHE_SIZE_KEY);
     if (StringUtils.isBlank(cacheSizeStr)) {
@@ -191,9 +201,13 @@ public class BrightspaceUserProviderFactory implements ManagedServiceFactory {
     validateConfigurationKey(BRIGHTSPACE_APP_ID, applicationId);
     validateConfigurationKey(BRIGHTSPACE_APP_KEY, applicationKey);
 
-    ServiceRegistration existingRegistration = this.providerRegistrations.remove(pid);
-    if (existingRegistration != null) {
-      existingRegistration.unregister();
+    ServiceRegistration existingUserRegistration = this.userProviderRegistrations.remove(pid);
+    if (existingUserRegistration != null) {
+      existingUserRegistration.unregister();
+    }
+    ServiceRegistration existingRoleRegistration = this.roleProviderRegistrations.remove(pid);
+    if (existingRoleRegistration != null) {
+      existingRoleRegistration.unregister();
     }
 
     Organization org;
@@ -204,17 +218,17 @@ public class BrightspaceUserProviderFactory implements ManagedServiceFactory {
       throw new ConfigurationException(ORGANIZATION_KEY, "not found");
     }
 
-    logger.debug("creating new brightspace user provider for pid={}", pid);
+    logger.debug("creating new brightspace user and role providers for pid={}", pid);
 
     BrightspaceClientImpl clientImpl
         = new BrightspaceClientImpl(urlStr, applicationId, applicationKey, systemUserId, systemUserKey);
     BrightspaceUserProviderInstance provider
-        = new BrightspaceUserProviderInstance(pid, clientImpl, org, cacheSize, cacheExpiration  ,
-            instructorRoles, ignoredUsernames);
-    this.providerRegistrations
-        .put(pid, this.bundleContext.registerService(UserProvider.class.getName(), provider, null));
-    this.providerRegistrations
-        .put(pid, this.bundleContext.registerService(RoleProvider.class.getName(), provider, null));
+        = new BrightspaceUserProviderInstance(pid, clientImpl, org, cacheSize, cacheExpiration,
+            instructorRoles, ignoredUsernames, userPattern, sitePattern);
+    this.userProviderRegistrations
+            .put(pid, this.bundleContext.registerService(UserProvider.class.getName(), provider, null));
+    this.roleProviderRegistrations
+            .put(pid, this.bundleContext.registerService(RoleProvider.class.getName(), provider, null));
   }
 
   /**
@@ -225,9 +239,9 @@ public class BrightspaceUserProviderFactory implements ManagedServiceFactory {
   @Override
   public void deleted(String pid) {
     logger.debug("delete BrightspaceUserProviderInstance for pid={}", pid);
-    ServiceRegistration registration = providerRegistrations.remove(pid);
-    if (registration != null) {
-      registration.unregister();
+    ServiceRegistration userRegistration = userProviderRegistrations.remove(pid);
+    if (userRegistration != null) {
+      userRegistration.unregister();
 
       try {
         ManagementFactory.getPlatformMBeanServer().unregisterMBean(getObjectName(pid));
@@ -235,6 +249,12 @@ public class BrightspaceUserProviderFactory implements ManagedServiceFactory {
         logger.warn("Unable to unregister mbean for pid='{}'", pid, e);
       }
     }
+
+    ServiceRegistration roleRegistration = roleProviderRegistrations.remove(pid);
+    if (roleRegistration != null) {
+      roleRegistration.unregister();
+    }
+
   }
 
   private void validateConfigurationKey(String key, String value) throws ConfigurationException {
