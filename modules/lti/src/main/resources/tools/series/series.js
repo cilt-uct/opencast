@@ -98,7 +98,6 @@ function loadPage(page) {
   $('main').html($('#template-loading').html());
 
   $.getJSON(url, function( data ) {
-    data = data['search-results'];
     var rendered = '',
         results = [],
         total = parseInt(data.total);
@@ -109,13 +108,13 @@ function loadPage(page) {
 
     for (var i = 0; i < results.length; i++) {
       var episode = results[i],
-          i18ncreator = Mustache.render(i18n('CREATOR'), {creator: episode.dcCreator}),
+          i18ncreator = Mustache.render(i18n('CREATOR'), {creator: episode.dc.creator[0]}),
           template = $('#template-episode').html(),
           tpldata = {
             player: player + episode.id,
-            title: episode.dcTitle,
+            title: episode.dc.title[0],
             i18ncreator: i18ncreator,
-            created: tryLocalDate(episode.dcCreated)};
+            created: tryLocalDate(episode.dc.created[0])};
 
       // get preview image
       var attachments = episode.mediapackage.attachments.attachment;

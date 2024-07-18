@@ -117,7 +117,7 @@ function loadEpisodesTab(page, q) {
 
   axios.get(url)
     .then((response) => {
-      let data = response.data['search-results'];
+      let data = response;
       let rendered = '',
           results = [],
           total = parseInt(data.total);
@@ -133,20 +133,20 @@ function loadEpisodesTab(page, q) {
             tpldata,
             attachments;
 
-        if(episode.dcCreator != null) {
-          i18ncreator = Mustache.render(i18n('CREATOR'), {creator: episode.dcCreator});
+        if(episode.dc.creator[0] != null) {
+          i18ncreator = Mustache.render(i18n('CREATOR'), {creator: episode.dc.creator[0]});
         } else {
           i18ncreator = '';
         }
 
         tpldata = {
-          tool: '/play/' + episode.id,
-          displayTitle: episode.dcTitle,
-          escapedTitle: episode.dcTitle.replace(/'/g, "\\'"),
+          tool: '/play/' + episode.mediapackage.id,
+          displayTitle: episode.dc.title[0],
+          escapedTitle: episode.dc.title[0].replace(/'/g, "\\'"),
           i18ncreator:  i18ncreator.split("by ")[1],
-          created: tryLocalDate(episode.dcCreated).split(",")[0],
+          created: tryLocalDate(episode.dc.created[0]).split(",")[0],
           seriestitle: episode.mediapackage.seriestitle,
-          mpID: episode.id,
+          mpID: episode.mediapackage.id,
           color: generateSeriesColor(episode.mediapackage.series),
           duration: formatDuration(episode.mediapackage.duration)};
 
@@ -204,7 +204,7 @@ function loadSeriesTab(page, q) {
 
   axios.get(url)
   .then((response) => {
-    let data = response.data['search-results'],
+    let data = response,
         seriestool = 'ltitools/series/index.html?series=',
         rendered = '',
         results = [],
@@ -218,11 +218,11 @@ function loadSeriesTab(page, q) {
       let serie = results[i],
           template = $('#template-series').html(),
           tpldata = {
-            tool: seriestool + serie.id,
-            title: serie.dcTitle,
-            created: tryLocalDate(serie.dcCreated),
+            tool: seriestool + serie.dc.identifier,
+            title: serie.dc.title[0],
+            created: tryLocalDate(serie.dc.created[0]),
             image: 'engage/ui/img/logo/opencast-icon.svg',
-            color: generateSeriesColor(serie.id)};
+            color: generateSeriesColor(serie.dc.identifier)};
 
       // render template
       rendered += Mustache.render(template, tpldata);
