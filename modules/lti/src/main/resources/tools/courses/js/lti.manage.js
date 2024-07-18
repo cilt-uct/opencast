@@ -2759,19 +2759,27 @@ function validateVTT(fileName, fileContents) {
 }
 
 function checkCaptions(id) {
-  var url = '/search/episode.json?limit1&id=' + id;
-  $.get({url: url},
-    function(response) {
-        var attachments = response["search-results"]["result"]["mediapackage"]["attachments"]["attachment"];
-        for(var i = 0; i < attachments.length; i++) {
-            if(attachments[i].mimetype === "text/vtt" && attachments[i].tags["tag"].indexOf("engage-download") >= 0) {
-              if($('#btnCaptions_' + id).hide()) {
-                 $('#btnCaptions_' + id).show();
-              }
-            } 
+  var url = '/search/episode.json?limit=1&id=' + id;
+  $.get({url: url}, function(response) {
+    if (response.result && response.result.length > 0) {
+      var mediapackage = response.result[0].mediapackage;
+      if (mediapackage && mediapackage.attachments && mediapackage.attachments.attachment) {
+        var attachments = mediapackage.attachments.attachment;
+        for (var i = 0; i < attachments.length; i++) {
+          if (attachments[i].mimetype === "text/vtt" && attachments[i].tags.tag.indexOf("engage-download") >= 0) {
+            var btn = $('#btnCaptions_' + id);
+          if (btn.is(":hidden")) {
+            btn.show();
+          }
         }
-   })
+      }
+    }
+  }
+  }).fail(function(jqXHR, textStatus, errorThrown) {
+    console.error("Request failed: " + textStatus + ", " + errorThrown);
+  });
 }
+  
 
 function getCaptions(id) {
   var url = '/search/episode.json?limit1&id=' + id;
@@ -2779,7 +2787,7 @@ function getCaptions(id) {
   var providerArray = [];
 
   $.get({url: url}, function(response) {
-    var attachments = response["search-results"]["result"]["mediapackage"]["attachments"]["attachment"];
+    var attachments = response["result"][0]["mediapackage"]["attachments"]["attachment"];
     var captionsExist = false;
     
     attachments.forEach(function(attachment) {

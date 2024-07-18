@@ -1598,25 +1598,25 @@ EventManager.prototype = {
         url: '/search/episode.json?limit1&id=' + id,
         dataType: 'json'
       }).done(function(res) {
-        var query = res['search-results'];
+        var query = res['result'][0];
         var response = [];
 
         if (query.total === 0) {
           return d.reject("cannot find");
         }
-        if (!Array.isArray(query.result.mediapackage.media.track)) {
-          if (!query.result.mediapackage.media.track.video) {
+        if (!Array.isArray(query.mediapackage.media.track)) {
+          if (!query.mediapackage.media.track.video) {
             return d.reject("no video");
           }
 
           response.push({
-            type: query.result.mediapackage.media.track.type,
-             url: query.result.mediapackage.media.track.url
+            type: query.mediapackage.media.track.type,
+            url: query.mediapackage.media.track.url
           });
           return d.resolve(response);
         }
 
-        response = query.result.mediapackage.media.track
+        response = query.mediapackage.media.track
                      .filter(function(track) {
                        return track.video;
                      })
@@ -1658,7 +1658,7 @@ EventManager.prototype = {
                        return arr;
                      }, []);
 
-        var notes = query.result.mediapackage.attachments.attachment
+        var notes = query.mediapackage.attachments.attachment
                       .filter(function(attachment) {
                         return attachment.type === 'attachment/notes' || attachment.type === 'attachment/part+notes';
                       })

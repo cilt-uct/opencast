@@ -318,7 +318,7 @@ $(document).on("click", ".downloader", function () {
 
 function listEpisode(info) {
     var epiItem = document.createElement('li');
-    var recordid = info.id,
+    var recordid = info.mediapackage.id,
         mediaTrack = info.mediapackage.media.track;
 
     //Various DOM elements to contain episode information
@@ -341,11 +341,11 @@ function listEpisode(info) {
     dlSpan.appendChild(downloadSpan);
     downloadSpan.appendChild(dlBtn);
 
-    titleSpan.innerHTML = '<span>' + he.encode(info.dcTitle) || '' + '</span>';
-    creatorSpan.innerHTML = '<span>' + he.encode(info.dcCreator ? info.dcCreator : '') + '</span>';
-    dateSpan.innerHTML = '<span>' + moment(info.dcCreated).format('D MMM YYYY HH:mm') || '' + '</span>';
+    titleSpan.innerHTML = '<span>' + he.encode(info.dc.title[0]) || '' + '</span>';
+    creatorSpan.innerHTML = '<span>' + he.encode(info.dc.creator[0] ? info.dc.creator[0] : '') + '</span>';
+    dateSpan.innerHTML = '<span>' + moment(info.dc.created[0]).format('D MMM YYYY HH:mm') || '' + '</span>';
 
-    vidLink.href = '/play/' + info.id;
+    vidLink.href = '/play/' + info.mediapackage.id;
 
     picSpan.appendChild(vidLink);
 
@@ -378,10 +378,10 @@ function listEpisode(info) {
     dlBtn.className = "btn btn-primary downloader";
     dlBtn.setAttribute("data-target", "#downloadModal");
     dlBtn.setAttribute("data-id", recordid);
-    dlBtn.setAttribute("data-title", info.dcTitle);
+    dlBtn.setAttribute("data-title", info.dc.title[0]);
     dlBtn.setAttribute("data-downloaded", false);
-    dlBtn.setAttribute("data-presenter", info.dcCreator);
-    dlBtn.setAttribute("data-date", moment(info.dcCreated).format('D MMM YYYY HH:mm'));
+    dlBtn.setAttribute("data-presenter", info.dc.creator[0]);
+    dlBtn.setAttribute("data-date", moment(info.dc.created[0]).format('D MMM YYYY HH:mm'));
     dlBtn.setAttribute("data-package", JSON.stringify(mediaTrack));
     dlBtn.setAttribute("data-captions", JSON.stringify(captions));
     dlBtn.setAttribute("data-series", JSON.stringify(courseID));
@@ -389,13 +389,13 @@ function listEpisode(info) {
 
   //Set data attribute to make item searchable
     var searchableObject = {
-        title: info.dcTitle || '',
-        createddate: info.dcCreated || '',
-        creator: info.dcCreator || ''
+        title: info.dc.title[0] || '',
+        createddate: info.dc.created[0] || '',
+        creator: info.dc.creator[0] || ''
     };
-    epiItem.setAttribute('data-id', info.id);
+    epiItem.setAttribute('data-id', info.mediapackage.id);
     epiItem.setAttribute('data-search', JSON.stringify(searchableObject));
-    epiItem.setAttribute('data-title', info.dcTitle || 'track');
+    epiItem.setAttribute('data-title', info.dc.title[0] || 'track');
     return epiItem;
 }
 
@@ -405,13 +405,13 @@ var limit = 10000,
 xhr({url: url, responseType: 'json'},
     function(json) {
       document.querySelector('.lti-oc-previous h2')
-        .setAttribute('data-total',json['search-results'].total);
+        .setAttribute('data-total',json.total);
       var episodeList = document.querySelector('.lti-oc-all .list');
-      if (Array.isArray(json['search-results'].result)) {
+      if (Array.isArray(json['result'])) {
         var currYear = new Date();
-        var results = json['search-results'].result;
+        var results = json['result'];
         var results_count = results.length;
-        var courseYear = new Date(results[0]["dcCreated"]);
+        var courseYear = new Date(results[0].dc.created[0]);
 
         try {
             if(courseYear.getFullYear() < currYear.getFullYear()) {
@@ -421,7 +421,7 @@ xhr({url: url, responseType: 'json'},
                     document.querySelector('.sorting').setAttribute('data-sort', 'asc');
                 }
             } else {
-                json['search-results'].result.forEach(function(episode) {
+                json['result'].forEach(function(episode) {
                     episodeList.appendChild( listEpisode(episode) );
                 });
             }
@@ -429,8 +429,8 @@ xhr({url: url, responseType: 'json'},
             console.log(e);
         }
       }
-      else if (typeof json['search-results'].result === 'object' && json['search-results'].result != null) {
-        episodeList.appendChild( listEpisode(json['search-results'].result) );
+      else if (typeof json['result'] === 'object' && json['result'] != null) {
+        episodeList.appendChild( listEpisode(json['result']) );
       }
 
       if (window.self !== window.top) {
@@ -450,7 +450,7 @@ var latestEpisodesURL = '/search/episode.json?sid=' + (courseID || '') + '&limit
 xhr({url: latestEpisodesURL, responseType: 'json'},
   function(response) {
     var latestContainer = document.querySelector('.lti-oc-recent');
-    response['search-results'].result.forEach( function(episode) {
+    response['result'].forEach( function(episode) {
       latestContainer.appendChild( listEpisode(episode) );
     });
 });
