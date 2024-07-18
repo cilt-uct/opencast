@@ -79,7 +79,7 @@
             "presentation2/player+preview",
             "pic-in-pic1/player+preview",
             "pic-in-pic2/player+preview",
-            "side-bys-de/player+preview"
+            "side-by-side/player+preview"
         ],
         "theme": "custom_theme"
     },
@@ -141,9 +141,9 @@
                     "title": "Presentation"
                 },
                 {
-                    "id": "presenter-2",
+                    "id": "presentation-2",
                     "content": [
-                        "presenter-2"
+                        "presentation-2"
                     ],
                     "icon": "present-mode-1.svg",
                     "title": "Presentation2"
@@ -175,8 +175,9 @@
             ],
             "dualVideoContentIds": [
                 "presenter-presentation-dynamic",
+                "presenter-presentation-2-dynamic",
                 "presenter-2-presentation-dynamic",
-                "presenter-presenter-2-dynamic"
+                "presenter-2-presentation-2-dynamic"
             ],
             "tabIndexStart": 40
         },
@@ -193,22 +194,13 @@
                     "title": "Presenter and presentation"
                 },
                 {
-                    "id": "presenter-2-presentation",
-                    "content": [
-                        "presenter-2",
-                        "presentation"
-                    ],
-                    "icon": "present-mode-3.svg",
-                    "title": "Presenter and presentation"
-                },
-                {
-                    "id": "presenter-presenter-2",
+                    "id": "presenter-presentation-2",
                     "content": [
                         "presenter",
-                        "presenter-2"
+                        "presentation2"
                     ],
                     "icon": "present-mode-3.svg",
-                    "title": "Presenter and presentation"
+                    "title": "Presenter and presentation2"
                 }
             ],
             "tabIndexStart": 40
@@ -226,48 +218,29 @@
                 "title": "Presenter and presentation"
               },
               {
-                "id": "presenter-2-presentation-dynamic",
-                "content": [
-                  "presenter-2",
-                  "presentation"
-                ],
-                "icon": "present-mode-3.svg",
-                "title": "Presenter and presentation"
-              },
-              {
-                "id": "presenter-presenter-2-dynamic",
+                "id": "presenter-presentation-2-dynamic",
                 "content": [
                   "presenter",
-                  "presenter-2"
+                  "presentation2"
                 ],
                 "icon": "present-mode-3.svg",
-                "title": "Presenter and presentation"
+                "title": "Presenter and presentation2"
               }
             ],
             "tabIndexStart": 40
         },
         "es.upv.paella.tripleVideo": {
-            "enabled": false,
+            "enabled": true,
             "validContent": [
                 {
-                    "id": "presenter-presenter-2-presentation",
+                    "id": "presenter-presentation-presentation2",
                     "content": [
                         "presenter",
-                        "presenter-2",
-                        "presentation"
+                        "presentation",
+                        "presentation2"
                     ],
                     "icon": "present-mode-4.svg",
-                    "title": "Presenter and presentation"
-                },
-                {
-                    "id": "presenter-2-presenter-3-presentation",
-                    "content": [
-                        "presenter-2",
-                        "presenter-3",
-                        "presentation"
-                    ],
-                    "icon": "present-mode-4.svg",
-                    "title": "Presenter and presentation"
+                    "title": "Presenter, presentation and presentation2"
                 }
             ],
             "tabIndexStart": 40
@@ -546,7 +519,7 @@
 
         "/* other plugins */": "*********************************************************",
         "es.upv.paella.findCaptionsPlugin": {
-            "enabled": false,
+            "enabled": true,
             "side": "right",
             "description": "Search in captions",
             "order": 10
