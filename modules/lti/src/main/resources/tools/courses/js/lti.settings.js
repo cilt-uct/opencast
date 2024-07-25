@@ -17,7 +17,7 @@ $(document).ready(function(){
 
     for (var j=0; j < ext.length; j++) {
         if(ext[j].id == "retention-cycle") {
-            if(ext[j].value == "normal") {
+            if(ext[j].value == "normal" || ext[j].value == "") {
                 $('#series_retention  option[value=normal]').attr('selected','selected');
             } else if(ext[j].value == "long") {
                 $('#series_retention  option[value=long]').attr('selected','selected');
@@ -48,6 +48,13 @@ $(document).ready(function(){
                 $('#retain_date').val('');
             }
         }
+        if(ext[j].id == "notification-list") {
+            if(ext[j].value != '') {
+                $('#notification_list').val(ext[j].value);
+            } else {
+                $('#notification_list').val('');
+            }
+        }
     }
 
     $("#save_button").click(function(e) {
@@ -55,17 +62,23 @@ $(document).ready(function(){
         var captions = $('#series_captions').val();
         var retention = $('#series_retention').val();
         var notificationList = $('#notification_list').val();
+        var notificationListArray = notificationList.split(';').map(email => email.trim()).filter(email => email.length > 0);
 
         var fd = new FormData();
-        const newExt = [
-            { id: "caption-type", value: captions },
-            { id: "retention-cycle", value: retention },
-            { id: "notification-list", value: notificationList }
-        ];
-        
-        const updatedMetadata = [
-            { flavor: "ext/series", fields: newExt }
-        ];
+        const newExt = ext.map(obj => {
+            switch (obj.id) {
+                case "caption-type":
+                    return { ...obj, value: captions };
+                case "retention-cycle":
+                    return { ...obj, value: retention };
+                case "notification-list":
+                    return { ...obj, value: notificationListArray };
+                default:
+                    return obj;
+            }
+        });
+    
+        const updatedMetadata = seriesInfo.map(obj => obj.flavor === "ext/series" ? { ...obj, fields: newExt } : obj);
 
         var metadata = JSON.stringify(updatedMetadata);
         fd.append("metadata", metadata);
