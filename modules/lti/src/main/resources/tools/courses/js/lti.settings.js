@@ -50,31 +50,26 @@ $(document).ready(function(){
         }
     }
 
-    $("#series_captions").change(function(e){
-      e.preventDefault();
-      var captions = $('#series_captions').val();
-      var fd;
-      fd = new FormData();
-      const newExt = ext.map(obj => obj.id === "caption-type" ? { ...obj, value: captions } : obj)
-      const updatedMetadata = seriesInfo.map(obj => obj.flavor === "ext/series" ? { ...obj, fields: newExt} : obj)
-
-      var metadata = JSON.stringify(updatedMetadata);
-      fd.append("metadata",metadata);
-
-      updateSeriesMetadata(fd);
-    });
-
-
-    $("#series_retention").change(function(e){
+    $("#save_button").click(function(e) {
         e.preventDefault();
+        var captions = $('#series_captions').val();
         var retention = $('#series_retention').val();
-        var fd;
-        fd = new FormData();
-        const newExt = ext.map(obj => obj.id === "retention-cycle" ? { ...obj, value: retention } : obj)
-        const updatedMetadata = seriesInfo.map(obj => obj.flavor === "ext/series" ? { ...obj, fields: newExt} : obj)
+        var notificationList = $('#notification_list').val();
+
+        var fd = new FormData();
+        const newExt = [
+            { id: "caption-type", value: captions },
+            { id: "retention-cycle", value: retention },
+            { id: "notification-list", value: notificationList }
+        ];
+        
+        const updatedMetadata = [
+            { flavor: "ext/series", fields: newExt }
+        ];
 
         var metadata = JSON.stringify(updatedMetadata);
-        fd.append("metadata",metadata);
+        fd.append("metadata", metadata);
+        $("#processingModal").modal('show');
 
         updateSeriesMetadata(fd);
     });
@@ -104,8 +99,14 @@ function updateSeriesMetadata(fd) {
         data: fd,
         dataType: "json"
     }).done(function (data) {
-        return data;
-    }).fail(function (error) {
-        return error;
+        $("#processingContent").hide();
+        $("#resultMessage").text("Series settings updated successfully!");
+        $("#resultContent").show();
+    }).fail(function (jqXHR, textStatus, errorThrown) {
+        $("#processingContent").hide();
+        $("#resultMessage").text("Failed to update series settings. Please try again.");
+        $("#resultContent").show();
+        console.error("Update failed:", textStatus, errorThrown);
+        console.log("Response Text:", jqXHR.responseText);
     });
 }
