@@ -17,7 +17,7 @@ $(document).ready(function(){
 
     for (var j=0; j < ext.length; j++) {
         if(ext[j].id == "retention-cycle") {
-            if(ext[j].value == "normal") {
+            if(ext[j].value == "normal" || ext[j].value == "") {
                 $('#series_retention  option[value=normal]').attr('selected','selected');
             } else if(ext[j].value == "long") {
                 $('#series_retention  option[value=long]').attr('selected','selected');
@@ -48,34 +48,41 @@ $(document).ready(function(){
                 $('#retain_date').val('');
             }
         }
+        if(ext[j].id == "notification-list") {
+            if(ext[j].value != '') {
+                $('#notification_list').val(ext[j].value);
+            } else {
+                $('#notification_list').val('');
+            }
+        }
     }
 
-    $("#series_captions").change(function(e){
-      e.preventDefault();
-      var captions = $('#series_captions').val();
-      var fd;
-      fd = new FormData();
-      const newExt = ext.map(obj => obj.id === "caption-type" ? { ...obj, value: captions } : obj)
-      const updatedMetadata = seriesInfo.map(obj => obj.flavor === "ext/series" ? { ...obj, fields: newExt} : obj)
-
-      var metadata = JSON.stringify(updatedMetadata);
-      fd.append("metadata",metadata);
-
-      updateSeriesMetadata(fd);
-    });
-
-
-    $("#series_retention").change(function(e){
+    $("#save_button").click(function(e) {
         e.preventDefault();
+        var captions = $('#series_captions').val();
         var retention = $('#series_retention').val();
-        var fd;
-        fd = new FormData();
-        const newExt = ext.map(obj => obj.id === "retention-cycle" ? { ...obj, value: retention } : obj)
-        const updatedMetadata = seriesInfo.map(obj => obj.flavor === "ext/series" ? { ...obj, fields: newExt} : obj)
+        var notificationList = $('#notification_list').val();
+        var notificationListArray = notificationList.split(';').map(email => email.trim()).filter(email => email.length > 0);
+
+        var fd = new FormData();
+        const newExt = ext.map(obj => {
+            switch (obj.id) {
+                case "caption-type":
+                    return { ...obj, value: captions };
+                case "retention-cycle":
+                    return { ...obj, value: retention };
+                case "notification-list":
+                    return { ...obj, value: notificationListArray };
+                default:
+                    return obj;
+            }
+        });
+
+        const updatedMetadata = seriesInfo.map(obj => obj.flavor === "ext/series" ? { ...obj, fields: newExt } : obj);
 
         var metadata = JSON.stringify(updatedMetadata);
-        fd.append("metadata",metadata);
-
+        fd.append("metadata", metadata);
+        $("#processingModal").modal('show');
         updateSeriesMetadata(fd);
     });
 });
@@ -104,8 +111,14 @@ function updateSeriesMetadata(fd) {
         data: fd,
         dataType: "json"
     }).done(function (data) {
-        return data;
-    }).fail(function (error) {
-        return error;
+        $("#processingContent").hide();
+        $("#resultMessage").text("Series settings updated successfully!");
+        $("#resultContent").show();
+    }).fail(function (jqXHR, textStatus, errorThrown) {
+        $("#processingContent").hide();
+        $("#resultMessage").text("Failed to update series settings. Please try again.");
+        $("#resultContent").show();
+        console.error("Update failed:", textStatus, errorThrown);
+        console.log("Response Text:", jqXHR.responseText);
     });
 }
