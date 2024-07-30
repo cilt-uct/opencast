@@ -405,7 +405,7 @@
             "enabled": true,
             "parentContainer": "settingsGroup",
             "order": 40,
-            "description": "Transcriptions"
+            "description": "Slides text"
         },
         "es.upv.paella.downloadsPlugin": {
             "enabled": true,
