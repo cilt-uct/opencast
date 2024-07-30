@@ -127,7 +127,7 @@ public class NibityAttachTranscriptionOperationHandler extends AbstractWorkflowO
     } else {
       type = Track.TYPE;
     }
-  
+
     // Target flavor is mandatory if target-caption-format was NOT informed and no conversion is done
     if (targetFlavorOption == null && captionFormatOption == null) {
       throw new WorkflowOperationException(TARGET_FLAVOR + " missing");
