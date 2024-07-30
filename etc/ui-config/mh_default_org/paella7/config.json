@@ -480,7 +480,7 @@
 
         "/* other plugins */": "*********************************************************",
         "es.upv.paella.findCaptionsPlugin": {
-            "enabled": false,
+            "enabled": true,
             "side": "right",
             "description": "Search in captions",
             "order": 10
