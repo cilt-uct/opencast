@@ -163,8 +163,9 @@ public class NibityAttachTranscriptionOperationHandler extends AbstractWorkflowO
           String captionMimeType = "text/vtt";
           String captionIdentifier = "captions.vtt";
           String captionFileType = "vtt";
+          MediaPackageElement.Type captionType = Track.TYPE;
           mediaPackage = addTranscriptionElementToMediaPackage(zis, captionMimeType, captionIdentifier, captionFileType,
-                  mediaPackage, flavor, targetTagOption);
+                  mediaPackage, flavor, captionType, targetTagOption);
         } else {
           workflowInstance.setConfiguration(HAS_VTT, "false");
         }
@@ -175,8 +176,9 @@ public class NibityAttachTranscriptionOperationHandler extends AbstractWorkflowO
           String transcriptMimeType = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
           String transcriptIdentifier = "captions.docx";
           String transcriptFileType = "docx";
+          MediaPackageElement.Type transcriptType = Attachment.TYPE;
           mediaPackage = addTranscriptionElementToMediaPackage(zis, transcriptMimeType, transcriptIdentifier,
-                  transcriptFileType, mediaPackage, flavor, targetTagOption);
+                  transcriptFileType, mediaPackage, flavor, transcriptType, targetTagOption);
         }
 
         // Extract the transcript json
@@ -186,8 +188,9 @@ public class NibityAttachTranscriptionOperationHandler extends AbstractWorkflowO
           String jsonIdentifier = "captions.json";
           String jsonFileType = "json";
           MediaPackageElementFlavor jsonFlavor = MediaPackageElementFlavor.parseFlavor("captions/json");
+          MediaPackageElement.Type jsonType = Attachment.TYPE;
           mediaPackage = addTranscriptionElementToMediaPackage(zis, jsonMimeType, jsonIdentifier,
-                  jsonFileType, mediaPackage, jsonFlavor, targetTagOption);
+                  jsonFileType, mediaPackage, jsonFlavor, jsonType, targetTagOption);
         }
 
         // Add the zip file to the media package
@@ -222,13 +225,13 @@ public class NibityAttachTranscriptionOperationHandler extends AbstractWorkflowO
   }
 
   public MediaPackage addTranscriptionElementToMediaPackage(InputStream zis, String captionMimeType,
-                                                            String captionIdentifier, String captionFileType,
-                                                            MediaPackage mediaPackage, MediaPackageElementFlavor flavor,
-                                                            String targetTagOption)
+                                                    String captionIdentifier, String captionFileType,
+                                                    MediaPackage mediaPackage, MediaPackageElementFlavor flavor,
+                                                    MediaPackageElement.Type captionType, String targetTagOption)
           throws WorkflowOperationException {
     try {
       MediaPackageElementBuilder builder = MediaPackageElementBuilderFactory.newInstance().newElementBuilder();
-      MediaPackageElement transcriptElement = builder.newElement(Attachment.TYPE,
+      MediaPackageElement transcriptElement = builder.newElement(captionType,
               new MediaPackageElementFlavor("captions", captionFileType));
       transcriptElement.setIdentifier(UUID.randomUUID().toString());
       transcriptElement.setMimeType(
