@@ -193,17 +193,6 @@ public class NibityAttachTranscriptionOperationHandler extends AbstractWorkflowO
                   jsonFileType, mediaPackage, jsonFlavor, jsonType, targetTagOption);
         }
 
-        // Extract the transcript json
-        if (zippedJson != null) {
-          InputStream zis = zipFile.getInputStream(zippedJson);
-          String jsonMimeType = "application/json";
-          String jsonIdentifier = "captions.json";
-          String jsonFileType = "json";
-          MediaPackageElementFlavor jsonFlavor = MediaPackageElementFlavor.parseFlavor("captions/json");
-          mediaPackage = addTranscriptionElementToMediaPackage(zis, jsonMimeType, jsonIdentifier,
-                  jsonFileType, mediaPackage, jsonFlavor, targetTagOption);
-        }
-
         // Add the zip file to the media package
         transcription.setIdentifier("nibity-transcript-" + jobId);
         transcription.setURI(workspace.moveTo(transcription.getURI(), mediaPackage.getIdentifier().toString(),
