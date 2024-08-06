@@ -90,7 +90,7 @@
 # under "subtitles.languages"
 # Type: boolean
 # Default: false
-#show = false
+show = true
 
 # The main flavor of the subtitle tracks in Opencast
 # No other tracks should have the same main flavor as subtitle tracks
