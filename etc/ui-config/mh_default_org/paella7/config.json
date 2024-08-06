@@ -429,7 +429,7 @@
             "enabled": true,
             "parentContainer": "settingsGroup",
             "order": 40,
-            "description": "Transcriptions"
+            "description": "Slides Text"
         },
         "org.opencast.paella.downloadsPlugin": {
             "enabled": true,

@@ -55,7 +55,7 @@ export default class TranscriptionsPlugin extends PopUpButtonPlugin {
   }
 
   get menuTitle() {
-    return 'Transcriptions';
+    return 'Slides Text';
   }
 
   async isEnabled() {
