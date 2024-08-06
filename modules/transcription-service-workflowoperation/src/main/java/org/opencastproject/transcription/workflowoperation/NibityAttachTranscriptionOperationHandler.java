@@ -147,9 +147,11 @@ public class NibityAttachTranscriptionOperationHandler extends AbstractWorkflowO
 
       String captionsZipNameVtt = mediaPackage + ".vtt";
       String captionsZipNameDocx = mediaPackage + ".docx";
+      String captionsZipNameJson = mediaPackage + ".json";
       ZipFile zipFile = new ZipFile(workspace.get(transcription.getURI()));
       ZipEntry zippedVtt = zipFile.getEntry(captionsZipNameVtt);
       ZipEntry zippedDocx = zipFile.getEntry(captionsZipNameDocx);
+      ZipEntry zippedJson = zipFile.getEntry(captionsZipNameJson);
 
       if (zippedVtt == null && zippedDocx == null) {
         logger.debug("Neither captions nor transcript found in zip file {}", transcription.getURI());
@@ -175,6 +177,17 @@ public class NibityAttachTranscriptionOperationHandler extends AbstractWorkflowO
           String transcriptFileType = "docx";
           mediaPackage = addTranscriptionElementToMediaPackage(zis, transcriptMimeType, transcriptIdentifier,
                   transcriptFileType, mediaPackage, flavor, targetTagOption);
+        }
+
+        // Extract the transcript json
+        if (zippedJson != null) {
+          InputStream zis = zipFile.getInputStream(zippedJson);
+          String jsonMimeType = "application/json";
+          String jsonIdentifier = "captions.json";
+          String jsonFileType = "json";
+          MediaPackageElementFlavor jsonFlavor = MediaPackageElementFlavor.parseFlavor("captions/json");
+          mediaPackage = addTranscriptionElementToMediaPackage(zis, jsonMimeType, jsonIdentifier,
+                  jsonFileType, mediaPackage, jsonFlavor, targetTagOption);
         }
 
         // Add the zip file to the media package
