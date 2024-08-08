@@ -349,7 +349,7 @@
             "popUpType": "no-modal",
             "description": "Playback rate"
         },
-        "es.upv.paella.volumeButtonPlugin": {
+        "org.opencast.paella.volumeButtonPlugin": {
             "enabled": true,
             "side": "left",
             "order": 5,
