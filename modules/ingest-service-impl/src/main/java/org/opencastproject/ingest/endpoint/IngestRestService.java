@@ -787,13 +787,6 @@ public class IngestRestService extends AbstractJobProducerEndpoint {
                 /* Use the identifier for the mediapackage */
                 mp.setIdentifier(new IdImpl(value));
               }
-              if ("created".equals(fieldName) || "date".equals(fieldName) || "temporal".equals(fieldName)) {
-                try {
-                  OpencastMetadataCodec.decodeDate(value);
-                } catch (IllegalArgumentException e) {
-                  return badRequest("Provided dates were not well formatted", e);
-                }
-              }
               if (dcc == null) {
                 dcc = dublinCoreService.newInstance();
               }
