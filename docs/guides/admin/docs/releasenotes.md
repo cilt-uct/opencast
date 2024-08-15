@@ -1,5 +1,17 @@
 # Opencast 16: Release Notes
 
+
+## Opencast 16.4
+
+This release fixes [a critical bug which may  cause ingests to fail](https://github.com/opencast/opencast/pull/6104).
+Please skip the 16.3 release and update to 16.4 directly.
+
+## Opencast 16.3
+
+This is again a bugfix release of Opencast 16. For example the broken docker compose command is fixed. A new version of
+Opencast's admin interface is included as well. [[#6100](https://github.com/opencast/opencast/pull/6100)]
+
+
 ## Opencast 16.2
 
 This is a biugfix release of Opencast 16. Among several other problems, this fixes an important bug causing problems for
