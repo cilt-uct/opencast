@@ -429,7 +429,7 @@
             "enabled": true,
             "parentContainer": "settingsGroup",
             "order": 40,
-            "description": "Slides Text"
+            "description": "Slide Text"
         },
         "org.opencast.paella.downloadsPlugin": {
             "enabled": true,
@@ -516,6 +516,13 @@
             "description": "Videos in this series"
         },
 
+        "org.opencast.paella.transcriptionPlugin": {
+            "enabled": true,
+            "side": "right",
+            "parentContainer": "videoContainer",
+            "order": 10,
+            "description": "Transcription"
+        },
 
         "/* other plugins */": "*********************************************************",
         "es.upv.paella.findCaptionsPlugin": {
