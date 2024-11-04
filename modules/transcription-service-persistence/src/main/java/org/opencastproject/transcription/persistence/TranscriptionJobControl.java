@@ -46,6 +46,8 @@ public class TranscriptionJobControl {
   private long trackDuration;
   // Transcription provider Id
   private long providerId;
+  // Tracks the number of retry attempts
+  private int retryCount = 0;
 
   public TranscriptionJobControl(String mediaPackageId, String trackId, String transcriptionJobId, Date dateCreated,
           Date dateExpected, Date dateCompleted, String status, long trackDuration, long providerId) {
@@ -131,6 +133,14 @@ public class TranscriptionJobControl {
 
   public void setProviderId(long providerId) {
     this.providerId = providerId;
+  }
+
+  public void incrementRetryCount() {
+      this.retryCount++;
+  }
+
+  public int getRetryCount() {
+      return this.retryCount;
   }
 
 }

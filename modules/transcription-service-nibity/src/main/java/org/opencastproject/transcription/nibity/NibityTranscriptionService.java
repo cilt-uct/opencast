@@ -1037,11 +1037,19 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
           String mpId = j.getMediaPackageId();
           String jobId = j.getTranscriptionJobId();
 
-          // If the job in progress, check if it should already have finished.
-          if (TranscriptionJobControl.Status.InProgress.name().equals(j.getStatus())) {
-            // If job should already have been completed, try to get the results.
-            if (j.getDateExpected().getTime() < System.currentTimeMillis()) {
-              try {
+          // Retry limit and expiry check
+          final int maxRetries = 3;
+          if (j.getRetryCount() >= maxRetries) {
+            logger.error("Job {} exceeded max retries. Marking as Error.", jobId);
+            database.updateJobControl(jobId, TranscriptionJobControl.Status.Error.name());
+            continue;
+          }
+
+          try {
+            // If the job in progress, check if it should already have finished.
+            if (TranscriptionJobControl.Status.InProgress.name().equals(j.getStatus())) {
+              // If job should already have been completed, try to get the results.
+              if (j.getDateExpected().getTime() < System.currentTimeMillis()) {
                 if (!checkJobResults(jobId, mpId)) {
                   // Job still running, not finished, so check if it should have finished more than N seconds ago
                   if (j.getDateExpected().getTime() + maxProcessingSeconds * 1000 < System.currentTimeMillis()) {
@@ -1053,25 +1061,29 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
                             "Transcription job was in processing state for too long and was"
                             + " marked as canceled (media package %s, job id %s).",
                             mpId, jobId));
+                  } else {
+                    j.incrementRetryCount();
+                    database.updateJobControl(jobId, TranscriptionJobControl.Status.InProgress.name());
                   }
                   // else Job still running, not finished
                   continue;
                 }
-              } catch (TranscriptionServiceException e) {
-                if (e.getCode() == 404) {
-                  // Job not found there, update job state to canceled
-                  database.updateJobControl(jobId, TranscriptionJobControl.Status.Canceled.name());
-                  // Send notification email
-                  sendEmail("Transcription ERROR",
-                          String.format("Transcription job was not found (media package %s, job id %s).", mpId, jobId));
-                }
-                continue; // Skip this one, exception was already logged
-              } catch (IOException ex) {
-                logger.error("Transcription job not found, error: {}", ex.toString());
               }
-            } else {
-              continue; // Not time to check yet
             }
+          } catch (TranscriptionServiceException e) {
+            if (e.getCode() == 404) {
+              logger.warn("Job {} not found in transcription service. Marking as Canceled.", jobId);
+              database.updateJobControl(jobId, TranscriptionJobControl.Status.Canceled.name());
+              sendEmail("Transcription ERROR", String.format("Transcription job not found (media package %s, job id %s).", mpId, jobId));
+            } else {
+              logger.error("Error while checking job {}: {}", jobId, e.getMessage());
+              j.incrementRetryCount();
+              database.updateJobControl(jobId, TranscriptionJobControl.Status.InProgress.name());
+            }
+          } catch (IOException ex) {
+            logger.error("Transcription job not found, error: {}", ex.toString());
+            j.incrementRetryCount();
+            database.updateJobControl(jobId, TranscriptionJobControl.Status.InProgress.name());
           }
 
           // Jobs that get here have state TranscriptionCompleted
