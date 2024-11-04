@@ -668,6 +668,18 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
           JSONObject jsonObject = (JSONObject) jsonParser.parse(jsonString);
 
           JSONArray resultArray = (JSONArray) jsonObject.get("data");
+
+          // Check if data array is empty
+          if (resultArray == null || resultArray.isEmpty()) {
+            logger.warn("Job {} returned with empty data array", jobId);
+
+            // Send notification email
+            sendEmail("Transcription ERROR", String.format(
+              "Transcription job returned with empty data array (media package %s, job id %s).", mpId, jobId));
+
+            return false;
+          }
+
           JSONObject result = (JSONObject) resultArray.get(0);
 
           Long transcriptId = (Long) result.get("file_id");
