@@ -1121,6 +1121,23 @@ public class GoogleSpeechTranscriptionService extends AbstractJobProducer implem
           // Jobs that get here have state TranscriptionCompleted or had an IOException]
           try {
 
+            // Check if the jobId with a mediapackage already exists in the database
+            TranscriptionJobControl existingJobs = database.findByJobAndMediaPackage(jobId, mpId);
+            if (!existingJobs.isEmpty()) {
+              TranscriptionJobControl existingJob = existingJobs.get();
+              logger.warn("Duplicate transcriptionJobId detected. Existing entry: [mediaPackageId = {}, jobId = {}]; "
+                  + "Attempted entry: [mediaPackageId = {}, jobId = {}]",
+                  existingJob.getMediaPackageId(), existingJob.getJobId(), mpId, jobId);
+              
+              // Send notification email
+              sendEmail(TRANSCRIPTION_ERROR, String.format(
+                  "Duplicate transcriptionJobId detected. Existing entry: [mediaPackageId = %s, jobId = %s]; "
+                      "+ \"Attempted entry: [mediaPackageId = %s, jobId = %s]",
+                  existingJob.getMediaPackageId(), existingJob.getJobId(), mpId, jobId));
+              
+              continue;
+            }
+
             // Apply workflow to attach transcripts
             Map<String, String> params = new HashMap<String, String>();
             params.put(TRANSCRIPTION_JOB_ID_KEY, jobId);

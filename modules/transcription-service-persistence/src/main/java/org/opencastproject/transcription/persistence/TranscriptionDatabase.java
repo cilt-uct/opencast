@@ -40,6 +40,12 @@ public interface TranscriptionDatabase {
   TranscriptionProviderControl storeProviderControl(String provider) throws TranscriptionDatabaseException;
 
   /*
+   * Get transcription job by job Id and mediapackage Id
+   */
+  TranscriptionJobControl findByJobAndMediaPackage(String jobId, String mpId) 
+          throws TranscriptionDatabaseException;
+
+  /*
    * Delete transcription job
    */
   void deleteJobControl(String jobId) throws TranscriptionDatabaseException;
