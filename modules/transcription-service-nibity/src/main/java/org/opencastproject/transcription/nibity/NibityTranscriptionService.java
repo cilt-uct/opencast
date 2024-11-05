@@ -675,7 +675,7 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
 
             // Send notification email
             sendEmail("Transcription ERROR", String.format(
-              "Transcription job returned with empty data array (media package %s, job id %s).", mpId, jobId));
+                "Transcription job returned with empty data array (media package %s, job id %s).", mpId, jobId));
 
             return false;
           }
