@@ -1074,7 +1074,8 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
             if (e.getCode() == 404) {
               logger.warn("Job {} not found in transcription service. Marking as Canceled.", jobId);
               database.updateJobControl(jobId, TranscriptionJobControl.Status.Canceled.name());
-              sendEmail("Transcription ERROR", String.format("Transcription job not found (media package %s, job id %s).", mpId, jobId));
+              sendEmail("Transcription ERROR", String.format(
+                  "Transcription job not found (media package %s, job id %s).", mpId, jobId));
             } else {
               logger.error("Error while checking job {}: {}", jobId, e.getMessage());
               j.incrementRetryCount();

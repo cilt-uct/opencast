@@ -136,11 +136,11 @@ public class TranscriptionJobControl {
   }
 
   public void incrementRetryCount() {
-      this.retryCount++;
+    this.retryCount++;
   }
 
   public int getRetryCount() {
-      return this.retryCount;
+    return this.retryCount;
   }
 
 }
