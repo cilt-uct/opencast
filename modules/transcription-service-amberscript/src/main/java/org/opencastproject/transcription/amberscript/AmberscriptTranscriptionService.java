@@ -1042,6 +1042,7 @@ public class AmberscriptTranscriptionService extends AbstractJobProducer impleme
               } catch (TranscriptionServiceException e) {
                 try {
                   database.updateJobControl(jobId, TranscriptionJobControl.Status.Canceled.name());
+                  continue;
                 } catch (TranscriptionDatabaseException ex) {
                   logger.warn("Could not cancel job '{}'.", jobId);
                 }
