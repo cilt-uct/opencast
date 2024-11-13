@@ -11,7 +11,15 @@
     <bundle>mvn:com.mysema.querydsl/querydsl-jpa/${querydsl.version}</bundle>
   </feature>
 
+  <!-- Update pax-web due to session timeout bug, see https://github.com/opencast/opencast/issues/6260 -->
+  <!-- REMOVE WITH KARAF 4.4.7 UPDATE -->
+  <repository>mvn:org.ops4j.pax.web/pax-web-features/8.0.29/xml/features</repository>
+
   <feature name="ext-core" version="${project.version}">
+    <!-- Update pax-web due to session timeout bug, see https://github.com/opencast/opencast/issues/6260 -->
+    <!-- REMOVE WITH KARAF 4.4.7 UPDATE -->
+    <feature version="8.0.29">pax-web-karaf</feature>
+
     <!-- Base features -->
     <feature>http</feature>
     <feature>http-whiteboard</feature>
