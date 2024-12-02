@@ -399,7 +399,7 @@ function listEpisode(info) {
     return epiItem;
 }
 
-var limit = 10000,
+var limit = 2000,
     url = "/search/episode.json?sid=" + (courseID || '') + "&limit=" + limit + "&sort=modified%20desc";
 
 xhr({url: url, responseType: 'json'},
