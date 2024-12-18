@@ -803,21 +803,41 @@ public class EditorServiceImpl implements EditorService {
   protected List<SegmentData> getDeletedSegments(MediaPackage mediaPackage, List<SegmentData> segments) {
     // add deletedElements
     long lastTime = 0;
+    long deletionLength = 3000;
+    long mediaDuration = mediaPackage.getDuration();
     List<SegmentData> deletedElements = new ArrayList<>();
-    for (int i = 0; i < segments.size(); i++) {
-      SegmentData segmentData = segments.get(i);
-      if (segmentData.getStart() != lastTime) {
-        SegmentData deleted = new SegmentData(lastTime, segmentData.getStart(), true);
-        deletedElements.add(deleted);
-      }
-      lastTime = segmentData.getEnd();
-      // check for last segment
-      if (segments.size() - 1 == i) {
-        if (mediaPackage.getDuration() != null && lastTime < mediaPackage.getDuration()) {
-          deletedElements.add(new SegmentData(lastTime, mediaPackage.getDuration(), true));
+
+    if (segments.size() <= 1 && mediaDuration > deletionLength) {
+      deletedElements.add(new SegmentData(0L, deletionLength, true));
+      segments.add(new SegmentData(deletionLength, mediaDuration - deletionLength));
+      deletedElements.add(new SegmentData(mediaDuration - deletionLength, mediaDuration, true));
+    } else {
+      for (int i = 0; i < segments.size(); i++) {
+        SegmentData segmentData = segments.get(i);
+        if (segmentData.getStart() != lastTime) {
+          deletedElements.add(new SegmentData(lastTime, deletionLength, true));
+          deletedElements.add(new SegmentData(deletionLength, segmentData.getStart(), true));
+        } else {
+          segments.remove(0);
+          deletedElements.add(new SegmentData(lastTime, deletionLength, true));
+          segments.add(new SegmentData(deletionLength, segmentData.getEnd()));
+        }
+        lastTime = segmentData.getEnd();
+
+        // check for last segment
+        if (segments.size() - 1 == i) {
+          if (mediaDuration != null && lastTime < mediaDuration) {
+            if ((mediaDuration - lastTime) <= deletionLength || lastTime == mediaDuration) {
+              segments.add(new SegmentData(segmentData.getStart(), mediaDuration - deletionLength));
+              deletedElements.add(new SegmentData(mediaDuration - deletionLength, mediaDuration, true));
+            } else {
+              deletedElements.add(new SegmentData(lastTime, mediaDuration, true));
+            }
+          }
         }
       }
     }
+
     return deletedElements;
   }
 
