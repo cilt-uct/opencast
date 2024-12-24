@@ -773,6 +773,8 @@ public class EditorServiceImpl implements EditorService {
 
     if (!segments.isEmpty()) {
       return segments;
+    } else {
+      addDeletedSegments(mediaPackage, segments);
     }
 
     // Read from silence detection flavors
@@ -800,44 +802,45 @@ public class EditorServiceImpl implements EditorService {
     return segments;
   }
 
+  protected List<SegmentData> addDeletedSegments(MediaPackage mediaPackage, List<SegmentData> segments) {
+    // add deletedElements
+    long deleteLength = 3000L;
+    long minLength = 6000L;
+    long mediaDuration = mediaPackage.getDuration();
+
+    logger.info("media duration: " + mediaDuration);
+
+    // If the media is too short, no segments are added
+    if (mediaPackage.getDuration() < minLength) {
+      return segments;
+    }
+
+    segments.add(new SegmentData(0L, deleteLength, true));
+    segments.add(new SegmentData(deleteLength, mediaDuration - deleteLength));
+    segments.add(new SegmentData(mediaDuration - deleteLength, mediaDuration, true));
+
+    return segments;
+  }
+
   protected List<SegmentData> getDeletedSegments(MediaPackage mediaPackage, List<SegmentData> segments) {
     // add deletedElements
     long lastTime = 0;
-    long deletionLength = 3000;
-    long mediaDuration = mediaPackage.getDuration();
     List<SegmentData> deletedElements = new ArrayList<>();
 
-    if (segments.size() <= 1 && mediaDuration > deletionLength) {
-      deletedElements.add(new SegmentData(0L, deletionLength, true));
-      segments.add(new SegmentData(deletionLength, mediaDuration - deletionLength));
-      deletedElements.add(new SegmentData(mediaDuration - deletionLength, mediaDuration, true));
-    } else {
-      for (int i = 0; i < segments.size(); i++) {
-        SegmentData segmentData = segments.get(i);
-        if (segmentData.getStart() != lastTime) {
-          deletedElements.add(new SegmentData(lastTime, deletionLength, true));
-          deletedElements.add(new SegmentData(deletionLength, segmentData.getStart(), true));
-        } else {
-          segments.remove(0);
-          deletedElements.add(new SegmentData(lastTime, deletionLength, true));
-          segments.add(new SegmentData(deletionLength, segmentData.getEnd()));
-        }
-        lastTime = segmentData.getEnd();
-
-        // check for last segment
-        if (segments.size() - 1 == i) {
-          if (mediaDuration != null && lastTime < mediaDuration) {
-            if ((mediaDuration - lastTime) <= deletionLength || lastTime == mediaDuration) {
-              segments.add(new SegmentData(segmentData.getStart(), mediaDuration - deletionLength));
-              deletedElements.add(new SegmentData(mediaDuration - deletionLength, mediaDuration, true));
-            } else {
-              deletedElements.add(new SegmentData(lastTime, mediaDuration, true));
-            }
-          }
+    for (int i = 0; i < segments.size(); i++) {
+      SegmentData segmentData = segments.get(i);
+      if (segmentData.getStart() != lastTime) {
+        SegmentData deleted = new SegmentData(lastTime, segmentData.getStart(), true);
+        deletedElements.add(deleted);
+      }
+      lastTime = segmentData.getEnd();
+      // check for last segment
+      if (segments.size() - 1 == i) {
+        if (mediaPackage.getDuration() != null && lastTime < mediaPackage.getDuration()) {
+          deletedElements.add(new SegmentData(lastTime, mediaPackage.getDuration(), true));
         }
       }
     }
-
     return deletedElements;
   }
 
