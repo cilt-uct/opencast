@@ -214,6 +214,8 @@ public class EditorServiceImpl implements EditorService {
   private int lockTimeout = DEFAULT_LOCK_TIMEOUT_SECONDS;
 
   private final Set<String> smilCatalogTagSet = new HashSet<>();
+  private final long defaultPadding = 3000;
+  private final long min_video_duration = 6000;
 
   @Reference
   void setSecurityService(SecurityService securityService) {
