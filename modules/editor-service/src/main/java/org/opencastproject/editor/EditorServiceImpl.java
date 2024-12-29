@@ -772,9 +772,9 @@ public class EditorServiceImpl implements EditorService {
     }
 
     if (!segments.isEmpty()) {
-      return segments;
+      processSegments(mediaPackage, segments);
     } else {
-      addDeletedSegments(mediaPackage, segments);
+      addDefaultDeletedSegments(mediaPackage, segments);
     }
 
     // Read from silence detection flavors
@@ -802,24 +802,58 @@ public class EditorServiceImpl implements EditorService {
     return segments;
   }
 
-  protected List<SegmentData> addDeletedSegments(MediaPackage mediaPackage, List<SegmentData> segments) {
-    // add deletedElements
-    long deleteLength = 3000L;
-    long minLength = 6000L;
-    long mediaDuration = mediaPackage.getDuration();
+  private void processSegments(MediaPackage mediaPackage, List<SegmentData> segments) {
+    if (segments.size() == 1) {
+      processSingleSegment(mediaPackage, segments);
+    } else if (segments.size() > 1) {
+      processMultipleSegments(mediaPackage, segments);
+    }
+  }
 
-    logger.info("media duration: " + mediaDuration);
+  private void processSingleSegment(MediaPackage mediaPackage, List<SegmentData> segments) {
+    SegmentData segment = segments.get(0);
+    long duration = mediaPackage.getDuration();
 
-    // If the media is too short, no segments are added
-    if (mediaPackage.getDuration() < minLength) {
-      return segments;
+    if (segment.getStart() == 0 && segment.getEnd() < duration) {
+      long remaining = duration - segment.getEnd();
+      segments.removeIf(s -> s.getStart() == segment.getStart() && s.getEnd() == segment.getEnd());
+      segments.add(new SegmentData(0L, defaultPadding, true));
+      if (remaining < defaultPadding) {
+        segments.add(new SegmentData(defaultPadding, duration - defaultPadding));
+        segments.add(new SegmentData(duration - defaultPadding, duration, true));
+      } else {
+        segments.add(new SegmentData(defaultPadding, segment.getEnd()));
+        segments.add(new SegmentData(segment.getEnd(), duration, true));
+      }
+    }
+  }
+
+  private void processMultipleSegments(MediaPackage mediaPackage, List<SegmentData> segments) {
+    long duration = mediaPackage.getDuration();
+
+    SegmentData firstSegment = segments.get(0);
+    SegmentData lastSegment = segments.get(segments.size() - 1);
+
+    if (firstSegment.getStart() == 0 && firstSegment.getEnd() < defaultPadding) {
+      segments.removeIf(s -> s.getStart() == firstSegment.getStart() && s.getEnd() == firstSegment.getEnd());
+      segments.add(new SegmentData(0L, defaultPadding, true));
+      segments.add(new SegmentData(defaultPadding, firstSegment.getEnd()));
     }
 
-    segments.add(new SegmentData(0L, deleteLength, true));
-    segments.add(new SegmentData(deleteLength, mediaDuration - deleteLength));
-    segments.add(new SegmentData(mediaDuration - deleteLength, mediaDuration, true));
+    if (lastSegment.getEnd() == duration || duration - lastSegment.getEnd() < defaultPadding) {
+      segments.removeIf(s -> s.getStart() == lastSegment.getStart() && s.getEnd() == lastSegment.getEnd());
+      segments.add(new SegmentData(lastSegment.getStart(), duration - defaultPadding));
+      segments.add(new SegmentData(duration - defaultPadding, duration, true));
+    }
+  }
 
-    return segments;
+  private void addDefaultDeletedSegments(MediaPackage mediaPackage, List<SegmentData> segments) {
+    long duration = mediaPackage.getDuration();
+    if (duration >= min_video_duration) {
+      segments.add(new SegmentData(0L, defaultPadding, true));
+      segments.add(new SegmentData(defaultPadding, duration - defaultPadding));
+      segments.add(new SegmentData(duration - defaultPadding, duration, true));
+    }
   }
 
   protected List<SegmentData> getDeletedSegments(MediaPackage mediaPackage, List<SegmentData> segments) {
