@@ -816,16 +816,24 @@ public class EditorServiceImpl implements EditorService {
     SegmentData segment = segments.get(0);
     long duration = mediaPackage.getDuration();
 
-    if (segment.getStart() == 0 && segment.getEnd() < duration) {
-      long remaining = duration - segment.getEnd();
+    if (segment.getStart() < defaultPadding) {
+      long segmentEnd = segment.getEnd();
       segments.removeIf(s -> s.getStart() == segment.getStart() && s.getEnd() == segment.getEnd());
       segments.add(new SegmentData(0L, defaultPadding, true));
-      if (remaining < defaultPadding) {
+
+      if (segmentEnd == duration || duration - segmentEnd < defaultPadding) {
         segments.add(new SegmentData(defaultPadding, duration - defaultPadding));
         segments.add(new SegmentData(duration - defaultPadding, duration, true));
       } else {
-        segments.add(new SegmentData(defaultPadding, segment.getEnd()));
-        segments.add(new SegmentData(segment.getEnd(), duration, true));
+        segments.add(new SegmentData(defaultPadding, segmentEnd));
+        segments.add(new SegmentData(segmentEnd, duration, true));
+      }
+    } else {
+      long segmentStart = segment.getStart();
+      if (duration - segment.getEnd() < defaultPadding || segment.getEnd() == duration) {
+        segments.removeIf(s -> s.getStart() == segment.getStart() && s.getEnd() == segment.getEnd());
+        segments.add(new SegmentData(segmentStart, duration - defaultPadding));
+        segments.add(new SegmentData(duration - defaultPadding, duration, true));
       }
     }
   }
@@ -836,22 +844,25 @@ public class EditorServiceImpl implements EditorService {
     SegmentData firstSegment = segments.get(0);
     SegmentData lastSegment = segments.get(segments.size() - 1);
 
-    if (firstSegment.getStart() == 0 && firstSegment.getEnd() < defaultPadding) {
+    if (firstSegment.getStart() == 0) {
+      long firstSegmentEnd = firstSegment.getEnd();
       segments.removeIf(s -> s.getStart() == firstSegment.getStart() && s.getEnd() == firstSegment.getEnd());
       segments.add(new SegmentData(0L, defaultPadding, true));
       segments.add(new SegmentData(defaultPadding, firstSegment.getEnd()));
     }
 
     if (lastSegment.getEnd() == duration || duration - lastSegment.getEnd() < defaultPadding) {
+      long lastSegmentStart = lastSegment.getStart();
       segments.removeIf(s -> s.getStart() == lastSegment.getStart() && s.getEnd() == lastSegment.getEnd());
-      segments.add(new SegmentData(lastSegment.getStart(), duration - defaultPadding));
+      segments.add(new SegmentData(lastSegmentStart, duration - defaultPadding));
       segments.add(new SegmentData(duration - defaultPadding, duration, true));
     }
+    segments.sort(Comparator.comparingLong(SegmentData::getStart));
   }
 
   private void addDefaultDeletedSegments(MediaPackage mediaPackage, List<SegmentData> segments) {
     long duration = mediaPackage.getDuration();
-    if (duration >= min_video_duration) {
+    if (duration > min_video_duration) {
       segments.add(new SegmentData(0L, defaultPadding, true));
       segments.add(new SegmentData(defaultPadding, duration - defaultPadding));
       segments.add(new SegmentData(duration - defaultPadding, duration, true));
