@@ -844,7 +844,7 @@ public class EditorServiceImpl implements EditorService {
     SegmentData firstSegment = segments.get(0);
     SegmentData lastSegment = segments.get(segments.size() - 1);
 
-    if (firstSegment.getStart() < defaultPadding>) {
+    if (firstSegment.getStart() < defaultPadding) {
       long firstSegmentEnd = firstSegment.getEnd();
       segments.removeIf(s -> s.getStart() == firstSegment.getStart() && s.getEnd() == firstSegment.getEnd());
       segments.add(new SegmentData(0L, defaultPadding, true));
