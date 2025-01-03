@@ -24,12 +24,6 @@ Currently Supported
 * Ubuntu 18.04 and newer amd64
 
 
-Supported JDKs
---------------
-
-For Opencast 10 and newer we support JDK 11 only.
-
-
 Activate Repository
 -------------------
 

@@ -21,6 +21,8 @@
 
 package org.opencastproject.search.impl;
 
+import static org.opencastproject.systems.OpencastConstants.DIGEST_USER_PROPERTY;
+
 import org.opencastproject.elasticsearch.index.ElasticsearchIndex;
 import org.opencastproject.elasticsearch.index.rebuild.AbstractIndexProducer;
 import org.opencastproject.elasticsearch.index.rebuild.IndexProducer;
@@ -45,6 +47,7 @@ import org.opencastproject.security.api.Role;
 import org.opencastproject.security.api.SecurityConstants;
 import org.opencastproject.security.api.SecurityService;
 import org.opencastproject.security.api.UnauthorizedException;
+import org.opencastproject.security.util.SecurityUtil;
 import org.opencastproject.series.api.SeriesException;
 import org.opencastproject.series.api.SeriesService;
 import org.opencastproject.util.NotFoundException;
@@ -131,6 +134,8 @@ public final class SearchServiceIndex extends AbstractIndexProducer implements I
   /** The organization directory service */
   private OrganizationDirectoryService organizationDirectory = null;
 
+  private String systemUserName = null;
+
   /**
    * Creates a new instance of the search service index.
    */
@@ -146,6 +151,7 @@ public final class SearchServiceIndex extends AbstractIndexProducer implements I
   @Activate
   public void activate(final ComponentContext cc) throws IllegalStateException {
     createIndex();
+    systemUserName = cc.getBundleContext().getProperty(DIGEST_USER_PROPERTY);
   }
 
   private void createIndex() {
@@ -216,7 +222,14 @@ public final class SearchServiceIndex extends AbstractIndexProducer implements I
     checkMPWritePermission(mediaPackageId);
 
     logger.debug("Attempting to add media package {} to search index", mediaPackageId);
-    var acl = authorizationService.getActiveAcl(mediaPackage).getA();
+    final var acls = new AccessControlList[1];
+    final var org = securityService.getOrganization();
+    final var systemUser = SecurityUtil.createSystemUser(systemUserName, org);
+    // Ensure we always get the actual acl by forcing access
+    SecurityUtil.runAs(securityService, org, systemUser, () -> {
+      acls[0] = authorizationService.getActiveAcl(mediaPackage).getA();
+    });
+    var acl = acls[0] == null ? new AccessControlList() : acls[0];
     var now = new Date();
 
     try {
@@ -299,14 +312,14 @@ public final class SearchServiceIndex extends AbstractIndexProducer implements I
 
   private void checkMPWritePermission(final String mediaPackageId) throws SearchException {
     try {
-      MediaPackage mp = persistence.getMediaPackage(mediaPackageId);
-      if (!authorizationService.hasPermission(mp, Permissions.Action.WRITE.toString())) {
+      AccessControlList acl = persistence.getAccessControlList(mediaPackageId);
+      if (!authorizationService.hasPermission(acl, Permissions.Action.WRITE.toString())) {
         boolean isAdmin = securityService.getUser().getRoles().stream()
             .map(Role::getName)
             .anyMatch(r -> r.equals(SecurityConstants.GLOBAL_ADMIN_ROLE));
         if (!isAdmin) {
           throw new UnauthorizedException(securityService.getUser(), "Write permission denied for " + mediaPackageId,
-              authorizationService.getActiveAcl(mp).getA());
+              acl);
         } else {
           logger.debug("Write for {} is not allowed by ACL, but user has {}",
               mediaPackageId, SecurityConstants.GLOBAL_ADMIN_ROLE);
@@ -342,7 +355,11 @@ public final class SearchServiceIndex extends AbstractIndexProducer implements I
       var updateRequst = new UpdateRequest(INDEX_NAME, mediaPackageId)
           .doc(gson.toJson(json), XContentType.JSON);
       esIndex.getClient().update(updateRequst, RequestOptions.DEFAULT);
-
+    } catch (ElasticsearchStatusException e) {
+      if (e.status().getStatus() != RestStatus.NOT_FOUND.getStatus()) {
+        throw e;
+      }
+      logger.warn("Event {} is not in the search index. Skipping deletion", mediaPackageId);
     } catch (IOException e) {
       throw new SearchException("Could not delete episode " + mediaPackageId + " from index", e);
     }
@@ -456,10 +473,12 @@ public final class SearchServiceIndex extends AbstractIndexProducer implements I
 
             current.getAndIncrement();
             indexMediaPackage(mediaPackage, acl, modificationDate, deletionDate);
-          } catch (SearchServiceDatabaseException | UnauthorizedException | NotFoundException e) {
+          } catch (SearchServiceDatabaseException | UnauthorizedException e) {
             logIndexRebuildError(logger, total, current.get(), e);
             //NB: Runtime exception thrown to escape the functional interfacing
             throw new RuntimeException("Internal Index Rebuild Failure", e);
+          } catch (RuntimeException | NotFoundException e) {
+            logSkippingElement(logger, "event", tuple.getA().getIdentifier().toString(), e);
           }
         });
         //Current is the *page* index, so we remove one since each page only has pageSize entries
