@@ -214,6 +214,8 @@ public class EditorServiceImpl implements EditorService {
   private int lockTimeout = DEFAULT_LOCK_TIMEOUT_SECONDS;
 
   private final Set<String> smilCatalogTagSet = new HashSet<>();
+  private static final long defaultPadding = 3000;
+  private static final long min_video_duration = 6000;
 
   @Reference
   void setSecurityService(SecurityService securityService) {
@@ -772,7 +774,9 @@ public class EditorServiceImpl implements EditorService {
     }
 
     if (!segments.isEmpty()) {
-      return segments;
+      processSegments(mediaPackage, segments);
+    } else {
+      addDefaultDeletedSegments(mediaPackage, segments);
     }
 
     // Read from silence detection flavors
@@ -800,10 +804,76 @@ public class EditorServiceImpl implements EditorService {
     return segments;
   }
 
+  private void processSegments(MediaPackage mediaPackage, List<SegmentData> segments) {
+    if (segments.size() == 1) {
+      processSingleSegment(mediaPackage, segments);
+    } else if (segments.size() > 1) {
+      processMultipleSegments(mediaPackage, segments);
+    }
+  }
+
+  private void processSingleSegment(MediaPackage mediaPackage, List<SegmentData> segments) {
+    SegmentData segment = segments.get(0);
+    long duration = mediaPackage.getDuration();
+
+    if (segment.getStart() < defaultPadding) {
+      long segmentEnd = segment.getEnd();
+      segments.removeIf(s -> s.getStart() == segment.getStart() && s.getEnd() == segment.getEnd());
+      segments.add(new SegmentData(0L, defaultPadding, true));
+
+      if (segmentEnd == duration || duration - segmentEnd < defaultPadding) {
+        segments.add(new SegmentData(defaultPadding, duration - defaultPadding));
+        segments.add(new SegmentData(duration - defaultPadding, duration, true));
+      } else {
+        segments.add(new SegmentData(defaultPadding, segmentEnd));
+        segments.add(new SegmentData(segmentEnd, duration, true));
+      }
+    } else {
+      long segmentStart = segment.getStart();
+      if (duration - segment.getEnd() < defaultPadding || segment.getEnd() == duration) {
+        segments.removeIf(s -> s.getStart() == segment.getStart() && s.getEnd() == segment.getEnd());
+        segments.add(new SegmentData(segmentStart, duration - defaultPadding));
+        segments.add(new SegmentData(duration - defaultPadding, duration, true));
+      }
+    }
+  }
+
+  private void processMultipleSegments(MediaPackage mediaPackage, List<SegmentData> segments) {
+    long duration = mediaPackage.getDuration();
+
+    SegmentData firstSegment = segments.get(0);
+    SegmentData lastSegment = segments.get(segments.size() - 1);
+
+    if (firstSegment.getStart() < defaultPadding) {
+      long firstSegmentEnd = firstSegment.getEnd();
+      segments.removeIf(s -> s.getStart() == firstSegment.getStart() && s.getEnd() == firstSegment.getEnd());
+      segments.add(new SegmentData(0L, defaultPadding, true));
+      segments.add(new SegmentData(defaultPadding, firstSegment.getEnd()));
+    }
+
+    if (lastSegment.getEnd() == duration || duration - lastSegment.getEnd() < defaultPadding) {
+      long lastSegmentStart = lastSegment.getStart();
+      segments.removeIf(s -> s.getStart() == lastSegment.getStart() && s.getEnd() == lastSegment.getEnd());
+      segments.add(new SegmentData(lastSegmentStart, duration - defaultPadding));
+      segments.add(new SegmentData(duration - defaultPadding, duration, true));
+    }
+    segments.sort(Comparator.comparingLong(SegmentData::getStart));
+  }
+
+  private void addDefaultDeletedSegments(MediaPackage mediaPackage, List<SegmentData> segments) {
+    long duration = mediaPackage.getDuration();
+    if (duration > min_video_duration) {
+      segments.add(new SegmentData(0L, defaultPadding, true));
+      segments.add(new SegmentData(defaultPadding, duration - defaultPadding));
+      segments.add(new SegmentData(duration - defaultPadding, duration, true));
+    }
+  }
+
   protected List<SegmentData> getDeletedSegments(MediaPackage mediaPackage, List<SegmentData> segments) {
     // add deletedElements
     long lastTime = 0;
     List<SegmentData> deletedElements = new ArrayList<>();
+
     for (int i = 0; i < segments.size(); i++) {
       SegmentData segmentData = segments.get(i);
       if (segmentData.getStart() != lastTime) {
