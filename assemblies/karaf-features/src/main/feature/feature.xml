@@ -665,11 +665,6 @@
     <bundle start-level="82">mvn:org.opencastproject/opencast-security-jwt/${project.version}</bundle>
   </feature>
 
-  <feature name="opencast-plugin-userdirectory-moodle" version="${project.version}">
-    <feature>opencast-core</feature>
-    <bundle start-level="82">mvn:org.opencastproject/opencast-userdirectory-moodle/${project.version}</bundle>
-  </feature>
-
   <feature name="opencast-plugin-userdirectory-sakai" version="${project.version}">
     <feature>opencast-core</feature>
     <bundle start-level="82">mvn:org.opencastproject/opencast-userdirectory-sakai/${project.version}</bundle>
@@ -678,11 +673,6 @@
   <feature name="opencast-plugin-userdirectory-brightspace" version="${project.version}">
     <feature>opencast-core</feature>
     <bundle start-level="82">mvn:org.opencastproject/opencast-userdirectory-brightspace/${project.version}</bundle>
-  </feature>
-
-  <feature name="opencast-plugin-userdirectory-canvas" version="${project.version}">
-    <feature>opencast-core</feature>
-    <bundle start-level="82">mvn:org.opencastproject/opencast-userdirectory-canvas/${project.version}</bundle>
   </feature>
 
   <feature name="opencast-plugin-userdirectory-studip" version="${project.version}">
