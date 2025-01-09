@@ -355,12 +355,12 @@ public class EditorServiceImpl implements EditorService {
     logger.debug("Thumbnail workflow property set to '{}'", thumbnailWfProperty);
 
     // Dedault video padding
-    defaultPaddingLength = Long.parseUnsignedLong(
+    defaultPaddingLength = Long.parseLong(
         Objects.toString(properties.get(OPT_DEFAULT_PADDING_LENGTH), DEFAULT_PADDING_LENGTH));
     logger.debug("Default padding property set to '{}'", defaultPaddingLength);
 
     // Minimum video duration
-    minVideoDuration = Long.parseUnsignedLong(
+    minVideoDuration = Long.parseLong(
         Objects.toString(properties.get(OPT_MIN_VIDEO_DURATION), DEFAULT_MIN_VIDEO_DURATION));
     logger.debug("Default padding property set to '{}'", minVideoDuration);
 
