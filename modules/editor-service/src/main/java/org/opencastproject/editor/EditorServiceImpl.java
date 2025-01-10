@@ -220,6 +220,8 @@ public class EditorServiceImpl implements EditorService {
   private int lockTimeout = DEFAULT_LOCK_TIMEOUT_SECONDS;
 
   private final Set<String> smilCatalogTagSet = new HashSet<>();
+  private static final long defaultPadding = 3000;
+  private static final long min_video_duration = 6000;
 
   @Reference
   void setSecurityService(SecurityService securityService) {
@@ -887,7 +889,6 @@ public class EditorServiceImpl implements EditorService {
     // add deletedElements
     long lastTime = 0;
     List<SegmentData> deletedElements = new ArrayList<>();
-
     for (int i = 0; i < segments.size(); i++) {
       SegmentData segmentData = segments.get(i);
       if (segmentData.getStart() != lastTime) {
