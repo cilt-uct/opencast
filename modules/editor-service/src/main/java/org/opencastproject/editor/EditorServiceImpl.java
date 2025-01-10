@@ -178,6 +178,8 @@ public class EditorServiceImpl implements EditorService {
   private List<MediaPackageElementFlavor> thumbnailSourcePrimary;
   private String distributionDirectory;
   private Boolean localPublication = null;
+  private Long defaultPaddingLength;
+  private Long minVideoDuration;
 
   private static final String DEFAULT_PREVIEW_SUBTYPE = "prepared";
   private static final String DEFAULT_PREVIEW_TAG = "editor";
@@ -192,6 +194,8 @@ public class EditorServiceImpl implements EditorService {
   private static final List<MediaPackageElementFlavor> DEFAULT_THUMBNAIL_PRIORITY_FLAVOR = new ArrayList<>();
   private static final int DEFAULT_LOCK_TIMEOUT_SECONDS = 300; // ( 5 mins )
   private static final int DEFAULT_LOCK_REFRESH_SECONDS = 60;  // ( 1 min )
+  private static final String DEFAULT_PADDING_LENGTH = "0"; // (0 secs)
+  private static final String DEFAULT_MIN_VIDEO_DURATION = "6000"; // (6 secs)
 
   public static final String OPT_PREVIEW_SUBTYPE = "preview.subtype";
   public static final String OPT_PREVIEW_TAG = "preview.tag";
@@ -208,14 +212,14 @@ public class EditorServiceImpl implements EditorService {
   public static final String OPT_LOCK_ENABLED = "lock.enable";
   public static final String OPT_LOCK_TIMEOUT = "lock.release.after.seconds";
   public static final String OPT_LOCK_REFRESH = "lock.refresh.after.seconds";
+  public static final String OPT_DEFAULT_PADDING_LENGTH = "default.padding.length";
+  public static final String OPT_MIN_VIDEO_DURATION = "min.video.duration";
 
   private Boolean lockingActive;
   private int lockRefresh = DEFAULT_LOCK_REFRESH_SECONDS;
   private int lockTimeout = DEFAULT_LOCK_TIMEOUT_SECONDS;
 
   private final Set<String> smilCatalogTagSet = new HashSet<>();
-  private static final long defaultPadding = 3000;
-  private static final long min_video_duration = 6000;
 
   @Reference
   void setSecurityService(SecurityService securityService) {
@@ -349,6 +353,16 @@ public class EditorServiceImpl implements EditorService {
 
     thumbnailWfProperty = Objects.toString(properties.get(OPT_THUMBNAIL_WF_PROPERTY), DEFAULT_THUMBNAIL_WF_PROPERTY);
     logger.debug("Thumbnail workflow property set to '{}'", thumbnailWfProperty);
+
+    // Dedault video padding
+    defaultPaddingLength = Long.parseLong(
+        Objects.toString(properties.get(OPT_DEFAULT_PADDING_LENGTH), DEFAULT_PADDING_LENGTH));
+    logger.debug("Default padding property set to '{}'", defaultPaddingLength);
+
+    // Minimum video duration
+    minVideoDuration = Long.parseLong(
+        Objects.toString(properties.get(OPT_MIN_VIDEO_DURATION), DEFAULT_MIN_VIDEO_DURATION));
+    logger.debug("Default padding property set to '{}'", minVideoDuration);
 
     String thumbnailPriorities = Objects.toString(properties.get(OPT_THUMBNAIL_PRIORITY_FLAVOR));
     if ("null".equals(thumbnailPriorities)  || thumbnailPriorities.isEmpty()) {
@@ -816,24 +830,24 @@ public class EditorServiceImpl implements EditorService {
     SegmentData segment = segments.get(0);
     long duration = mediaPackage.getDuration();
 
-    if (segment.getStart() < defaultPadding) {
+    if (segment.getStart() < defaultPaddingLength) {
       long segmentEnd = segment.getEnd();
       segments.removeIf(s -> s.getStart() == segment.getStart() && s.getEnd() == segment.getEnd());
-      segments.add(new SegmentData(0L, defaultPadding, true));
+      segments.add(new SegmentData(0L, defaultPaddingLength, true));
 
-      if (segmentEnd == duration || duration - segmentEnd < defaultPadding) {
-        segments.add(new SegmentData(defaultPadding, duration - defaultPadding));
-        segments.add(new SegmentData(duration - defaultPadding, duration, true));
+      if (segmentEnd == duration || duration - segmentEnd < defaultPaddingLength) {
+        segments.add(new SegmentData(defaultPaddingLength, duration - defaultPaddingLength));
+        segments.add(new SegmentData(duration - defaultPaddingLength, duration, true));
       } else {
-        segments.add(new SegmentData(defaultPadding, segmentEnd));
+        segments.add(new SegmentData(defaultPaddingLength, segmentEnd));
         segments.add(new SegmentData(segmentEnd, duration, true));
       }
     } else {
       long segmentStart = segment.getStart();
-      if (duration - segment.getEnd() < defaultPadding || segment.getEnd() == duration) {
+      if (duration - segment.getEnd() < defaultPaddingLength || segment.getEnd() == duration) {
         segments.removeIf(s -> s.getStart() == segment.getStart() && s.getEnd() == segment.getEnd());
-        segments.add(new SegmentData(segmentStart, duration - defaultPadding));
-        segments.add(new SegmentData(duration - defaultPadding, duration, true));
+        segments.add(new SegmentData(segmentStart, duration - defaultPaddingLength));
+        segments.add(new SegmentData(duration - defaultPaddingLength, duration, true));
       }
     }
   }
@@ -844,28 +858,28 @@ public class EditorServiceImpl implements EditorService {
     SegmentData firstSegment = segments.get(0);
     SegmentData lastSegment = segments.get(segments.size() - 1);
 
-    if (firstSegment.getStart() < defaultPadding) {
+    if (firstSegment.getStart() < defaultPaddingLength) {
       long firstSegmentEnd = firstSegment.getEnd();
       segments.removeIf(s -> s.getStart() == firstSegment.getStart() && s.getEnd() == firstSegment.getEnd());
-      segments.add(new SegmentData(0L, defaultPadding, true));
-      segments.add(new SegmentData(defaultPadding, firstSegment.getEnd()));
+      segments.add(new SegmentData(0L, defaultPaddingLength, true));
+      segments.add(new SegmentData(defaultPaddingLength, firstSegment.getEnd()));
     }
 
-    if (lastSegment.getEnd() == duration || duration - lastSegment.getEnd() < defaultPadding) {
+    if (lastSegment.getEnd() == duration || duration - lastSegment.getEnd() < defaultPaddingLength) {
       long lastSegmentStart = lastSegment.getStart();
       segments.removeIf(s -> s.getStart() == lastSegment.getStart() && s.getEnd() == lastSegment.getEnd());
-      segments.add(new SegmentData(lastSegmentStart, duration - defaultPadding));
-      segments.add(new SegmentData(duration - defaultPadding, duration, true));
+      segments.add(new SegmentData(lastSegmentStart, duration - defaultPaddingLength));
+      segments.add(new SegmentData(duration - defaultPaddingLength, duration, true));
     }
     segments.sort(Comparator.comparingLong(SegmentData::getStart));
   }
 
   private void addDefaultDeletedSegments(MediaPackage mediaPackage, List<SegmentData> segments) {
     long duration = mediaPackage.getDuration();
-    if (duration > min_video_duration) {
-      segments.add(new SegmentData(0L, defaultPadding, true));
-      segments.add(new SegmentData(defaultPadding, duration - defaultPadding));
-      segments.add(new SegmentData(duration - defaultPadding, duration, true));
+    if (duration > minVideoDuration) {
+      segments.add(new SegmentData(0L, defaultPaddingLength, true));
+      segments.add(new SegmentData(defaultPaddingLength, duration - defaultPaddingLength));
+      segments.add(new SegmentData(duration - defaultPaddingLength, duration, true));
     }
   }
 
