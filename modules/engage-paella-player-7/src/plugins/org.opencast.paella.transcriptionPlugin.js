@@ -35,6 +35,7 @@ import QuestionIcon from '../icons/question.svg';
 import InfoIcon from '../icons/info.svg';
 
 import '../css/TranscriptionPlugin.css';
+import { getUrlFromOpencastServer } from '../js/PaellaOpencast';
 
 export default class transcriptionPlugin extends PopUpButtonPlugin {
 
@@ -51,6 +52,14 @@ export default class transcriptionPlugin extends PopUpButtonPlugin {
   }
 
   async isEnabled() {
+    const { series } = this.player.videoManifest.metadata;
+    const seriesInfo = await fetch(getUrlFromOpencastServer(`/api/series/${ series }/metadata`))
+    if (seriesInfo.ok) {
+      this._seriesData = await seriesInfo.json();
+      this._seriesData = this._seriesData[1].fields;
+    }
+    this.transcriptionTypes = this._seriesData.find(field => field.id === 'transcription-type')?.value || [];
+
     const episode = await this.player.getEpisode({episodeId: this.player.videoId});
     const tracks = episode?.mediapackage?.media?.track ?? [];
     const attachments = episode?.mediapackage?.attachments?.attachment ?? [];
@@ -135,21 +144,23 @@ export default class transcriptionPlugin extends PopUpButtonPlugin {
     const tabs = [
       { tab: 'transcript', icon: this.transcriptIcon, title: 'Transcript' },
       { tab: 'summary', icon: this.summaryIcon, title: 'Summary' },
-      { tab: 'key-points', icon: this.keyIcon, title: 'Key points' },
-      { tab: 'practice-questions', icon: this.questionIcon, title: 'Q & A' },
-      { tab: 'multiple-choice', icon: this.checkIcon, title: 'Multiple choice' },
-      { tab: 'audio-summary', icon: this.audioIcon, title: 'Audio summary' },
-      { tab: 'further-reading', icon: this.bookIcon, title: 'Further reading' },
-      { tab: 'study-notes', icon: this.notesIcon, title: 'Notes' },
+      { tab: 'key_points', icon: this.keyIcon, title: 'Key points' },
+      { tab: 'practice_questions', icon: this.questionIcon, title: 'Q & A' },
+      { tab: 'multiple_choice', icon: this.checkIcon, title: 'Multiple choice' },
+      { tab: 'audio_summary', icon: this.audioIcon, title: 'Audio summary' },
+      { tab: 'further_reading', icon: this.bookIcon, title: 'Further reading' },
+      { tab: 'study_notes', icon: this.notesIcon, title: 'Notes' },
       { tab: 'info', icon: this.infoIcon, title: 'Info' }
     ];
 
     // Iterate over tabs arrayand dynamically generate the HTML for each tab button
-    return tabs.map(({ tab, icon, title }) => `
-      <button class="tab-button" data-tab="${tab}" title="${title}">
-        <span class="tab-icon">${icon}</span>
-      </button>
-    `).join('');
+    return tabs
+      .filter(({ tab }) => this.transcriptionTypes.includes(tab))
+      .map(({ tab, icon, title }) => `
+        <button class="tab-button" data-tab="${tab}" title="${title}">
+          <span class="tab-icon">${icon}</span>
+        </button>
+      `).join('');
   }
 
   // Create the HTML structure for the content of each tab
@@ -175,22 +186,22 @@ export default class transcriptionPlugin extends PopUpButtonPlugin {
         </div>
         <div class="summary-text">${this.getFormattedContent('summary')}</div>`
       },
-      { id: 'key-points', class: 'keypoints-content', content: `
+      { id: 'key_points', class: 'keypoints-content', content: `
         <div class="key-points-text">${this.getFormattedContent('key_points')}</div>`
       },
-      { id: 'practice-questions', class: 'practiceQuestions-content', content: `
+      { id: 'practice_questions', class: 'practiceQuestions-content', content: `
         <div class="practice-questions-text">${this.getFormattedContent('practice_questions')}</div>`
       },
-      { id: 'multiple-choice', class: 'multipleChoice-content', content: `
+      { id: 'multiple_choice', class: 'multipleChoice-content', content: `
         <div class="multiple-choice-text">${this.getFormattedContent('multiple_choice')}</div>`
       },
-      { id: 'audio-summary', class: 'audioSummary-content', content: `
+      { id: 'audio_summary', class: 'audioSummary-content', content: `
         <div class="audio-summary-text">${this.getFormattedContent('audio_summary_script')}</div>`
       },
-      { id: 'further-reading', class: 'furtherReading-content', content: `
+      { id: 'further_reading', class: 'furtherReading-content', content: `
         <div class="further-reading-text">${this.getFormattedContent('further_reading')}</div>`
       },
-      { id: 'study-notes', class: 'studyNotes-content', content: `
+      { id: 'study_notes', class: 'studyNotes-content', content: `
         <div class="study-notes-text">${this.getFormattedContent('study_notes')}</div>`
       },
       { id: 'info', class: 'info-content', content: `
@@ -198,11 +209,13 @@ export default class transcriptionPlugin extends PopUpButtonPlugin {
       }
     ];
 
-    return tabContents.map(({ id, class: className, content }) => `
-      <div class="tab-pane ${className}" id="${id}">
-        ${content}
-      </div>
-    `).join('');
+    return tabContents
+      .filter(({ id }) => transcriptionTypes.includes(id))
+      .map(({ id, class: className, content }) => `
+        <div class="tab-pane ${className}" id="${id}">
+          ${content}
+        </div>
+      `).join('');
   }
 
   // Generate HTML content for the "Info" tab
