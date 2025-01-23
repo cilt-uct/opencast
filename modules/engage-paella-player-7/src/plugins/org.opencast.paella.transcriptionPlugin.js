@@ -53,7 +53,7 @@ export default class transcriptionPlugin extends PopUpButtonPlugin {
 
   async isEnabled() {
     const { series } = this.player.videoManifest.metadata;
-    const seriesInfo = await fetch(getUrlFromOpencastServer(`/api/series/${ series }/metadata`))
+    const seriesInfo = await fetch(getUrlFromOpencastServer(`/api/series/${ series }/metadata`));
     if (seriesInfo.ok) {
       this._seriesData = await seriesInfo.json();
       this._seriesData = this._seriesData[1].fields;
@@ -210,7 +210,7 @@ export default class transcriptionPlugin extends PopUpButtonPlugin {
     ];
 
     return tabContents
-      .filter(({ id }) => transcriptionTypes.includes(id))
+      .filter(({ id }) => this.transcriptionTypes.includes(id))
       .map(({ id, class: className, content }) => `
         <div class="tab-pane ${className}" id="${id}">
           ${content}
