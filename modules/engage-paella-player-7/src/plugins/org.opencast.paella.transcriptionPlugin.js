@@ -54,19 +54,20 @@ export default class transcriptionPlugin extends PopUpButtonPlugin {
   async isEnabled() {
     const { series } = this.player.videoManifest.metadata;
     const seriesInfo = await fetch(getUrlFromOpencastServer(`/api/series/${ series }/metadata`));
+    const episode = await this.player.getEpisode({episodeId: this.player.videoId});
+    const tracks = episode?.mediapackage?.media?.track ?? [];
+    const attachments = episode?.mediapackage?.attachments?.attachment ?? [];
+
     if (seriesInfo.ok) {
       this._seriesData = await seriesInfo.json();
       this._seriesData = this._seriesData[1].fields;
     }
-    this.transcriptionTypes = this._seriesData.find(field => field.id === 'transcription-type')?.value || [];
 
-    const episode = await this.player.getEpisode({episodeId: this.player.videoId});
-    const tracks = episode?.mediapackage?.media?.track ?? [];
-    const attachments = episode?.mediapackage?.attachments?.attachment ?? [];
     this._captions = tracks.find(track => track.type === 'captions/source' && track.mimetype === 'text/vtt') ||
       attachments.find(att => ['captions/vtt', 'captions/vtt+en-us'].includes(att.type) && att.mimetype === 'text/vtt');
     this._captionsJsonAttachment = attachments.find(att => att.type === 'captions/json'
       && att.mimetype === 'application/json');
+    this._transcriptionTypes = this._seriesData.find(field => field.id === 'transcription-type')?.value || [];
 
     if (this._captionsJsonAttachment) {
       const transcriptResponse = await fetch(this._captionsJsonAttachment.url);
@@ -104,7 +105,7 @@ export default class transcriptionPlugin extends PopUpButtonPlugin {
     if (!this._captionsJsonAttachment) {
       content = createElementWithHtmlText(`
         <div class="transcription-plugin-container">
-          <p>I don't have ai-generated stuff!</p>
+          <p>This video does not have ai-generated resources!</p>
         </div>
       `);
     } else {
@@ -127,13 +128,10 @@ export default class transcriptionPlugin extends PopUpButtonPlugin {
         </div>
       `);
 
-      this.initializeCommonElements(content);
-      this.addAIModelDisclaimer();
-      this.handleTabSwitching(content);
-      this.handleLanguageDropdownChange();
-      this.setupCaptions();
+      this.videoBaseContainer = document.querySelector('.base-video-rect');
+      this.captionsCanvas = document.querySelector('.captions-canvas');
+      this._cueElements = [];
       this.bindVideoEvents();
-      this.handlePopupControls(content);
     }
 
     return content;
@@ -153,11 +151,18 @@ export default class transcriptionPlugin extends PopUpButtonPlugin {
       { tab: 'info', icon: this.infoIcon, title: 'Info' }
     ];
 
-    // Iterate over tabs arrayand dynamically generate the HTML for each tab button
-    return tabs
-      .filter(({ tab }) => this.transcriptionTypes.includes(tab))
+    // Filter tabs based on transcription types
+    let filteredTabs = tabs.filter(({ tab }) => this._transcriptionTypes.includes(tab));
+    if (filteredTabs.length > 1 && !filteredTabs.some(({ tab }) => tab === 'info')) {
+      filteredTabs.push(
+        tabs.find(({ tab }) => tab === 'info')
+      );
+    }
+
+    return filteredTabs
       .map(({ tab, icon, title }) => `
-        <button class="tab-button" data-tab="${tab}" title="${title}">
+        <button class="tab-button ${tab === 'transcript' ? 'active' : ''}" 
+        data-tab="${tab}" title="${title}">
           <span class="tab-icon">${icon}</span>
         </button>
       `).join('');
@@ -165,14 +170,23 @@ export default class transcriptionPlugin extends PopUpButtonPlugin {
 
   // Create the HTML structure for the content of each tab
   createTabContent() {
+    const aiModelText = `
+      <div class="ai-model-text">
+        <span class='ai-model'>AI-generated transcript and summaries. Click 
+          <span class='tab-icon'>${this.infoIcon}</span> for more info.
+        </span>
+        <hr/>
+      </div>`;
+
     const tabContents = [
       { id: 'transcript', class: 'active search-content', content: `
         <div class="input-container">
-          <span class="search-icon">&#x1F50D;</span>
+          <button class="search-button" title="Search">&#x1F50D;</button>
           <input type="text" placeholder="${this.player.translate('Find in transcript')}"
             class="search-input form-control"/>
+          <button class="clear-button" title="Clear search">&#x2715;</button>
         </div>
-        <div class="transcript-text"></div>`
+        <div class="transcript-text tab-contents"></div>`
       },
       { id: 'summary', class: 'summary-content', content: `
         <div class="summary-header">
@@ -184,42 +198,66 @@ export default class transcriptionPlugin extends PopUpButtonPlugin {
             </select>
           </div>
         </div>
-        <div class="summary-text">${this.getFormattedContent('summary')}</div>`
+        <div class="summary-text tab-contents">${this.getFormattedContent('summary')}</div>`
       },
       { id: 'key_points', class: 'keypoints-content', content: `
-        <div class="key-points-text">${this.getFormattedContent('key_points')}</div>`
+        <div class="key-points-text tab-contents">${this.getFormattedContent('key_points')}</div>`
       },
       { id: 'practice_questions', class: 'practiceQuestions-content', content: `
-        <div class="practice-questions-text">${this.getFormattedContent('practice_questions')}</div>`
+        <div class="practice-questions-text tab-contents">${this.getFormattedContent('practice_questions')}</div>`
       },
       { id: 'multiple_choice', class: 'multipleChoice-content', content: `
-        <div class="multiple-choice-text">${this.getFormattedContent('multiple_choice')}</div>`
+        <div class="multiple-choice-text tab-contents">${this.getFormattedContent('multiple_choice')}</div>`
       },
       { id: 'audio_summary', class: 'audioSummary-content', content: `
-        <div class="audio-summary-text">${this.getFormattedContent('audio_summary_script')}</div>`
+        <div class="audio-summary-text tab-contents">${this.getFormattedContent('audio_summary_script')}</div>`
       },
       { id: 'further_reading', class: 'furtherReading-content', content: `
-        <div class="further-reading-text">${this.getFormattedContent('further_reading')}</div>`
+        <div class="further-reading-text tab-contents">${this.getFormattedContent('further_reading')}</div>`
       },
       { id: 'study_notes', class: 'studyNotes-content', content: `
-        <div class="study-notes-text">${this.getFormattedContent('study_notes')}</div>`
+        <div class="study-notes-text tab-contents">${this.getFormattedContent('study_notes')}</div>`
       },
       { id: 'info', class: 'info-content', content: `
-        <div class="info-text">${this.getInfoContent()}</div>`
+        <div class="info-text tab-contents">${this.getInfoContent()}</div>`
       }
     ];
 
-    return tabContents
-      .filter(({ id }) => this.transcriptionTypes.includes(id))
-      .map(({ id, class: className, content }) => `
+    // Filter tabs based on transcription types
+    let filteredTabs = tabContents.filter(({ id }) => this._transcriptionTypes.includes(id));
+
+    // If more than one tab is displayed, ensure 'info' tab is included
+    if (filteredTabs.length > 1 && !filteredTabs.some(tab => tab.id === 'info')) {
+      filteredTabs.push(
+        tabContents.find(({ id }) => id === 'info')
+      );
+    }
+
+    return `${aiModelText}
+      ${filteredTabs.map(({ id, class: className, content }) => `
         <div class="tab-pane ${className}" id="${id}">
           ${content}
         </div>
-      `).join('');
+      `).join('')}
+    `;
   }
 
   // Generate HTML content for the "Info" tab
   getInfoContent() {
+    const iconDescriptions = [
+      { tab: 'transcript', icon: this.transcriptIcon, description: 'Transcript' },
+      { tab: 'summary', icon: this.summaryIcon, description: 'Video summary' },
+      { tab: 'key_points', icon: this.keyIcon, description: 'Key Points' },
+      { tab: 'practice_questions', icon: this.questionIcon, description: 'Practice questions' },
+      { tab: 'multiple_choice', icon: this.checkIcon, description: 'Multiple Choice Questions' },
+      { tab: 'audio_summary', icon: this.audioIcon, description: 'Audio Summary' },
+      { tab: 'further_reading', icon: this.bookIcon, description: 'Additional reading resources' },
+      { tab: 'study_notes', icon: this.notesIcon, description: 'Study Notes' }
+    ];
+
+    // Filter icons based on the displayed tabs
+    const filteredIcons = iconDescriptions.filter(({ tab }) => this._transcriptionTypes.includes(tab));
+
     return `
       <h3>About the Transcription</h3>
       <p>This transcription is generated by WayWithWords using the AI model
@@ -229,14 +267,9 @@ export default class transcriptionPlugin extends PopUpButtonPlugin {
       <hr/>
       <h3>Tab Button Icons</h3>
       <ul class="icon-description-list">
-        <li><span class="tab-icon">${this.transcriptIcon}</span> Full transcript</li>
-        <li><span class="tab-icon">${this.summaryIcon}</span> Main points summary</li>
-        <li><span class="tab-icon">${this.keyIcon}</span> Key Points</li>
-        <li><span class="tab-icon">${this.questionIcon}</span> Practice questions</li>
-        <li><span class="tab-icon">${this.checkIcon}</span> Multiple Choice Questions</li>
-        <li><span class="tab-icon">${this.audioIcon}</span> Audio Summary</li>
-        <li><span class="tab-icon">${this.bookIcon}</span> Additional resources</li>
-        <li><span class="tab-icon">${this.notesIcon}</span> Study Notes</li>
+        ${filteredIcons.map(({ icon, description }) => `
+          <li><span class="tab-icon">${icon}</span> ${description}</li>
+        `).join('')}
       </ul>
     `;
   }
@@ -246,111 +279,8 @@ export default class transcriptionPlugin extends PopUpButtonPlugin {
     return this._transcriptionData?.[section]?.content?.[0]?.text?.replace(/\n/g, '<br>') || '';
   }
 
-  // Initialize commonly used elements
-  initializeCommonElements(content) {
-    this._tabButtonsContainer = content.querySelector('.tab-buttons');
-    this._tabs = content.querySelectorAll('.tab-button');
-    this._tabContents = content.querySelectorAll('.tab-pane');
-    this._input = content.querySelector('.search-input');
-    this._transcriptContainer = content.querySelector('.transcript-text');
-    this._languageDropdown = content.querySelector('.summary-language-dropdown');
-    this._summaryText = content.querySelector('.summary-text');
-  }
-
-  // Add AI model disclaimer to each tab
-  addAIModelDisclaimer() {
-    if (this._transcriptionModel) {
-      const aiModelText = `This transcript is AI-generated by ${this._transcriptionModel} and
-      may be inaccurate or incomplete. If in doubt, watch the full video, or consult your lecturer
-      or course material.`;
-
-      this._tabContents.forEach(tabPane => {
-        tabPane.insertAdjacentHTML('afterbegin', `<span class="ai-model">${aiModelText}</span><hr/>`);
-      });
-    }
-  }
-
-  // Handle tab switching
-  handleTabSwitching(content) {
-    this._tabs.forEach(tab => {
-      tab.addEventListener('click', () => {
-        this._tabs.forEach(t => t.classList.remove('active'));
-        this._tabContents.forEach(tc => tc.classList.remove('active'));
-
-        tab.classList.add('active');
-        const targetPane = content.querySelector(`#${tab.getAttribute('data-tab')}`);
-        if (targetPane) {
-          targetPane.classList.add('active');
-        }
-      });
-    });
-  }
-
-  // Handle language dropdown changes
-  handleLanguageDropdownChange() {
-    this._languageDropdown.addEventListener('change', () => {
-      const language = this._languageDropdown.value;
-      const transcriptionContent = this._transcriptionData[`translation_${language}`]?.content[0]?.text
-        || this._transcriptionData.summary?.content[0]?.text || '';
-      this._summaryText.innerHTML = transcriptionContent.replace(/\n/g, '<br>');
-    });
-  }
-
-  // Display captions and setup search input event listeners
-  setupCaptions() {
-    this.showTranscript();
-
-    this._input.addEventListener('keyup', (evt) => {
-      this.handleSearchInput(evt);
-    });
-  }
-
-  // Handle search input in the transcript tab
-  handleSearchInput(evt) {
-    if (evt.key === 'Enter' || evt.keyCode === 13) {
-      evt.preventDefault();
-      if (this.searchTimer) clearTimeout(this.searchTimer);
-
-      this.searchTimer = setTimeout(() => {
-        const searchText = this._input.value.trim().toLowerCase();
-        this.highlightSearchResults(searchText);
-        this.searchTimer = null;
-      }, 500);
-    }
-    evt.stopPropagation();
-  }
-
-  // Highlight search results in the transcript tab
-  highlightSearchResults(searchText) {
-    this._cueElements.forEach(elem => {
-      let cueText = elem._cue.captions.join('');
-      if (searchText) {
-        const regex = new RegExp(`(${searchText})`, 'gi');
-        cueText = cueText.replace(regex, '<span class="highlight">$1</span>');
-      }
-      elem.innerHTML = cueText;
-
-      elem.querySelectorAll('.highlight').forEach(span => {
-        span.addEventListener('click', async evt => {
-          this.handleHighlightClick(evt, elem);
-        });
-      });
-    });
-  }
-
-  // Handle clicks on highlighted search results
-  async handleHighlightClick(evt, elem) {
-    this._cueElements.forEach(elem => elem.classList.remove('current'));
-    const parentElem = evt.target.closest('.result-item');
-    if (parentElem) parentElem.classList.add('current');
-
-    await this.player.videoContainer.setCurrentTime(elem._cue.start);
-    evt.stopPropagation();
-  }
-
   // Show captions in transcript format
   showTranscript() {
-    // Determine if a given language is the current language
     const browserLanguage = navigator.language.substring(0, 2);
     const isCurrentLanguage = (lang) => {
       const currentLanguage = this.player.captionsCanvas.currentCaptions?.language || browserLanguage;
@@ -361,7 +291,6 @@ export default class transcriptionPlugin extends PopUpButtonPlugin {
       this.captions[0];
     if (!currentCaptions) return;
 
-    this._cueElements = [];
     let sentenceCounter = 0;
     let paragraphElem = document.createElement('p');
 
@@ -370,7 +299,6 @@ export default class transcriptionPlugin extends PopUpButtonPlugin {
       const cueElem = createElementWithHtmlText(`<span class="result-item">${captionText}</span>`);
       cueElem._cue = cue;
 
-      this.setupCueClickEvent(cueElem);
       paragraphElem.appendChild(cueElem);
       sentenceCounter++;
 
@@ -384,52 +312,28 @@ export default class transcriptionPlugin extends PopUpButtonPlugin {
     });
   }
 
-  // Setup and handle click events for individual cues
-  setupCueClickEvent(cueElem) {
-    cueElem.addEventListener('click', async evt => {
-      this._cueElements.forEach(elem => elem.classList.remove('current'));
-      evt.target.classList.add('current');
-      evt.target.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  highlightCurrentCaptions(currentTime, cueElements, transcriptContainer) {
+    // Skip auto-scrolling if a search is in progress
+    if (this.isSearching) return;
 
-      const time = evt.target._cue.start;
-      await this.player.videoContainer.setCurrentTime(time);
-
-      evt.stopPropagation();
-    });
-  }
-
-  // Bind necessary video events (play, end, time update)
-  bindVideoEvents() {
-    this.player.bindEvent(Events.TIMEUPDATE, evt => {
-      this.updateCurrentCaptionHighlighting(evt.currentTime, this._cueElements, this._transcriptContainer);
-    }, true);
-
-    this.player.bindEvent(Events.ENDED, () => {
-      this._transcriptContainer.innerHTML = '';
-      this.showTranscript();
-    });
-
-    this.player.bindEvent(Events.PLAY, () => {
-      this._transcriptContainer.innerHTML = '';
-      this._input.value = '';
-      this.showTranscript();
-      this.updateCurrentCaptionHighlighting(this.player.videoContainer.currentTime,
-        this._cueElements, this._transcriptContainer);
-    });
-  }
-
-  updateCurrentCaptionHighlighting(currentTime, cueElements, transcriptContainer) {
     cueElements.forEach((elem, index) => {
       const isCurrent = elem._cue.start <= currentTime && (elem._cue.end >= currentTime ||
         index === cueElements.length - 1);
 
       if (isCurrent) {
         elem.classList.add('current');
-        elem.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 
-        const elemPosTop = elem.offsetTop - transcriptContainer.scrollTop;
-        if (elemPosTop < 0 || elemPosTop > transcriptContainer.clientHeight) {
-          transcriptContainer.scrollTo({ top: elem.offsetTop - 20 });
+        // Automatic scrolling only if user is not actively scrolling
+        if (!this.userScrolling) {
+          requestAnimationFrame(() => {
+            elem.scrollIntoView({ behavior: 'instant', block: 'nearest' });
+
+            // Adjust scroll to keep the element fully in view
+            const elemPosTop = elem.offsetTop - transcriptContainer.scrollTop;
+            if (elemPosTop < 0 || elemPosTop > transcriptContainer.clientHeight) {
+              transcriptContainer.scrollTo({ top: elem.offsetTop - 80, behavior: 'instant'});
+            }
+          });
         }
       } else {
         elem.classList.remove('current');
@@ -437,78 +341,105 @@ export default class transcriptionPlugin extends PopUpButtonPlugin {
     });
   }
 
-  // Handle popup controls and layout transitions
-  handlePopupControls(content) {
-    const pluginCloseButton = document.querySelector(`.popup-content.fixed .title-bar
-      .popup-action-buttons .popup-action-button.close-button`);
-    const pluginOpenButton = document.querySelector('.button-plugin.fixed-width');
-    const transcriptPopupContent = document.querySelector('.popup-container .popup-content.fixed');
-    const videoBaseContainer = document.querySelector('.base-video-rect.dynamic');
-    const captionsCanvas = document.querySelector('.captions-canvas');
+  // Handle search input in the transcript tab
+  searchTranscript(evt) {
+    if (evt.type === 'click' || evt.key === 'Enter' || evt.keyCode === 13) {
+      evt.preventDefault();
 
-    if (transcriptPopupContent) {
-      transcriptPopupContent.id = 'transcriptPopupContent';
-      transcriptPopupContent.classList.add('vertical-transcript');
-      if (pluginCloseButton && pluginCloseButton.style.display === 'none') {
-        pluginCloseButton.style.display = 'block';
+      if (this.searchTimer) clearTimeout(this.searchTimer);
+
+      const searchText = this._input.value.trim().toLowerCase();
+
+      // Highlight results, and reset the index if a new search text is provided
+      if (this.lastSearchText !== searchText) {
+        this.lastSearchText = searchText;
+        this.highlightSearchResults(searchText);
+        this.highlightIndex = -1;
       }
-    }
 
-    if (videoBaseContainer) {
-      const isLandscape = videoBaseContainer.classList.contains('landscape');
-      const isPortrait = videoBaseContainer.classList.contains('portrait');
-
-      // Handle layout based on current mode (landscape/portrait)
-      if (isLandscape) {
-        this.handleLandscapeMode(videoBaseContainer, captionsCanvas);
-      } else if (isPortrait) {
-        this.handlePortraitMode(videoBaseContainer, transcriptPopupContent, captionsCanvas);
+      // Navigate to the next match
+      if (this._highlightedElements.length > 0) {
+        this.scrollToNextHighlight();
       }
-    }
 
-    pluginCloseButton.addEventListener('click', (evt) => {
       evt.stopPropagation();
-      this.handleClosePopup(videoBaseContainer, captionsCanvas);
-    });
-
-    if (pluginOpenButton) {
-      pluginOpenButton.addEventListener('click', () => {
-        if (videoBaseContainer) {
-          if (videoBaseContainer.classList.contains('landscape')) {
-            this.handleLandscapeMode(videoBaseContainer, captionsCanvas);
-          } else if (videoBaseContainer.classList.contains('portrait')) {
-            this.handlePortraitMode(videoBaseContainer, transcriptPopupContent, captionsCanvas);
-          }
-        }
-      });
     }
-
-    this.setupBurgerMenu(content);
   }
 
-  // Handle transition to landscape mode
-  handleLandscapeMode(container, captions) {
-    const landscapeContainer = container.querySelector('.landscape-container');
+  // Highlight search results in the transcript tab
+  highlightSearchResults(searchText) {
+    this._highlightedElements = [];
 
-    container.classList.replace('landscape', 'portrait');
-    container.classList.add('transcription');
-
-    // Move children to videoBaseContainer
-    if (landscapeContainer) {
-      while (landscapeContainer.firstChild) {
-        container.appendChild(landscapeContainer.firstChild);
+    this._cueElements.forEach(elem => {
+      let cueText = elem._cue.captions.join('');
+      if (searchText) {
+        const regex = new RegExp(`(${searchText})`, 'gi');
+        cueText = cueText.replace(regex, '<span class="highlight">$1</span>');
       }
-      landscapeContainer.remove();
-    }
+      elem.innerHTML = cueText;
 
-    if (captions && captions.style.display === 'block') {
-      captions.classList.add('transcription-enabled');
+      // Collect all highlighted elements for navigation
+      const matches = elem.querySelectorAll('.highlight');
+      matches.forEach(match => this._highlightedElements.push(match));
+
+      // Add click event for individual highlights
+      matches.forEach(span => {
+        span.addEventListener('click', evt => {
+          this.jumpToHighlightedCue(evt, elem);
+        });
+      });
+    });
+
+    // Reset navigation index and scroll to the first match if available
+    if (this._highlightedElements.length > 0) {
+      this.highlightIndex = 0;
     }
+  }
+
+  // Clear highlighted search results
+  clearSearchHighlights() {
+    this._highlightedElements.forEach(elem => {
+      elem.classList.remove('highlight');
+      elem.classList.remove('current-highlight');
+    });
+    this._highlightedElements = [];
+  }
+
+  // Handle clicks on highlighted search results
+  async jumpToHighlightedCue(evt, elem) {
+    this._cueElements.forEach(elem => elem.classList.remove('current'));
+    const parentElem = evt.target.closest('.result-item');
+    if (parentElem) parentElem.classList.add('current');
+
+    await this.player.videoContainer.setCurrentTime(elem._cue.start);
+    evt.stopPropagation();
+  }
+
+  // Scroll to the next highlighted search result
+  scrollToNextHighlight() {
+    if (!this._highlightedElements || this._highlightedElements.length === 0) return;
+    this._highlightedElements.forEach(elem => elem.classList.remove('current-highlight'));
+    this.highlightIndex = (this.highlightIndex + 1) % this._highlightedElements.length;
+
+    const nextHighlight = this._highlightedElements[this.highlightIndex];
+    nextHighlight.classList.add('current-highlight');
+
+    nextHighlight.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+
+  handleUserScroll() {
+    this.userScrolling = true;
+    clearTimeout(this.autoScrollTimeout);
+
+    // Reset userScrolling flag after a brief delay to detect when scrolling stops.
+    this.autoScrollTimeout = setTimeout(() => {
+      this.userScrolling = false;
+    }, 5000);
   }
 
   // Handle transition to portrait mode
   handlePortraitMode(container, popupContent, captions) {
-    container.classList.replace('transcription', 'transcription-sm');
+    container.classList.add('transcription-sm');
 
     if (popupContent && popupContent.classList.contains('vertical-transcript')) {
       popupContent.classList.replace('vertical-transcript', 'vertical-transcript-sm');
@@ -519,8 +450,8 @@ export default class transcriptionPlugin extends PopUpButtonPlugin {
     }
   }
 
-  // Handle closing of the popup and resetting the layout
-  handleClosePopup(container, captions) {
+  // Handle the closing of the plugin and resetting the layout
+  closePlugin(container, captions) {
     const isPortrait = container.classList.contains('portrait');
     const isTranscription = container.classList.contains('transcription');
 
@@ -535,7 +466,7 @@ export default class transcriptionPlugin extends PopUpButtonPlugin {
       container.classList.remove('transcription-sm');
     }
 
-    // Ensure captions reset properly
+    // Ensure captions layout is reset properly
     if (captions && captions.style.display === 'block' && captions.classList.contains('transcription-enabled')) {
       captions.classList.remove('transcription-enabled');
     }
@@ -555,19 +486,152 @@ export default class transcriptionPlugin extends PopUpButtonPlugin {
     container.appendChild(newLandscapeContainer);
   }
 
-  // Setup and Handle burger menu interactions
-  setupBurgerMenu(content) {
-    this.menuButton = content.querySelector('.menu-button');
-    const burgerMenu = content.querySelector('.burger-menu');
+  // Bind video events
+  bindVideoEvents() {
+    this.player.bindEvent(Events.TIMEUPDATE, evt => {
+      this.highlightCurrentCaptions(evt.currentTime, this._cueElements, this._transcriptContainer);
+    }, true);
 
-    this.menuButton.addEventListener('click', async () => {
-      burgerMenu.classList.toggle('active');
+    this.player.bindEvent(Events.ENDED, () => {
+      this._transcriptContainer.innerHTML = '';
+      this.showTranscript();
     });
 
-    this._tabs.forEach(button => {
-      button.addEventListener('click', () => {
-        burgerMenu.classList.remove('active');
-      });
+    this.player.bindEvent(Events.PLAY, () => {
+      this._transcriptContainer.innerHTML = '';
+      this._input.value = '';
+
+      this.showTranscript();
+      this.highlightCurrentCaptions(this.player.videoContainer.currentTime,
+        this._cueElements, this._transcriptContainer);
+    });
+
+    this.player.bindEvent(Events.HIDE_POPUP, (evt) => {
+      const sourcePlugin = evt.plugin || evt.detail?.plugin;
+      if(sourcePlugin && sourcePlugin.name === 'org.opencast.paella.transcriptionPlugin') {
+        sourcePlugin.videoBaseContainer.classList.remove('portrait');
+        sourcePlugin.videoBaseContainer.classList.add('landscape');
+        this.closePlugin(sourcePlugin.videoBaseContainer, this.captionsCanvas);
+      }
+    });
+
+    this.player.bindEvent(Events.SHOW_POPUP, (evt) => {
+      const sourcePlugin = evt.plugin || evt.detail?.plugin;
+
+      if(sourcePlugin && sourcePlugin.name === 'org.opencast.paella.transcriptionPlugin') {
+
+        this.userScrolling = false;
+        this.autoScrollTimeout = null;
+        this.isSearching = false;
+        sourcePlugin._tabs = document.querySelectorAll('.tab-button');
+        sourcePlugin._tabContents = document.querySelectorAll('.tab-pane');
+        sourcePlugin._input = document.querySelector('.search-input');
+        sourcePlugin._searchButton = document.querySelector('.search-button');
+        sourcePlugin._clearButton = document.querySelector('.clear-button');
+        this._transcriptContainer = document.querySelector('.transcript-text');
+        sourcePlugin._languageDropdown = document.querySelector('.summary-language-dropdown');
+        sourcePlugin._summaryText = document.querySelector('.summary-text');
+        sourcePlugin.menuButton = document.querySelector('.menu-button');
+        sourcePlugin.burgerMenu = document.querySelector('.burger-menu');
+        const aiModelText = document.querySelector('.ai-model-text');
+
+        sourcePlugin.transcriptPopupContainer = Array.from(document.querySelectorAll('.popup-container'))
+          .find(popup => popup.style.display === 'block');
+
+        sourcePlugin.transcriptPopupContent = sourcePlugin.transcriptPopupContainer
+          .querySelector('.popup-content.fixed');
+        sourcePlugin.pluginCloseButton = sourcePlugin.transcriptPopupContent
+          .querySelector('.title-bar .popup-action-buttons .popup-action-button.close-button');
+
+        // Change to portrait mode
+        sourcePlugin.videoBaseContainer.classList.remove('landscape');
+        sourcePlugin.videoBaseContainer.classList.add('dynamic');
+        sourcePlugin.videoBaseContainer.classList.add('portrait');
+
+        sourcePlugin.transcriptPopupContainer.id = 'transcriptPopupContainer';
+        sourcePlugin.transcriptPopupContainer.classList.add('transcript');
+        sourcePlugin.transcriptPopupContent.classList.add('vertical-transcript');
+
+        if (sourcePlugin.pluginCloseButton && sourcePlugin.pluginCloseButton.style.display === 'none') {
+          sourcePlugin.pluginCloseButton.style.display = 'block';
+        }
+
+        this.showTranscript();
+
+        this.handlePortraitMode(sourcePlugin.videoBaseContainer, sourcePlugin.transcriptPopupContent,
+          this.captionsCanvas);
+
+        this._tabs.forEach(button => {
+          button.addEventListener('click', () => {
+            const activeTab = button.getAttribute('data-tab');
+            aiModelText.style.display = activeTab === 'info' ? 'none' : 'block';
+          });
+        });
+
+        this._tabs.forEach(tab => {
+          tab.addEventListener('click', () => {
+            this._tabs.forEach(t => t.classList.remove('active'));
+            this._tabContents.forEach(tc => tc.classList.remove('active'));
+
+            tab.classList.add('active');
+            const targetPane = document.querySelector(`#${tab.getAttribute('data-tab')}`);
+            if (targetPane) {
+              targetPane.classList.add('active');
+            }
+          });
+        });
+
+        sourcePlugin.menuButton.addEventListener('click', async () => {
+          sourcePlugin.burgerMenu.classList.toggle('active');
+        });
+
+        sourcePlugin._tabs.forEach(button => {
+          button.addEventListener('click', () => {
+            sourcePlugin.burgerMenu.classList.remove('active');
+          });
+        });
+
+        // Attach cue click event handler inside SHOW_POPUP
+        sourcePlugin._cueElements.forEach(cueElem => {
+          cueElem.addEventListener('click', async evt => {
+            this._cueElements.forEach(elem => elem.classList.remove('current'));
+            evt.target.classList.add('current');
+            evt.target.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+            const time = evt.target._cue.start;
+            await this.player.videoContainer.setCurrentTime(time);
+
+            evt.stopPropagation();
+          });
+        });
+
+        sourcePlugin._input.addEventListener('keyup', (evt) => {
+          this.searchTranscript(evt);
+        });
+
+        sourcePlugin._searchButton.addEventListener('click', (evt) => {
+          this.searchTranscript(evt);
+        });
+
+        sourcePlugin._clearButton.addEventListener('click', () => {
+          sourcePlugin._input.value = '';
+          this.clearSearchHighlights();
+        });
+
+        sourcePlugin._languageDropdown.addEventListener('change', () => {
+          const language = sourcePlugin._languageDropdown.value;
+          const transcriptionContent = this._transcriptionData[`translation_${language}`]?.content[0]?.text
+            || this._transcriptionData.summary?.content[0]?.text || '';
+          this._summaryText.innerHTML = transcriptionContent.replace(/\n/g, '<br>');
+        });
+
+        sourcePlugin.pluginCloseButton.addEventListener('click', (evt) => {
+          evt.stopPropagation();
+          this.closePlugin(sourcePlugin.videoBaseContainer, this.captionsCanvas);
+        });
+
+        sourcePlugin._transcriptContainer.addEventListener('scroll', this.handleUserScroll.bind(this));
+      }
     });
   }
 }

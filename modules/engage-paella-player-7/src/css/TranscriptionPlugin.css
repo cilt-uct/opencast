@@ -1,10 +1,15 @@
 html {
   font-family: Lato, Lucida Sans Unicode, Lucida Grande, sans-serif !important;
-  font-size: 20px !important;
+  font-size: 14px !important;
+}
+
+.popup-container.transcript .center-container {
+  overflow: hidden;
 }
 
 .popup-content.fixed.vertical-transcript, .popup-content.fixed.vertical-transcript-sm{
   display: flex !important;
+  overflow:unset !important;
 }
 
 .captions-canvas.visible-ui.transcription-enabled {
@@ -17,29 +22,37 @@ html {
 }
 
 .popup-content.fixed.vertical-transcript{
-    width: 40% !important;
-    height: calc(100vh - var(--playback-bar-height) - 80px) !important;
-    right: 0px !important;
-    background-color: var(--main-bg-color) !important;
-    top: 0px !important;
+  width: 40% !important;
+  height: calc(100vh - var(--playback-bar-height) - 80px) !important;
+  right: 0px !important;
+  background-color: var(--main-bg-color) !important;
+  top: 0px !important;
 }
 
 .popup-content.fixed.vertical-transcript-sm{
-    width: 40% !important;
-    height: calc(100vh - var(--playback-bar-height) - 80px) !important;
-    right: 0px !important;
-    background-color: var(--main-bg-color) !important;
-    top: 0px !important;
+  width: 40% !important;
+  height: calc(100vh - var(--playback-bar-height) - 80px) !important;
+  right: 0px !important;
+  background-color: var(--main-bg-color) !important;
+  top: 0px !important;
 }
 
 .base-video-rect.dynamic.portrait.transcription {
     right: 15% !important;
+    gap: 0 !important;
 }
 
 .base-video-rect.dynamic.portrait.transcription-sm {
-    right: 20%;
-    margin-left: 0px;
-    width: calc(100vw - 50%);
+  right: 15%;
+  margin-left: 0px;
+  width: calc(100vw - 45%) !important;
+  gap: 0 !important;
+}
+
+.trancription-plugin-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
 }
 
 .popup-content.fixed.vertical-transcript .center-container .ai-declaration {
@@ -49,86 +62,144 @@ html {
 }
 
 .content-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.tab-pane {
+  overflow: hidden;
+  display: flex;
+
 }
 
 .tab-pane .transcript-text p span.result-item {
-    cursor: pointer;
-    color: white;
-    margin: 0 2px;
-    display: inline;
+  cursor: pointer;
+  color: white;
+  margin: 0 2px;
+  display: inline;
 }
 
 .tab-pane .input-container {
-    position: relative;
-    display: inline-block;
-    float: right;
-    margin-bottom: 20px;
+  position: relative;
+  display: inline-block;
+  display: flex;
+  flex-shrink: 0;
+}
+
+.tab-pane .input-container .search-input {
+  flex: 1;
+  padding-right: 30px;
+}
+
+.clear-button {
+  position: absolute;
+  right: 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #999;
+  transform: translateY(-50%);
+  top: 50%;
+}
+
+.clear-button:hover {
+  color: #333; 
 }
 
 .tab-pane input {
-    padding-left: 30px;
-    width: 100%;
-    height: var(--find-captions-plugin-search-bar-height);
-    border-radius: 5px;
-    border: 1px solid #ccc;
-    float: right;
-    box-sizing: border-box;
+  padding-left: 10px;
+  width: 100%;
+  height: var(--find-captions-plugin-search-bar-height);
+  border-radius: 5px;
+  border: 1px solid #ccc;
+  float: right;
+  box-sizing: border-box;
 }
 
-.tab-pane .search-icon {
-    position: absolute;
-    left: 10px;
-    top: 50%;
-    transform: translateY(-50%);
-    pointer-events: none;
+.tab-pane .search-button {
+  position: absolute;
+  right: 5%;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.tab-pane .search-button:hover {
+  color: #333; 
 }
 
 .tab-pane .search-content {
-    overflow: hidden;
     margin-bottom: 10px;
 }
 
 .tab-pane .transcript-text {
-    clear: both;
-    padding-top: 3px;
-    overflow: scroll;
-    scroll-behavior: smooth;
+  clear: both;
+}
+
+.tab-pane .transcript-text::before {
+  height: 20px;
+  content: "";
 }
 
 .tab-pane .transcript-text p span.result-item.current {
-    background-color: var(--highlight-bg-color-hover);
-    margin: 0 2px;
+  background-color: var(--highlight-bg-color-hover);
+  margin: 0 2px;
 }
 
 .tab-pane .transcript-text .highlight {
   background-color: coral;
 }
 
+.tab-pane .transcript-text .current-highlight {
+  background-color: yellow;
+}
+
 .tab-content {
-  padding: 5px 0px;  
+  display: flex;
+  flex-direction: column;
+  padding: 5px 0px; 
+  position: relative;
+  overflow: hidden;
   height: calc(100vh - var(--playback-bar-height) - 180px);
+}
+
+.tab-contents {
+  flex-grow: 1;
+  overflow-y: auto;
+  margin-top: 3%;
+  max-height: 100%; 
+}
+
+.ai-model-text {
+  position: relative;
 }
 
 .ai-model {
   color: lightgray; 
-  font-size: 9px;
-  float: right;
-  padding-bottom: 5px;
+  font-size: 12px;
   text-align: center;
   display: block;
-  margin-bottom: 10px;
+  flex-shrink: 0;
 }
 
-.disclaimer {
-  font-size: 9px !important;
-  color: lightgray !important;
-  text-align: center;
-  padding: 10px;
-  margin-top: 20px;
-  border-top: 1px solid #ccc;
+.ai-model button {
+  color: white;
+  background: none!important;
+  border: none;
+  padding: 0!important;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.ai-model .tab-icon svg{
+  font-size: 12px;
+  fill: lightgray;
+  vertical-align: middle;
+  width: 12px;
+  height: 12px;
 }
 
 .icon-description-list {
@@ -157,16 +228,16 @@ html {
 }
 
 .tabs {
-    display: flex;
-    padding: 20px 50px;
-    position: relative;
-    align-items: center;
+  display: flex;
+  padding: 20px 50px;
+  position: relative;
+  align-items: center;
 }
 
 .tab-buttons {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
 }
 
 .left-tabs {
@@ -180,23 +251,16 @@ html {
 }
 
 .tab-button {
-    cursor: pointer;
-    padding: 6px 6px 0px 6px;
-    font-size: 12px;
-    color: white;
-    border: none;
-    outline: none;
-    align-items: center;
-    margin: 0 2px;
-    text-align: center;
-    background: none;
-    border: none;
+  cursor: pointer;
+  border: none;
+  align-items: center;
+  text-align: center;
+  background: none;
 }
 
 .tab-button .tab-icon {
   display: inline-block;
-  width: 1em;
-  height: 0.75em;
+  width: var(--button-icon-size);
   cursor: pointer;
   border: none;
   background: none;
@@ -220,25 +284,12 @@ html {
   display: none;
 }
 
+
 .tab-content .tab-pane.active {
-  display: block;
+  display: flex;
   max-height: calc(100vh - var(--playback-bar-height) - 95px) !important;
   padding: 5px 10px;
-  font-weight: 300 !important;
-}
-
-.tab-content .tab-pane.active.transcript-text{
-  overflow: scroll;
-  scroll-behavior: smooth;
-
-  /* Hide scrollbar for WebKit-based browsers */
-  scrollbar-width: none; /* Firefox */
-  -ms-overflow-style: none;  /* IE and Edge */
-}
-
-.transcript-text::-webkit-scrollbar {
-  width: 0;
-  height: 0;
+  flex-direction: column;
 }
 
 .tab-pane .dropdown-container .summary-language-dropdown {
@@ -250,21 +301,20 @@ html {
 }
 
 .tab-pane .summary-text {
-    padding-top: 10px;
-    clear: both;
+  clear: both;
 }
 
 .tab-content .tab-pane div {
-    color: white;
-    font-size: 12px;
+  color: white;
+  padding-top: 1%;
 }
 
 .tab-open .dropdown-open .summary-language-dropdown {
-    display: block;
+  display: block;
 }
 
 .tab-pane .dropdown-open .dropdown-icon {
-    display: none;
+  display: none;
 }
 
 .tabs-container {
@@ -274,6 +324,8 @@ html {
   border-bottom: 1px solid white;
   padding-bottom: 10px;
   padding-top: 25px;
+  position: sticky;
+  z-index: 9999;
 }
 
 .burger-menu {
@@ -298,10 +350,10 @@ html {
 }
 
 .menu-button {
-    background: none;
-    border: none;
-    cursor: pointer;
-    color: white;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: white;
 }
 
 @media (max-width: 359px) {
@@ -319,11 +371,6 @@ html {
     position: absolute;
     float: right !important;
   }
-
-  .tab-pane {
-    text-align: justify !important;
-  }
-
 }
 
 /* Medium screens (360px to 430px) */
@@ -342,16 +389,9 @@ html {
     height: calc(100vh - var(--playback-bar-height) - 155px) !important;
   }
 
-  .transcript-text {
-    max-height: calc(100vh - var(--playback-bar-height) - 155px) !important;
-    overflow: scroll;
-    scroll-behavior: smooth;
-  }
-
   .summary-language-dropdown {
     width: 100% !important;
   }
-
 
   .right-tabs .tab-button {
     display: none;
@@ -367,11 +407,6 @@ html {
     position: absolute;
     float: right !important;
   }
-
-  .tab-pane {
-    text-align: justify !important;
-  }
-
 }
 
 /* Large screens (431px and above) */
@@ -390,10 +425,6 @@ html {
     height: calc(100vh - var(--playback-bar-height) - 175px) !important;
   }
 
-  .transcript-text {
-    max-height: calc(100vh - var(--playback-bar-height) - 175px) !important;
-  }
-
   .summary-language-dropdown {
     width: 100% !important;
   }
@@ -408,11 +439,6 @@ html {
     position: absolute;
     float: right !important;
   }
-
-  .tab-pane {
-    text-align: justify !important;
-  }
-
 }
 
 @media (min-width: 540px) {
@@ -430,10 +456,6 @@ html {
     height: calc(100vh - var(--playback-bar-height) - 158px) !important;
   }
 
-  .transcript-text {
-    max-height: calc(100vh - var(--playback-bar-height) - 208px) !important;
-  }
-
   .summary-language-dropdown {
     width: 80% !important;
   }
@@ -449,10 +471,6 @@ html {
     float: right !important;
   }
 
-  .tab-pane {
-    text-align: justify !important;
-  }
-
 }
 
 @media (min-height: 720px) and (min-width: 540px) { 
@@ -463,10 +481,6 @@ html {
 
   .tab-content {
     height: calc(100vh - var(--playback-bar-height) - 80px) !important;
-  }
-
-  .transcript-text {
-    max-height: calc(100vh - var(--playback-bar-height) - 80px) !important;
   }
 }
 
@@ -485,11 +499,6 @@ html {
   .tab-content {
     height: calc(100vh - var(--playback-bar-height) - 122px) !important;
   }
-
-  .transcript-text {
-    max-height: calc(100vh - var(--playback-bar-height) - 220px) !important;
-  }
-
   .right-tabs .tab-button {
     display: block;
   }
@@ -512,10 +521,6 @@ html {
 
   .tab-content {
     height: calc(100vh - var(--playback-bar-height) - 115px) !important;
-  }
-
-  .transcript-text {
-    max-height: calc(100vh - var(--playback-bar-height) - 115px) !important;
   }
 
   .summary-language-dropdown {
@@ -544,10 +549,6 @@ html {
 
   .tab-content {
     height: calc(100vh - var(--playback-bar-height) - 115px) !important;
-  }
-
-  .transcript-text {
-    max-height: calc(100vh - var(--playback-bar-height) - 115px) !important;
   }
 
   .right-tabs .tab-button {
