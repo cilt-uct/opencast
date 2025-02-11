@@ -69,7 +69,7 @@ $(document).ready(function(){
                 $('#notification_list').val('');
             }
         }
-        if (ext[j].id == "transcription-type") {
+        if (ext[j].id == "transcript-features") {
             if (ext[j].value != '') {
                 $('#ai_features').val(ext[j].value);
             } else {
@@ -111,7 +111,7 @@ $(document).ready(function(){
                     return { ...obj, value: retention };
                 case "notification-list":
                     return { ...obj, value: notificationListArray };
-                case "transcription-type":
+                case "transcript-features":
                     return { ...obj, value: aiFeaturesArray};
                 default:
                     return obj;

@@ -32,7 +32,7 @@
 
         <div class="lti-oc-top-section">
             <div class="lti-oc-title">
-                <h2>Manage Series Settings</h2>
+                <h2>Series Settings</h2>
             </div>
         </div>
     </div>
@@ -53,6 +53,12 @@
                         </div>
                     </div>
                     <div class="form-group">
+                        <label class="control-label col-sm-2" for="notification_list">Notification list:</label>
+                        <div class="col-sm-10">
+                            <input type="text" class="form-control" id="notification_list" name="notification_list">
+                        </div>
+                    </div>
+                    <div class="form-group">
                         <label class="control-label col-sm-2" for="series_captions">Captions:</label>
                         <div class="col-sm-10">
                             <select class="form-control" id="series_captions" name="series_captions">
@@ -60,22 +66,6 @@
                                 <option value="none">None</option>
                                 <option value="google">Google Speech-to-Text</option>
                             </select>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label class="control-label col-sm-2" for="series_retention">Retention cycle:</label>
-                        <div class="col-sm-10">
-                            <select class="form-control" id="series_retention" name="series_retention">
-                                <option value="normal">Default (4 years)</option>
-                                <option value="forever">Keep Forever</option>
-                                <option value="long">Long (8 years)</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label class="control-label col-sm-2" for="notification_list">Notification list:</label>
-                        <div class="col-sm-10">
-                            <input type="text" class="form-control" id="notification_list" name="notification_list">
                         </div>
                     </div>
                     <div class="form-group">
@@ -127,6 +117,16 @@
                             </div>
                         
                             <input type="hidden" class="form-control mt-2" id="ai_features" name="ai_features">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="control-label col-sm-2" for="series_retention">Retention cycle:</label>
+                        <div class="col-sm-10">
+                            <select class="form-control" id="series_retention" name="series_retention">
+                                <option value="normal">Default (4 years)</option>
+                                <option value="forever">Keep Forever</option>
+                                <option value="long">Long (8 years)</option>
+                            </select>
                         </div>
                     </div>
                     <div class="form-group">
