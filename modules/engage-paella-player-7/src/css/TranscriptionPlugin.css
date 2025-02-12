@@ -371,10 +371,14 @@ html {
     position: absolute;
     float: right !important;
   }
+
+  .dropdown-menu .tab-button .tab-icon {
+    width: 1.1rem;
+  }
 }
 
 /* Medium screens (360px to 430px) */
-@media (min-width: 360px) {
+@media (min-width: 360px) and (max-width: 430px) {
    .popup-content.fixed.vertical-transcript-sm {
     height: calc(100vh - var(--playback-bar-height) - 79px) !important;
     width: 40% !important;
@@ -407,10 +411,14 @@ html {
     position: absolute;
     float: right !important;
   }
+
+  .dropdown-menu .tab-button .tab-icon {
+    width: 1.1rem;
+  }
 }
 
 /* Large screens (431px and above) */
-@media (min-width: 431px) {
+@media (min-width: 431px) and (max-width: 539px) {
   .popup-content.fixed.vertical-transcript-sm {
     height: calc(100vh - var(--playback-bar-height) - 78px) !important;
     width: 40% !important;
@@ -439,9 +447,13 @@ html {
     position: absolute;
     float: right !important;
   }
+
+  .dropdown-menu .tab-button .tab-icon {
+    width: 1.1rem;
+  }
 }
 
-@media (min-width: 540px) {
+@media (min-width: 540px) and (max-width: 719px) {
   .popup-content.fixed.vertical-transcript-sm {
     height: calc(100vh - var(--playback-bar-height) - 33px) !important;
     width: 35% !important;
@@ -471,9 +483,13 @@ html {
     float: right !important;
   }
 
+  .dropdown-menu .tab-button .tab-icon {
+    width: 1.1rem;
+  }
+
 }
 
-@media (min-height: 720px) and (min-width: 540px) { 
+@media (min-height: 720px) and (min-width: 540px) and (max-width: 767px){ 
   .popup-content.fixed.vertical-transcript-sm {
     height: calc(100vh - var(--playback-bar-height) - 80px) !important;
     width: 35% !important;
@@ -485,7 +501,7 @@ html {
 }
 
 /* Specific styles for iPads (or tablets) */
-@media (min-width: 768px) {
+@media (min-width: 768px) and (max-width: 1023px) {
   .popup-content.fixed.vertical-transcript-sm {
     height: calc(100vh - var(--playback-bar-height) - 32px) !important;
     width: 35% !important;
@@ -505,6 +521,10 @@ html {
 
   .burger-menu {
     display: none;
+  }
+
+  .tab-button .tab-icon {
+    width: 1.1rem;
   }
 }
 

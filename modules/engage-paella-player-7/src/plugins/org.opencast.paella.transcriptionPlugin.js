@@ -67,7 +67,11 @@ export default class transcriptionPlugin extends PopUpButtonPlugin {
       attachments.find(att => ['captions/vtt', 'captions/vtt+en-us'].includes(att.type) && att.mimetype === 'text/vtt');
     this._captionsJsonAttachment = attachments.find(att => att.type === 'captions/json'
       && att.mimetype === 'application/json');
-    this._transcriptionTypes = this._seriesData.find(field => field.id === 'transcript-features')?.value || [];
+    this._transcriptionTypes = this._seriesData.find(field => field.id === 'transcript-features')?.value;
+
+    if (!Array.isArray(this._transcriptionTypes) || this._transcriptionTypes.length === 0) {
+      this._transcriptionTypes = ['transcript'];
+    }
 
     if (this._captionsJsonAttachment) {
       const transcriptResponse = await fetch(this._captionsJsonAttachment.url);
