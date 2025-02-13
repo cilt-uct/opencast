@@ -16,7 +16,6 @@
   </properties>
   <dependencies>
     <dependency>
-    
       <groupId>org.tsugi</groupId>
       <artifactId>tsugi-util</artifactId>
       <version>0.2.1</version>

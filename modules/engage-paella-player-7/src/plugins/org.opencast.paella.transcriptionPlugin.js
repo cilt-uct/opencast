@@ -183,7 +183,7 @@ export default class transcriptionPlugin extends PopUpButtonPlugin {
       { id: 'summary', class: 'summary-content', content: `
         <div class="summary-header">
           <div class="dropdown-container">
-            <select class="summary-language-dropdown">
+            <select class="summary-language-dropdown" name="language-dropdown">
               <option value="english">English</option>
               <option value="afrikaans">Afrikaans</option>
               <option value="isixhosa">IsiXhosa</option>
