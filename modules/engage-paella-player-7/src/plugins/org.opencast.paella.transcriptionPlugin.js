@@ -52,34 +52,32 @@ export default class transcriptionPlugin extends PopUpButtonPlugin {
   }
 
   async isEnabled() {
-    const { series } = this.player.videoManifest.metadata;
-    const seriesInfo = await fetch(getUrlFromOpencastServer(`/api/series/${ series }/metadata`));
+    const seriesId = this.player.videoManifest.metadata.series;
+    const seriesInfo = await fetch(getUrlFromOpencastServer(`/api/series/${ seriesId }/metadata`));
     const episode = await this.player.getEpisode({episodeId: this.player.videoId});
     const tracks = episode?.mediapackage?.media?.track ?? [];
     const attachments = episode?.mediapackage?.attachments?.attachment ?? [];
 
-    if (seriesInfo.ok) {
-      this._seriesData = await seriesInfo.json();
-      this._seriesData = this._seriesData[1].fields;
-    }
-
+    this.seriesInfo = await seriesInfo.json();
+    this._seriesData = this.seriesInfo[1].fields;
+    this._transcriptFeatures = this._seriesData.find(field => field.id === 'transcript-features')?.value;
     this._captions = tracks.find(track => track.type === 'captions/source' && track.mimetype === 'text/vtt') ||
       attachments.find(att => ['captions/vtt', 'captions/vtt+en-us'].includes(att.type) && att.mimetype === 'text/vtt');
-    this._captionsJsonAttachment = attachments.find(att => att.type === 'captions/json'
+    this._transcriptFeaturesAttachment = attachments.find(att => att.type === 'captions/json'
       && att.mimetype === 'application/json');
-    this._transcriptionTypes = this._seriesData.find(field => field.id === 'transcript-features')?.value;
 
-    if (!Array.isArray(this._transcriptionTypes) || this._transcriptionTypes.length === 0) {
-      this._transcriptionTypes = ['transcript'];
+    // Default transcript features to transcript if array is empty
+    if (!Array.isArray(this._transcriptFeatures) || this._transcriptFeatures.length === 0) {
+      this._transcriptFeatures = ['transcript'];
     }
 
-    if (this._captionsJsonAttachment) {
-      const transcriptResponse = await fetch(this._captionsJsonAttachment.url);
-      const transcriptionJson = await transcriptResponse.json();
-      this._transcriptionData = transcriptionJson[Object.keys(transcriptionJson)[0]];
+    if (this._transcriptFeaturesAttachment) {
+      const transcriptFeaturesResponse = await fetch(this._transcriptFeaturesAttachment.url);
+      const transcriptJson = await transcriptFeaturesResponse.json();
+      this._transcriptionData = transcriptJson[Object.keys(transcriptJson)[0]];
       this._transcriptionModel = this._transcriptionData.summary?.model;
 
-      return !!(this._captions || this._captionsJsonAttachment);
+      return !!(this._captions || (this._transcriptFeaturesAttachment && this._transcriptFeatures.length > 0));
     }
   }
 
@@ -97,7 +95,6 @@ export default class transcriptionPlugin extends PopUpButtonPlugin {
       infoIcon: InfoIcon,
     };
 
-    // Assign the icons
     Object.entries(iconMapping).forEach(([key, value]) => {
       this[key] = value;
     });
@@ -105,38 +102,29 @@ export default class transcriptionPlugin extends PopUpButtonPlugin {
 
   async getContent() {
     let content;
-    // Hide tabs if no AI-generated transcription exists
-    if (!this._captionsJsonAttachment) {
-      content = createElementWithHtmlText(`
-        <div class="transcription-plugin-container">
-          <p>This video does not have ai-generated resources!</p>
-        </div>
-      `);
-    } else {
-      content = createElementWithHtmlText(`
-        <div class="transcription-plugin-container">
-          <div class="tabs-container">
-            <div class="burger-menu" id="burgerMenu">
-              <button class="menu-button" aria-label="Menu">&#8942;</button>
-              <div class="dropdown-menu" id="dropdownMenu">
-                ${this.createTabButtons()}
-              </div>
-            </div>
-            <div class="right-tabs">
+    content = createElementWithHtmlText(`
+      <div class="transcription-plugin-container">
+        <div class="tabs-container">
+          <div class="burger-menu" id="burgerMenu">
+            <button class="menu-button" aria-label="Menu">&#8942;</button>
+            <div class="dropdown-menu" id="dropdownMenu">
               ${this.createTabButtons()}
             </div>
           </div>
-          <div class="tab-content">
-            ${this.createTabContent()}
+          <div class="right-tabs">
+            ${this.createTabButtons()}
           </div>
         </div>
-      `);
+        <div class="tab-content">
+          ${this.createTabContent()}
+        </div>
+      </div>
+    `);
 
-      this.videoBaseContainer = document.querySelector('.base-video-rect');
-      this.captionsCanvas = document.querySelector('.captions-canvas');
-      this._cueElements = [];
-      this.bindVideoEvents();
-    }
+    this.videoBaseContainer = document.querySelector('.base-video-rect');
+    this.captionsCanvas = document.querySelector('.captions-canvas');
+    this._cueElements = [];
+    this.bindVideoEvents();
 
     return content;
   }
@@ -156,7 +144,7 @@ export default class transcriptionPlugin extends PopUpButtonPlugin {
     ];
 
     // Filter tabs based on transcription types
-    let filteredTabs = tabs.filter(({ tab }) => this._transcriptionTypes.includes(tab));
+    let filteredTabs = tabs.filter(({ tab }) => this._transcriptFeatures.includes(tab));
     if (filteredTabs.length > 1 && !filteredTabs.some(({ tab }) => tab === 'info')) {
       filteredTabs.push(
         tabs.find(({ tab }) => tab === 'info')
@@ -228,7 +216,7 @@ export default class transcriptionPlugin extends PopUpButtonPlugin {
     ];
 
     // Filter tabs based on transcription types
-    let filteredTabs = tabContents.filter(({ id }) => this._transcriptionTypes.includes(id));
+    let filteredTabs = tabContents.filter(({ id }) => this._transcriptFeatures.includes(id));
 
     // If more than one tab is displayed, ensure 'info' tab is included
     if (filteredTabs.length > 1 && !filteredTabs.some(tab => tab.id === 'info')) {
@@ -260,7 +248,7 @@ export default class transcriptionPlugin extends PopUpButtonPlugin {
     ];
 
     // Filter icons based on the displayed tabs
-    const filteredIcons = iconDescriptions.filter(({ tab }) => this._transcriptionTypes.includes(tab));
+    const filteredIcons = iconDescriptions.filter(({ tab }) => this._transcriptFeatures.includes(tab));
 
     return `
       <h3>About the Transcription</h3>
@@ -278,9 +266,9 @@ export default class transcriptionPlugin extends PopUpButtonPlugin {
     `;
   }
 
-  // Retrieve and format the content for a specified section of the transcription data.
-  getFormattedContent(section) {
-    return this._transcriptionData?.[section]?.content?.[0]?.text?.replace(/\n/g, '<br>') || '';
+  // Retrieve and format the content for a specified transcript feature.
+  getFormattedContent(transcriptFeature) {
+    return this._transcriptionData?.[transcriptFeature]?.content?.[0]?.text?.replace(/\n/g, '<br>') || '';
   }
 
   // Show captions in transcript format
@@ -317,7 +305,6 @@ export default class transcriptionPlugin extends PopUpButtonPlugin {
   }
 
   highlightCurrentCaptions(currentTime, cueElements, transcriptContainer) {
-    // Skip auto-scrolling if a search is in progress
     if (this.isSearching) return;
 
     cueElements.forEach((elem, index) => {
@@ -327,7 +314,7 @@ export default class transcriptionPlugin extends PopUpButtonPlugin {
       if (isCurrent) {
         elem.classList.add('current');
 
-        // Automatic scrolling only if user is not actively scrolling
+        // Auto scroll only if user is not actively scrolling
         if (!this.userScrolling) {
           requestAnimationFrame(() => {
             elem.scrollIntoView({ behavior: 'instant', block: 'nearest' });
@@ -523,16 +510,15 @@ export default class transcriptionPlugin extends PopUpButtonPlugin {
       const sourcePlugin = evt.plugin || evt.detail?.plugin;
 
       if(sourcePlugin && sourcePlugin.name === 'org.opencast.paella.transcriptionPlugin') {
-
         this.userScrolling = false;
         this.autoScrollTimeout = null;
         this.isSearching = false;
+        this._transcriptContainer = document.querySelector('.transcript-text');
         sourcePlugin._tabs = document.querySelectorAll('.tab-button');
         sourcePlugin._tabContents = document.querySelectorAll('.tab-pane');
         sourcePlugin._input = document.querySelector('.search-input');
         sourcePlugin._searchButton = document.querySelector('.search-button');
         sourcePlugin._clearButton = document.querySelector('.clear-button');
-        this._transcriptContainer = document.querySelector('.transcript-text');
         sourcePlugin._languageDropdown = document.querySelector('.summary-language-dropdown');
         sourcePlugin._summaryText = document.querySelector('.summary-text');
         sourcePlugin.menuButton = document.querySelector('.menu-button');

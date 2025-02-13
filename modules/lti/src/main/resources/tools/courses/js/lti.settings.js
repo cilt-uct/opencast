@@ -5,17 +5,16 @@ $(document).ready(function(){
     var seriesInfo = getSeries("/api/series/" + seriesID + "/metadata");
     var dublin = seriesInfo[0].fields;
     var ext = seriesInfo[1].fields;
-    const aiFeaturesField = document.getElementById('ai_features');
-    const aiTranscriptionCheckboxes = document.querySelectorAll('#ai_features_options .form-check-input');
+    const transcriptFeaturesField = document.getElementById('transcript_features');
+    const transcriptFeaturesCheckboxes = document.querySelectorAll('#transcript_features_options .form-check-input');
 
-
-    // Update ai-features hidden input when checkboxes are checked/unchecked
-    aiTranscriptionCheckboxes.forEach(checkbox => {
+    // Update transcript-features hidden input when checkboxes are checked/unchecked
+    transcriptFeaturesCheckboxes.forEach(checkbox => {
         checkbox.addEventListener('change', () => {
-            const selectedFeatures = Array.from(aiTranscriptionCheckboxes)
+            const selectedFeatures = Array.from(transcriptFeaturesCheckboxes)
                 .filter(cb => cb.checked)
                 .map(cb => cb.value);
-            aiFeaturesField.value = selectedFeatures.join(',');
+            transcriptFeaturesField.value = selectedFeatures.join(',');
        });
     });
 
@@ -71,23 +70,23 @@ $(document).ready(function(){
         }
         if (ext[j].id == "transcript-features") {
             if (ext[j].value != '') {
-                $('#ai_features').val(ext[j].value);
+                $('#transcript_features').val(ext[j].value);
             } else {
-                $('#ai_features').val('');
+                $('#transcript_features').val('');
             }
         }
     }
 
     // Pre-check transcription checkboxes based on hidden input value
-    const aiFeatures = aiFeaturesField.value.split(',').map(feature => feature.trim());
+    const transcriptFeatures = transcriptFeaturesField.value.split(',').map(feature => feature.trim());
     // Always show/select transcript
-    if (!aiFeatures.includes('transcript')) {
-        aiFeatures.push('transcript');
-        aiFeaturesField.value = aiFeatures.join(',');
+    if (!transcriptFeatures.includes('transcript')) {
+        transcriptFeatures.push('transcript');
+        transcriptFeaturesField.value = transcriptFeatures.join(',');
     }
 
-    aiTranscriptionCheckboxes.forEach(checkbox => {
-        if (aiFeatures.includes(checkbox.value)) {
+    transcriptFeaturesCheckboxes.forEach(checkbox => {
+        if (transcriptFeatures.includes(checkbox.value)) {
             checkbox.checked = true;
         }
     });
@@ -97,10 +96,10 @@ $(document).ready(function(){
         var captions = $('#series_captions').val();
         var retention = $('#series_retention').val();
         var notificationList = $('#notification_list').val();
-        var aiFeatures = $('#ai_features').val();
+        var transcriptFeatures = $('#transcript_features').val();
 
         var notificationListArray = notificationList.split(';').map(email => email.trim()).filter(email => email.length > 0);
-        var aiFeaturesArray = aiFeatures.split(',').map(feature => feature.trim()).filter(feature => feature.length > 0);
+        var transcriptFeaturesArray = transcriptFeatures.split(',').map(feature => feature.trim()).filter(feature => feature.length > 0);
 
         var fd = new FormData();
         const newExt = ext.map(obj => {
@@ -112,7 +111,7 @@ $(document).ready(function(){
                 case "notification-list":
                     return { ...obj, value: notificationListArray };
                 case "transcript-features":
-                    return { ...obj, value: aiFeaturesArray};
+                    return { ...obj, value: transcriptFeaturesArray};
                 default:
                     return obj;
             }
