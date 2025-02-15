@@ -362,7 +362,7 @@ export default class transcriptionPlugin extends PopUpButtonPlugin {
     this._highlightedElements = [];
 
     this._cueElements.forEach(elem => {
-      let cueText = elem._cue.captions.join('');
+      let cueText = elem._cue.captions.join(' ');
       if (searchText) {
         const regex = new RegExp(`(${searchText})`, 'gi');
         cueText = cueText.replace(regex, '<span class="highlight">$1</span>');

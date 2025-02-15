@@ -256,6 +256,7 @@ html {
   align-items: center;
   text-align: center;
   background: none;
+  padding-top: 0.25rem;
 }
 
 .tab-button .tab-icon {
