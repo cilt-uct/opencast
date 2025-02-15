@@ -396,12 +396,19 @@
             "tabIndex": 10,
             "description": "Captions"
         },
-
-        "es.upv.paella.fullscreenButton": {
+        "org.opencast.paella.transcriptionPlugin": {
             "enabled": true,
             "side": "right",
             "order": 104,
             "tabIndex": 11,
+            "description": "Transcription"
+        },
+
+        "es.upv.paella.fullscreenButton": {
+            "enabled": true,
+            "side": "right",
+            "order": 105,
+            "tabIndex": 12,
             "description": "Fullscreen"
         },
 
@@ -429,7 +436,7 @@
             "enabled": true,
             "parentContainer": "settingsGroup",
             "order": 40,
-            "description": "Slides Text"
+            "description": "Slide Text"
         },
         "org.opencast.paella.downloadsPlugin": {
             "enabled": true,
@@ -516,10 +523,9 @@
             "description": "Videos in this series"
         },
 
-
         "/* other plugins */": "*********************************************************",
         "es.upv.paella.findCaptionsPlugin": {
-            "enabled": true,
+            "enabled": false,
             "side": "right",
             "description": "Search in captions",
             "order": 10

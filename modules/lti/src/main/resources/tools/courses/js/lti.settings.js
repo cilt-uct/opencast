@@ -5,6 +5,19 @@ $(document).ready(function(){
     var seriesInfo = getSeries("/api/series/" + seriesID + "/metadata");
     var dublin = seriesInfo[0].fields;
     var ext = seriesInfo[1].fields;
+    const transcriptFeaturesField = document.getElementById('transcript_features');
+    const transcriptFeaturesCheckboxes = document.querySelectorAll('#transcript_features_options .form-check-input');
+
+    // Update transcript-features hidden input when checkboxes are checked/unchecked
+    transcriptFeaturesCheckboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', () => {
+            const selectedFeatures = Array.from(transcriptFeaturesCheckboxes)
+                .filter(cb => cb.checked)
+                .map(cb => cb.value);
+            transcriptFeaturesField.value = selectedFeatures.join(',');
+       });
+    });
+
 
     for (var x=0; x < dublin.length; x++) {
         if(dublin[x].id == "title") {
@@ -55,14 +68,38 @@ $(document).ready(function(){
                 $('#notification_list').val('');
             }
         }
+        if (ext[j].id == "transcript-features") {
+            if (ext[j].value != '') {
+                $('#transcript_features').val(ext[j].value);
+            } else {
+                $('#transcript_features').val('');
+            }
+        }
     }
+
+    // Pre-check transcription checkboxes based on hidden input value
+    const transcriptFeatures = transcriptFeaturesField.value.split(',').map(feature => feature.trim());
+    // Always show/select transcript
+    if (!transcriptFeatures.includes('transcript')) {
+        transcriptFeatures.push('transcript');
+        transcriptFeaturesField.value = transcriptFeatures.join(',');
+    }
+
+    transcriptFeaturesCheckboxes.forEach(checkbox => {
+        if (transcriptFeatures.includes(checkbox.value)) {
+            checkbox.checked = true;
+        }
+    });
 
     $("#save_button").click(function(e) {
         e.preventDefault();
         var captions = $('#series_captions').val();
         var retention = $('#series_retention').val();
         var notificationList = $('#notification_list').val();
+        var transcriptFeatures = $('#transcript_features').val();
+
         var notificationListArray = notificationList.split(';').map(email => email.trim()).filter(email => email.length > 0);
+        var transcriptFeaturesArray = transcriptFeatures.split(',').map(feature => feature.trim()).filter(feature => feature.length > 0);
 
         var fd = new FormData();
         const newExt = ext.map(obj => {
@@ -73,6 +110,8 @@ $(document).ready(function(){
                     return { ...obj, value: retention };
                 case "notification-list":
                     return { ...obj, value: notificationListArray };
+                case "transcript-features":
+                    return { ...obj, value: transcriptFeaturesArray};
                 default:
                     return obj;
             }
