@@ -341,8 +341,8 @@ function listEpisode(info) {
     dlSpan.appendChild(downloadSpan);
     downloadSpan.appendChild(dlBtn);
 
-    titleSpan.innerHTML = '<span>' + he.encode(info.dc.title[0]) || '' + '</span>';
-    creatorSpan.innerHTML = '<span>' + he.encode(info.dc.creator[0] ? info.dc.creator[0] : '') + '</span>';
+    titleSpan.innerHTML = '<span>' + he.encode(info.dc.title && info.dc.title[0] ? info.dc.title[0] : '') + '</span>';
+    creatorSpan.innerHTML = '<span>' + he.encode(info.dc.creator && info.dc.creator[0] ? info.dc.creator[0] : '') + '</span>';
     dateSpan.innerHTML = '<span>' + moment(info.dc.created[0]).format('D MMM YYYY HH:mm') || '' + '</span>';
 
     vidLink.href = '/play/' + info.mediapackage.id;
@@ -378,9 +378,9 @@ function listEpisode(info) {
     dlBtn.className = "btn btn-primary downloader";
     dlBtn.setAttribute("data-target", "#downloadModal");
     dlBtn.setAttribute("data-id", recordid);
-    dlBtn.setAttribute("data-title", info.dc.title[0]);
+    dlBtn.setAttribute("data-title", info.dc.title && info.dc.title[0] ? info.dc.title[0] : '');
     dlBtn.setAttribute("data-downloaded", false);
-    dlBtn.setAttribute("data-presenter", info.dc.creator[0]);
+    dlBtn.setAttribute("data-presenter", info.dc.creator && info.dc.creator[0] ? info.dc.creator[0] : '');
     dlBtn.setAttribute("data-date", moment(info.dc.created[0]).format('D MMM YYYY HH:mm'));
     dlBtn.setAttribute("data-package", JSON.stringify(mediaTrack));
     dlBtn.setAttribute("data-captions", JSON.stringify(captions));
@@ -389,13 +389,13 @@ function listEpisode(info) {
 
   //Set data attribute to make item searchable
     var searchableObject = {
-        title: info.dc.title[0] || '',
+        title: info.dc.title && info.dc.title[0] ?info.dc.title[0] : '',
         createddate: info.dc.created[0] || '',
-        creator: info.dc.creator[0] || ''
+        creator: info.dc.creator && info.dc.creator[0] ? info.dc.creator[0] : ''
     };
     epiItem.setAttribute('data-id', info.mediapackage.id);
     epiItem.setAttribute('data-search', JSON.stringify(searchableObject));
-    epiItem.setAttribute('data-title', info.dc.title[0] || 'track');
+    epiItem.setAttribute('data-title', info.dc.title && info.dc.title[0] ? info.dc.title[0] : 'track');
     return epiItem;
 }
 
