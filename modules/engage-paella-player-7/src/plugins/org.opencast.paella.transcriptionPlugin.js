@@ -149,10 +149,10 @@ export default class transcriptionPlugin extends PopUpButtonPlugin {
 
     // Filter tabs based on transcription types
     let filteredTabs = tabs.filter(({ tab }) => this._transcriptFeatures.includes(tab));
-    if (filteredTabs.length > 1 && !filteredTabs.some(({ tab }) => tab === 'info')) {
-      filteredTabs.push(
-        tabs.find(({ tab }) => tab === 'info')
-      );
+
+    // Ensure the 'info' tab is always displayed
+    if (!filteredTabs.some(({ tab }) => tab === 'info')) {
+      filteredTabs.push(tabs.find(({ tab }) => tab === 'info'));
     }
 
     return filteredTabs
@@ -222,11 +222,9 @@ export default class transcriptionPlugin extends PopUpButtonPlugin {
     // Filter tabs based on transcription types
     let filteredTabs = tabContents.filter(({ id }) => this._transcriptFeatures.includes(id));
 
-    // If more than one tab is displayed, ensure 'info' tab is included
-    if (filteredTabs.length > 1 && !filteredTabs.some(tab => tab.id === 'info')) {
-      filteredTabs.push(
-        tabContents.find(({ id }) => id === 'info')
-      );
+    // Ensure the 'info' tab is always displayed
+    if (!filteredTabs.some(tab => tab.id === 'info')) {
+      filteredTabs.push(tabContents.find(({ id }) => id === 'info'));
     }
 
     return `${aiModelText}
