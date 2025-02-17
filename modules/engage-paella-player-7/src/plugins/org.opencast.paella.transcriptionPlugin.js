@@ -338,6 +338,10 @@ export default class transcriptionPlugin extends PopUpButtonPlugin {
 
   // Handle search input in the transcript tab
   searchTranscript(evt) {
+    if (evt.target === this._input) {
+      evt.stopPropagation();
+    }
+
     if (evt.type === 'click' || evt.key === 'Enter' || evt.keyCode === 13) {
       evt.preventDefault();
 
@@ -356,8 +360,6 @@ export default class transcriptionPlugin extends PopUpButtonPlugin {
       if (this._highlightedElements.length > 0) {
         this.scrollToNextHighlight();
       }
-
-      evt.stopPropagation();
     }
   }
 
