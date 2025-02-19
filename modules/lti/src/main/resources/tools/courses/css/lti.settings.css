@@ -122,6 +122,11 @@
     width: 17.5rem;
     max-width: 100%;
   }
+
+  #series_captions_label {
+    border: 0px;
+    padding: 6px 0;
+  }
   
   input:focus {
     border-color: #8cf;

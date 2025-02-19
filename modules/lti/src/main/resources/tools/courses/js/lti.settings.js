@@ -1,23 +1,15 @@
 const urlParams = new URLSearchParams(window.location.search);
 const seriesID = urlParams.get('sid');
+const seriesCaptionsDropdown = document.getElementById("series_captions");
+const seriesCaptionsLabel = document.getElementById("series_captions_label");
+const transcriptFeaturesField = document.getElementById('transcript_features');
+const transcriptFeaturesCheckboxes = document.querySelectorAll('#transcript_features_options .form-check-input');
+
 
 $(document).ready(function(){
     var seriesInfo = getSeries("/api/series/" + seriesID + "/metadata");
-    var dublin = seriesInfo[0].fields;
-    var ext = seriesInfo[1].fields;
-    const transcriptFeaturesField = document.getElementById('transcript_features');
-    const transcriptFeaturesCheckboxes = document.querySelectorAll('#transcript_features_options .form-check-input');
-
-    // Update transcript-features hidden input when checkboxes are checked/unchecked
-    transcriptFeaturesCheckboxes.forEach(checkbox => {
-        checkbox.addEventListener('change', () => {
-            const selectedFeatures = Array.from(transcriptFeaturesCheckboxes)
-                .filter(cb => cb.checked)
-                .map(cb => cb.value);
-            transcriptFeaturesField.value = selectedFeatures.join(',');
-       });
-    });
-
+    var dublin = seriesInfo[0]?.fields;
+    var ext = seriesInfo[1]?.fields;
 
     for (var x=0; x < dublin.length; x++) {
         if(dublin[x].id == "title") {
@@ -39,13 +31,17 @@ $(document).ready(function(){
             }
         }
         if(ext[j].id == "caption-type") {
-            if(ext[j].value == "none") {
-                $('#series_captions  option[value=none]').attr('selected','selected');
-            } else if(ext[j].value == "google") {
-                $('#series_captions  option[value=google]').attr('selected','selected');
-            } else if(ext[j].value == "") {
-                $('#series_captions  option[value=no_selection]').attr('selected','selected');
+            let captionValue = ext[j].value.trim();
+
+            if(captionValue === "nibity") {
+                $('#series_captions').hide();
+                $('#series_captions_label').text("WayWithWords").show();
+            } else {
+                $('#series_captions').show();
+                $('#series_captions_label').hide();
+                $('#series_captions option[value=' + captionValue + ']').prop('selected', true);
             }
+            toggleAIFeatures();
         }
         if(ext[j].id == "series-locked") {
             if(ext[j].value == false) {
@@ -79,11 +75,6 @@ $(document).ready(function(){
 
     // Pre-check transcription checkboxes based on hidden input value
     const transcriptFeatures = transcriptFeaturesField.value.split(',').map(feature => feature.trim());
-    // Always show/select transcript
-    if (!transcriptFeatures.includes('transcript')) {
-        transcriptFeatures.push('transcript');
-        transcriptFeaturesField.value = transcriptFeatures.join(',');
-    }
 
     transcriptFeaturesCheckboxes.forEach(checkbox => {
         if (transcriptFeatures.includes(checkbox.value)) {
@@ -91,12 +82,25 @@ $(document).ready(function(){
         }
     });
 
+    // Update transcript-features hidden input when checkboxes are checked/unchecked
+    transcriptFeaturesCheckboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', () => {
+            const selectedFeatures = Array.from(transcriptFeaturesCheckboxes)
+                .filter(cb => cb.checked)
+                .map(cb => cb.value);
+            transcriptFeaturesField.value = selectedFeatures.join(',');
+       });
+    });
+
     $("#save_button").click(function(e) {
         e.preventDefault();
-        var captions = $('#series_captions').val();
+        var captions = $('#series_captions').is(':visible') ? $('#series_captions').val() : 'nibity';
         var retention = $('#series_retention').val();
         var notificationList = $('#notification_list').val();
         var transcriptFeatures = $('#transcript_features').val();
+
+        console.log("Captions dropdown value:", $('#series_captions').val());
+        console.log("captions label value: ", captions);
 
         var notificationListArray = notificationList.split(';').map(email => email.trim()).filter(email => email.length > 0);
         var transcriptFeaturesArray = transcriptFeatures.split(',').map(feature => feature.trim()).filter(feature => feature.length > 0);
@@ -117,14 +121,33 @@ $(document).ready(function(){
             }
         });
 
+        
         const updatedMetadata = seriesInfo.map(obj => obj.flavor === "ext/series" ? { ...obj, fields: newExt } : obj);
 
         var metadata = JSON.stringify(updatedMetadata);
         fd.append("metadata", metadata);
+        console.log("metadata to update: ", fd);
         $("#processingModal").modal('show');
         updateSeriesMetadata(fd);
     });
 });
+
+function toggleAIFeatures() {
+    const isNibitySelected = seriesCaptionsDropdown.value === "nibity" || 
+        series_captions_label.style.display !== "none";
+
+    if (isNibitySelected) {
+        transcriptFeaturesCheckboxes.forEach(checkbox => {
+            checkbox.disabled = false;
+        });
+    } else {
+        transcriptFeaturesCheckboxes.forEach(checkbox => {
+            checkbox.checked = false;
+            checkbox.disabled = true;
+        });
+        transcriptFeaturesField.value = '';
+    }
+}
 
 function getSeries(url) {
     return JSON.parse($.ajax({
