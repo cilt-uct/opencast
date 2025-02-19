@@ -69,6 +69,8 @@ export default class transcriptionPlugin extends PopUpButtonPlugin {
     // Default transcript features to transcript if array is empty
     if (!Array.isArray(this._transcriptFeatures) || this._transcriptFeatures.length === 0) {
       this._transcriptFeatures = ['transcript'];
+    } else if (!this._transcriptFeatures.includes('transcript')) {
+      this._transcriptFeatures.push('transcript');
     }
 
     if (this._transcriptFeaturesAttachment) {
