@@ -117,7 +117,7 @@ function loadEpisodesTab(page, q) {
 
   axios.get(url)
     .then((response) => {
-      let data = response;
+      let data = response.data;
       let rendered = '',
           results = [],
           total = parseInt(data.total);
@@ -132,11 +132,10 @@ function loadEpisodesTab(page, q) {
             template = $('#template-episode').html(),
             tpldata,
             attachments;
+        i18ncreator = '';
 
-        if(episode.dc.creator[0] != null) {
+        if((episode.dc['creator'] !== undefined) && (episode.dc.creator.length >= 1) && (episode.dc.creator[0] != null)) {
           i18ncreator = Mustache.render(i18n('CREATOR'), {creator: episode.dc.creator[0]});
-        } else {
-          i18ncreator = '';
         }
 
         tpldata = {
