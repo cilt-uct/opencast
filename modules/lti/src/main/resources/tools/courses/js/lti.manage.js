@@ -2446,7 +2446,7 @@ $(document).ready(function() {
 
   $('#ttScheduleModal form').on('submit', function(e) {
     e.preventDefault();
-    var _series = ocManager.series.details[0];
+    var _series = ocManager.series.details;
     var schedules = $('#ttCourses li[data-course] li:not(.conflict) input:checked')
                      .toArray()
                      .map(function(input) {
