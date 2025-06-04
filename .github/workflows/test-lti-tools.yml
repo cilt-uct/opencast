@@ -11,7 +11,7 @@ on:
       - modules/lti/**
 
 jobs:
-  test-lti:
+  main:
     runs-on: ubuntu-24.04
     steps:
     - uses: actions/checkout@v5
