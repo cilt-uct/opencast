@@ -202,7 +202,7 @@ $(document).on("click", ".downloader", function () {
         episodePresenter = $(this).data('presenter') === "undefined" ? ' ' : $(this).data('presenter'),
         episodeDate = $(this).data('date'),
         mediaTrack  = $(this).data('package'),
-        captions  = $(this).data('captions'),
+        // captions  = $(this).data('captions'),
         episodeID  = $(this).data('id'),
         timestamp = new Date(),
         month = timestamp.getMonth() < 9 ? '0' + (timestamp.getMonth() + 1) : timestamp.getMonth() + 1,
@@ -220,7 +220,12 @@ $(document).on("click", ".downloader", function () {
     try {
         var  tBody = document.getElementById('mediaLinks');
         _.forEach(mediaTrack, function(item) {
-            var type, quality, videoName, caption_type,
+
+            if (item.mimetype === "text/vtt") {
+              return; // Skip captions
+            }
+
+            var type, quality, videoName,
                 tRow = document.createElement('tr'),
                 tCol1 = document.createElement('td'),
                 tCol2 = document.createElement('td'),
@@ -242,18 +247,13 @@ $(document).on("click", ".downloader", function () {
                 videoName = "Presenter (audio-only)";
             } else if (item.type.indexOf('presenter') > -1) {
                 type = "_Presenter";
-                if (caption_type == '') { caption_type = type; }
                 videoName = "Presenter (video)";
             } else if (item.type.indexOf('presentation2') > -1) {
                 type = "_Presentation";
-                if (caption_type == '') { caption_type = type; }
                 videoName = "Presentation 2 (video)";
             } else if (item.type.indexOf('presentation') > -1) {
                 type = "_Presentation";
-                if (caption_type == '') { caption_type = type; }
                 videoName = "Presentation (video)";
-            } else {
-                videoName = "Media track (" + item.type + ")";
             }
 
             if(typeof  item.video !== "undefined") {
@@ -286,30 +286,6 @@ $(document).on("click", ".downloader", function () {
             tRow.appendChild(tCol3);
             tRow.appendChild(tCol4);
         });
-
-        if(captions && Array.isArray(captions)) {
-            _.forEach(captions, function(item) {
-                var tCaptionRow = document.createElement('tr'),
-                    tCaptionCol1 = document.createElement('td'),
-                    tCaptionCol2 = document.createElement('td'),
-                    tCaptionCol3 = document.createElement('td'),
-                    tCaptionCol4 = document.createElement('td'),
-                    captionsType = item.type.split('/'),
-                    captionDownloadURL = item.url.replace('http:', 'https:') + '/download/' + seriesTitle.replace(/[^\w\s]/gi, '_') + '_' + dateStamp + '_' + captionsType[0].replace(/^./, captionsType[0][0].toUpperCase()) + '.' + captionsType[1];
-
-                tBody.appendChild(tCaptionRow);
-                tCaptionCol1.innerHTML = "Captions";
-                tCaptionCol2.innerHTML = "captions/" + captionsType[1];
-                tCaptionCol3.innerHTML = "";
-                tCaptionCol4.className = "text-center";
-                tCaptionCol4.innerHTML = "<a class='btn btn-default btn-sm dlCaption' data-episode-id='" + episodeID + "' role='button' href='" + captionDownloadURL + "'><i class='glyphicon glyphicon-download'></i></a>";
-
-                tCaptionRow.appendChild(tCaptionCol1);
-                tCaptionRow.appendChild(tCaptionCol2);
-                tCaptionRow.appendChild(tCaptionCol3);
-                tCaptionRow.appendChild(tCaptionCol4);
-            });
-        }
     } catch(e) {
         console.log(e);
     }
@@ -341,8 +317,8 @@ function listEpisode(info) {
     dlSpan.appendChild(downloadSpan);
     downloadSpan.appendChild(dlBtn);
 
-    titleSpan.innerHTML = '<span>' + he.encode(info.dc.title[0]) || '' + '</span>';
-    creatorSpan.innerHTML = '<span>' + he.encode(info.dc.creator[0] ? info.dc.creator[0] : '') + '</span>';
+    titleSpan.innerHTML = '<span>' + he.encode(info.dc.title && info.dc.title[0] ? info.dc.title[0] : '') + '</span>';
+    creatorSpan.innerHTML = '<span>' + he.encode(info.dc.creator && info.dc.creator[0] ? info.dc.creator[0] : '') + '</span>';
     dateSpan.innerHTML = '<span>' + moment(info.dc.created[0]).format('D MMM YYYY HH:mm') || '' + '</span>';
 
     vidLink.href = '/play/' + info.mediapackage.id;
@@ -378,9 +354,9 @@ function listEpisode(info) {
     dlBtn.className = "btn btn-primary downloader";
     dlBtn.setAttribute("data-target", "#downloadModal");
     dlBtn.setAttribute("data-id", recordid);
-    dlBtn.setAttribute("data-title", info.dc.title[0]);
+    dlBtn.setAttribute("data-title", info.dc.title && info.dc.title[0] ? info.dc.title[0] : '');
     dlBtn.setAttribute("data-downloaded", false);
-    dlBtn.setAttribute("data-presenter", info.dc.creator[0]);
+    dlBtn.setAttribute("data-presenter", info.dc.creator && info.dc.creator[0] ? info.dc.creator[0] : '');
     dlBtn.setAttribute("data-date", moment(info.dc.created[0]).format('D MMM YYYY HH:mm'));
     dlBtn.setAttribute("data-package", JSON.stringify(mediaTrack));
     dlBtn.setAttribute("data-captions", JSON.stringify(captions));
@@ -389,17 +365,17 @@ function listEpisode(info) {
 
   //Set data attribute to make item searchable
     var searchableObject = {
-        title: info.dc.title[0] || '',
+        title: info.dc.title && info.dc.title[0] ?info.dc.title[0] : '',
         createddate: info.dc.created[0] || '',
-        creator: info.dc.creator[0] || ''
+        creator: info.dc.creator && info.dc.creator[0] ? info.dc.creator[0] : ''
     };
     epiItem.setAttribute('data-id', info.mediapackage.id);
     epiItem.setAttribute('data-search', JSON.stringify(searchableObject));
-    epiItem.setAttribute('data-title', info.dc.title[0] || 'track');
+    epiItem.setAttribute('data-title', info.dc.title && info.dc.title[0] ? info.dc.title[0] : 'track');
     return epiItem;
 }
 
-var limit = 10000,
+var limit = 2000,
     url = "/search/episode.json?sid=" + (courseID || '') + "&limit=" + limit + "&sort=modified%20desc";
 
 xhr({url: url, responseType: 'json'},

@@ -2446,7 +2446,7 @@ $(document).ready(function() {
 
   $('#ttScheduleModal form').on('submit', function(e) {
     e.preventDefault();
-    var _series = ocManager.series.details[0];
+    var _series = ocManager.series.details;
     var schedules = $('#ttCourses li[data-course] li:not(.conflict) input:checked')
                      .toArray()
                      .map(function(input) {
@@ -2787,24 +2787,25 @@ function getCaptions(id) {
   var providerArray = [];
 
   $.get({url: url}, function(response) {
-    var attachments = response["result"][0]["mediapackage"]["attachments"]["attachment"];
+    var mediaPackage = response["result"][0]["mediapackage"];
+    var items = [].concat(mediaPackage["attachments"]["attachment"], mediaPackage["media"]["track"]);
     var captionsExist = false;
     
-    attachments.forEach(function(attachment) {
-      if (attachment.mimetype === "text/vtt" && attachment.tags["tag"].indexOf("engage-download") >= 0) {
+    items.forEach(function(item) {
+      if ((item.mimetype === "text/vtt" || item.mimetype === "application/json") && item.tags["tag"].indexOf("engage-download") >= 0) {
         captionsExist = true;
-        var id = attachment.id;
-        var providerInfo = getProviderInfo(attachment.type);
+        var id = item.id;
+        var providerInfo = getProviderInfo(item.type);
     
         if (providerInfo) {
           var provider = providerInfo.provider;
           var downloadElementId = providerInfo.downloadElementId;
           var removeElementId = providerInfo.removeElementId;
     
-          providerArray.push({"id": id, "mediatype": attachment.type, "url": attachment.url});
-          $('#' + downloadElementId).attr('href', attachment.url + "/download/" + attachment.url.substring(attachment.url.lastIndexOf('/') + 1)).show();
+          providerArray.push({"id": id, "mediatype": item.type, "url": item.url});
+          $('#' + downloadElementId).attr('href', item.url + "/download/" + item.url.substring(item.url.lastIndexOf('/') + 1)).show();
           $('#' + removeElementId + 'Captions').attr('data-provider', provider);
-          $('#' + downloadElementId).attr('data-mediatype', attachment.type);
+          $('#' + downloadElementId).attr('data-mediatype', item.type);
           $("#" + removeElementId + "Captions").show();
           $("#removeCaptionsList").show();
         }
@@ -2822,7 +2823,8 @@ function getCaptions(id) {
           vttURL = providerArray[i].url;
           mediaType = providerArray[i].mediatype;
           $('#downloadUploadedCaptions, #removeUploadedCaptions, #removeCaptionsList').show();
-        } else if (providerArray[i].mediatype.indexOf("captions/vtt") >= 0 || providerArray[i].mediatype.indexOf("captions/vtt+en-us") >= 0) {
+        } else if (providerArray[i].mediatype.indexOf("captions/vtt") >= 0 || providerArray[i].mediatype.indexOf("captions/vtt+en-us") >= 0
+          || providerArray[i].mediatype.indexOf("captions/source") >= 0 || providerArray[i].mediatype.indexOf("captions/json") >= 0) {
           provider = "WayWithWords";
           vttURL = providerArray[i].url;
           mediaType = providerArray[i].mediatype;
@@ -2852,7 +2854,7 @@ function getCaptions(id) {
 function getProviderInfo(type) {
   if (type.indexOf("captions/timedtext") >= 0) {
     return {provider: "googleTranscript", downloadElementId: "dlGoogleCaptions", removeElementId: "rmGoogle"};
-  } else if (type.indexOf("captions/vtt") >= 0) {
+  } else if (type.indexOf("captions/vtt") >= 0 || type.indexOf("captions/source") >= 0 || type.indexOf("captions/json") >= 0) {
     return {provider: "nibityTranscript", downloadElementId: "dlNibityCaptions", removeElementId: "rmNibity"};
   } else if (type.indexOf("captions/upload") >= 0) {
     return {provider: "uploadedTranscript", downloadElementId: "dlUploadedCaptions", removeElementId: "rmUploaded"};

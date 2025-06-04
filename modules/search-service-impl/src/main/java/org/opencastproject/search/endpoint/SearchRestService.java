@@ -207,7 +207,7 @@ public class SearchRestService extends AbstractJobProducerEndpoint {
         .size(size);
 
     if (StringUtils.isNotEmpty(sort)) {
-      var sortParam = StringUtils.split(sort);
+      var sortParam = StringUtils.split(sort.toLowerCase());
       var validSort = Arrays.asList("identifier", "title", "contributor", "creator", "modified").contains(sortParam[0]);
       var validOrder = sortParam.length < 2 || Arrays.asList("asc", "desc").contains(sortParam[1]);
       if (sortParam.length > 2 || !validSort || !validOrder) {
@@ -219,7 +219,7 @@ public class SearchRestService extends AbstractJobProducerEndpoint {
       if ("modified".equals(sortParam[0])) {
         searchSource.sort(sortParam[0], order);
       } else {
-        searchSource.sort(SearchResult.DUBLINCORE + sortParam[0], order);
+        searchSource.sort(SearchResult.DUBLINCORE + "." + sortParam[0], order);
       }
     }
 
@@ -283,8 +283,8 @@ public class SearchRestService extends AbstractJobProducerEndpoint {
               name = "limit",
               isRequired = false,
               type = RestParameter.Type.INTEGER,
-              defaultValue = "20",
-              description = "The maximum number of items to return per page. Limited to 250 for non-admins."
+              defaultValue = "100",
+              description = "The maximum number of items to return per page. Limited to 2000 for non-admins."
           ),
           @RestParameter(
               name = "offset",
@@ -385,9 +385,9 @@ public class SearchRestService extends AbstractJobProducerEndpoint {
           .entity("Limit and offset may not be negative.")
           .build();
     }
-    if (!admin && size > 250) {
+    if (!admin && size > 2000) {
       return Response.status(Response.Status.BAD_REQUEST)
-          .entity("Only admins are allowed to request more than 250 items.")
+          .entity("Only admins are allowed to request more than 2000 items.")
           .build();
     }
 
@@ -397,7 +397,7 @@ public class SearchRestService extends AbstractJobProducerEndpoint {
         .size(size);
 
     if (StringUtils.isNotEmpty(sort)) {
-      var sortParam = StringUtils.split(sort);
+      var sortParam = StringUtils.split(sort.toLowerCase());
       var validSort = Arrays.asList("title", "contributor", "creator", "modified").contains(sortParam[0]);
       var validOrder = sortParam.length < 2 || Arrays.asList("asc", "desc").contains(sortParam[1]);
       if (sortParam.length > 2 || !validSort || !validOrder) {

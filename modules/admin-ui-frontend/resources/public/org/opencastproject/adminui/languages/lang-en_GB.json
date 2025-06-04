@@ -956,7 +956,15 @@
                   "WRONG_SERIES_PUBLICATION": "Wrong series or publication channel",
                   "WRONG_WORKFLOW": "Wrong workflow",
                   "PROCESSING_FAILURE": "Processing failure",
-                  "ADMINUI_NOTES": "Notes in Admin UI"
+                  "ADMINUI_NOTES": "Notes in Admin UI",
+                  "CONSENT" : "Consent required",
+                  "AUTOTRIM" : "Automatically trimmed",
+                  "MEDIA_UNUSABLE" : "Unusable audio or video",
+                  "EVENT_INFO" : "Event information",
+                  "MEDIA_INFO" : "Media information",
+                  "MEDIA_QUALITY" : "Poor quality audio or video",
+                  "TRANSCRIPT" : "Transcript Request",
+                  "RECOVERED" : "Recovered media"
                }
             },
             "STATISTICS": {
@@ -2282,3 +2290,4 @@
       }
    }
 }
+

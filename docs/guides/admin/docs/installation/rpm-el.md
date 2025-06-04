@@ -5,7 +5,7 @@ This guide is based on an RPM software repository available for Red Hat based Li
 by [Osnabrück University](https://uni-osnabrueck.de).
 This repository provides preconfigured Opencast installations and all necessary 3rd-party-tools.
 
-> In addition to this guide, we have also recorded [a full installation done in 30 minutes](https://vt.uos.de/71hfc)
+> 🎞️ In addition to this guide, we have also recorded [a full installation done in 30 minutes](https://go.uos.de/71hfc)
 > if you like to see how this works before you try it yourself.
 
 
@@ -129,6 +129,9 @@ Some commonly used distributions are:
 Upgrading
 ---------
 
+> 🎞️ If you want to see how upgrading Opencast works if you are using the RPM repository,
+> [we made a short recording to show you the process](https://video.ethz.ch/events/opencast/miscellaneous/webinars/6803b383-239e-4a37-b0c6-e1fc7af124b0.html).
+
 Packages will automatically upgrade to the latest minor version in a release series when running `dnf update`.
 They do not automatically upgrade the latest major version.
 This is intentional since additional migration steps might be required.
@@ -149,8 +152,7 @@ systemctl stop opencast.service
 Then, update the repository:
 
 ```sh
-dnf install -y \
-  "https://pkg.opencast.org/rpms/release/el/$(rpm -E %rhel)/oc-{{ opencast_major_version() }}/noarch/opencast-repository-{{ opencast_major_version() }}-1.el$(rpm -E %rhel).noarch.rpm"
+dnf install -y "https://pkg.opencast.org/rpms/release/el/$(rpm -E %rhel)/oc-{{ opencast_major_version() }}/noarch/opencast-repository-{{ opencast_major_version() }}-1.el$(rpm -E %rhel).noarch.rpm"
 ```
 
 Upgrade to the new Opencast package by running:
