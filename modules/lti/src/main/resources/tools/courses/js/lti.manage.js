@@ -1117,9 +1117,9 @@ function personalEventEditable(id, has_preview) {
     var str = '<a type="button" style="padding: 0.5rem;" href="/play/' + id + '" target="_blank" title="Watch in player"><i class="fa fa-play-circle-o" style="font-size: 1.25em"></i></a>';
 
     if (has_preview) {
-        str += '<a type="button" style="padding: 0.5rem;" href="/admin-ng/index.html#!/events/events/' + id + '/tools/editor' +
-                '?ltimode=true&callback_url=' + encodeURIComponent('manage?sid=' + ocManager.series.id + '&type=personal') + '" title="Edit recording">' +
-                '  <i class="fa fa-scissors"></i></a>'
+      str += '<a type="button" style="padding: 0.5rem;" href="/editor-ui/index.html?id=' + id + 
+        '&ltimode=true&callback_url=' + encodeURIComponent('/manage?sid=' + ocManager.series.id + '&type=personal') + 
+        '" title="Edit recording"><i class="fa fa-scissors"></i></a>';
     }
 
     str += '<button type="button" id="btnDetails" data-toggle="modal" data-event="' + id + '" data-target="#editPublishedModal" title="Edit recording details">' +
