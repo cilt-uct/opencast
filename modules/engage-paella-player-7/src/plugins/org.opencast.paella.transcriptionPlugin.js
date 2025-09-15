@@ -47,6 +47,10 @@ export default class transcriptionPlugin extends PopUpButtonPlugin {
     return this.getAriaLabel();
   }
 
+  get name() {
+    return super.name || 'org.opencast.paella.transcriptionPlugin';
+  }
+
   get captions() {
     return this.player.captionsCanvas?.captions;
   }
@@ -479,6 +483,76 @@ export default class transcriptionPlugin extends PopUpButtonPlugin {
     container.appendChild(newLandscapeContainer);
   }
 
+  // Track User Event data
+  async logEvent(eventType, details = {}) {
+    try {
+      const currentTime = await this.player.videoContainer.currentTime();
+      const playing = !(await this.player.videoContainer.paused());
+
+      const opencastLog = {
+        id: this.player.videoId,
+        type: eventType.substr(0,128),
+        in: Math.round(currentTime),
+        out: Math.round(currentTime),
+        playing
+      };
+
+      if(this.name === 'org.opencast.paella.transcriptionPlugin') {
+        switch (eventType) {
+        case 'AI_RESOURCE_VIEWED':
+          if (details.resource) {
+            opencastLog.type = `paella:AIResourceViewed-${details.resource}`;
+          }
+          break;
+
+        case 'AI_RESOURCE_INTERACTION': {
+          const { resource, action, language } = details;
+
+          if (action === 'change_language' && language) {
+            opencastLog.type = `paella:AIResourceInteraction-${resource || 'unknown'}-${action}-${language}`;
+          }
+          else if (action === 'search_text') {
+            opencastLog.type = `paella:AIResourceInteraction-${resource || 'transcript'}-${action}`;
+          }
+          else {
+            opencastLog.type = `paella:AIResourceInteraction-${resource || 'unknown'}-${action || 'unknown'}`;
+          }
+          break;
+        }
+
+        case 'TRANSCRIPTION_PLUGIN_OPENED':
+          opencastLog.type = 'paella:transcriptionPluginOpened';
+          break;
+
+        case 'TRANSCRIPTION_PLUGIN_CLOSED':
+          opencastLog.type = 'paella:transcriptionPluginClosed';
+          break;
+
+        default:
+          opencastLog.type = `paella:${eventType}`;
+          break;
+        }
+
+        const params = (new URLSearchParams(opencastLog)).toString();
+        const requestUrl = `/usertracking/?${params}`;
+        const result = await fetch(getUrlFromOpencastServer(requestUrl), {
+          method: 'PUT'
+        });
+
+        if (!result.ok) {
+          this.player.log.error(`Error logging event '${eventType}'`, result.status);
+        }
+        else {
+          this.player.log.debug(`Opencast user log event done: '${opencastLog.type}'`);
+        }
+
+      }
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.log('Tracking event failed:', eventType, details, err);
+    }
+  }
+
   // Bind video events
   bindVideoEvents() {
     this.player.bindEvent(Events.TIMEUPDATE, evt => {
@@ -502,6 +576,7 @@ export default class transcriptionPlugin extends PopUpButtonPlugin {
     this.player.bindEvent(Events.HIDE_POPUP, (evt) => {
       const sourcePlugin = evt.plugin || evt.detail?.plugin;
       if(sourcePlugin && sourcePlugin.name === 'org.opencast.paella.transcriptionPlugin') {
+        this.logEvent('TRANSCRIPTION_PLUGIN_CLOSED');
         sourcePlugin.videoBaseContainer.classList.remove('portrait');
         sourcePlugin.videoBaseContainer.classList.add('landscape');
         this.closePlugin(sourcePlugin.videoBaseContainer, this.captionsCanvas);
@@ -512,6 +587,7 @@ export default class transcriptionPlugin extends PopUpButtonPlugin {
       const sourcePlugin = evt.plugin || evt.detail?.plugin;
 
       if(sourcePlugin && sourcePlugin.name === 'org.opencast.paella.transcriptionPlugin') {
+        this.logEvent('TRANSCRIPTION_PLUGIN_OPENED');
         this.userScrolling = false;
         this.autoScrollTimeout = null;
         this.isSearching = false;
@@ -570,6 +646,10 @@ export default class transcriptionPlugin extends PopUpButtonPlugin {
             if (targetPane) {
               targetPane.classList.add('active');
             }
+
+            // Log which AI resource/tab was viewed
+            const resource = tab.getAttribute('data-tab');
+            this.logEvent('AI_RESOURCE_VIEWED', { resource });
           });
         });
 
@@ -591,6 +671,7 @@ export default class transcriptionPlugin extends PopUpButtonPlugin {
             evt.target.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 
             const time = evt.target._cue.start;
+            this.logEvent('AI_RESOURCE_INTERACTION', { resource: 'transcript', action: 'jump_to_time', time });
             await this.player.videoContainer.setCurrentTime(time);
 
             evt.stopPropagation();
@@ -603,22 +684,31 @@ export default class transcriptionPlugin extends PopUpButtonPlugin {
 
         sourcePlugin._searchButton.addEventListener('click', (evt) => {
           this.searchTranscript(evt);
+          const query = sourcePlugin._input.value.trim();
+          if (query) {
+            this.logEvent('AI_RESOURCE_INTERACTION', { resource: 'transcript', action: 'search_text' });
+          }
         });
 
         sourcePlugin._clearButton.addEventListener('click', () => {
           sourcePlugin._input.value = '';
           this.clearSearchHighlights();
+          this.logEvent('AI_RESOURCE_INTERACTION', { resource: 'transcript', action: 'clear_search' });
         });
 
-        sourcePlugin._languageDropdown.addEventListener('change', () => {
-          const language = sourcePlugin._languageDropdown.value;
-          const transcriptionContent = this._transcriptionData[`translation_${language}`]?.content[0]?.text
-            || this._transcriptionData.summary?.content[0]?.text || '';
-          this._summaryText.innerHTML = transcriptionContent.replace(/\n/g, '<br>');
-        });
+        if (sourcePlugin._languageDropdown) {
+          sourcePlugin._languageDropdown.addEventListener('change', () => {
+            const language = sourcePlugin._languageDropdown.value;
+            const transcriptionContent = this._transcriptionData[`translation_${language}`]?.content[0]?.text
+              || this._transcriptionData.summary?.content[0]?.text || '';
+            this._summaryText.innerHTML = transcriptionContent.replace(/\n/g, '<br>');
+            this.logEvent('AI_RESOURCE_INTERACTION', { resource: 'summary', action: 'change_language', language });
+          });
+        }
 
         sourcePlugin.pluginCloseButton.addEventListener('click', (evt) => {
           evt.stopPropagation();
+          this.logEvent('TRANSCRIPTION_PLUGIN_CLOSED');
           this.closePlugin(sourcePlugin.videoBaseContainer, this.captionsCanvas);
         });
 
