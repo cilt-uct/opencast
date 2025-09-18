@@ -612,7 +612,11 @@
             "events": [
                 "PLAY",
                 "CAPTIONS_ENABLED",
-                "CAPTIONS_DISABLED"
+                "CAPTIONS_DISABLED",
+                "TRANSCRIPTION_PLUGIN_OPENED",
+                "TRANSCRIPTION_PLUGIN_CLOSED",
+                "AI_RESOURCE_VIEWED",
+                "AI_RESOURCE_INTERACTION"
             ]
         },
         "es.upv.paella.debug.userTrackingDataPlugin": {
