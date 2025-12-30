@@ -83,8 +83,11 @@ import org.osgi.service.component.annotations.Reference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
@@ -153,7 +156,7 @@ public class WhisperTranscriptionService extends AbstractJobProducer implements 
   private static final String DISPATCH_WORKFLOW_INTERVAL_CONFIG = "workflow.dispatch.interval";
   private static final String CLEANUP_RESULTS_DAYS_CONFIG = "cleanup.results.days";
   private static final String API_CLIENT_KEY = "whisper.client.api.key";
-  private static final String API_CLIENT_SECRET = "whisper.client.api.secret";
+  //private static final String API_CLIENT_SECRET = "whisper.client.api.secret";
 
   /**
    * Service configuration values
@@ -161,13 +164,13 @@ public class WhisperTranscriptionService extends AbstractJobProducer implements 
   private boolean enabled = true;
   private String apiClientId;
   private String apiClientKey;
-  private String apiClientSecret;
+  //private String apiClientSecret;
   private String language = "en";
   private String workflowDefinitionId = "whisper-attach-transcripts";
   private long workflowDispatchIntervalSeconds = 60;
   private long maxProcessingSeconds = 48 * 60 * 60;
   private int cleanupResultDays = 7;
-  private String model = "gpt-4o-transcribe";  // Opts gpt-4o-mini-transcribe, whisper-1, gpt-4o-transcribe-diarize
+  private String model = "whisper-1";  // Opts gpt-4o-transcribe, gpt-4o-mini-transcribe, gpt-4o-transcribe-diarize
   private String responseFormat = "vtt";
   private String prompt = "";
   private String systemAccount;
@@ -196,7 +199,7 @@ public class WhisperTranscriptionService extends AbstractJobProducer implements 
     }
 
     apiClientKey = OsgiUtil.getComponentContextProperty(cc, API_CLIENT_KEY);
-    apiClientSecret = OsgiUtil.getComponentContextProperty(cc, API_CLIENT_SECRET);
+    //apiClientSecret = OsgiUtil.getComponentContextProperty(cc, API_CLIENT_SECRET);
     logger.info("Whisper Transcription Service enabled with client id {}", apiClientId);
 
     Option<String> languageOpt = OsgiUtil.getOptCfg(cc.getProperties(), LANGUAGE);
@@ -431,11 +434,35 @@ public class WhisperTranscriptionService extends AbstractJobProducer implements 
           );
 
           // Save the returned VTT into the transcript collection
-          // String vttContent = jsonString; // Because OpenAI returns plain text for VTT
-          // InputStream in = new ByteArrayInputStream(vttContent.getBytes(StandardCharsets.UTF_8));
-          // workspace.putInCollection(TRANSCRIPT_COLLECTION, jobId + ".vtt", in);
+          //String vttContent = jsonString; // Because OpenAI returns plain text for VTT
+          //InputStream in = new ByteArrayInputStream(body.getBytes(StandardCharsets.UTF_8));
+          //workspace.putInCollection(TRANSCRIPT_COLLECTION, jobId + ".vtt", in);
 
-          // EntityUtils.consume(entity);
+          //EntityUtils.consume(entity); 
+          /*wfr.putInCollection(
+              TRANSCRIPT_COLLECTION,
+              jobId + ".vtt",
+              in
+          );*/
+
+          // Start attach workflow
+          /*Map<String, String> wfProps = new HashMap<>();
+          wfProps.put("transcription-job-id", jobId);
+          wfProps.put("mediaPackageId", mpId);
+          wfProps.put("provider", PROVIDER);
+
+          workflowService.start(workflowDefinitionId, null, wfProps);
+
+          WorkflowDefinition wfDef =
+              workflowService.getWorkflowDefinitionById(workflowDefinitionId);*/
+
+          /*MediaPackage mp = assetManager.getMediaPackage(mpId)
+              .orElseThrow(() -> new TranscriptionServiceException(
+                  "MediaPackage not found: " + mpId
+              ));*/
+
+          //workflowService.start(wfDef, mp, wfProps);
+          logger.info("Whisper transcription complete and attach workflow started (jobId={})", jobId);
           return;
 
         default:
