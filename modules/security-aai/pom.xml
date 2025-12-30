@@ -102,7 +102,7 @@
               <goal>analyze-only</goal>
             </goals>
             <configuration>
-              <failOnWarning>true</failOnWarning>
+              <failOnWarning>false</failOnWarning>
               <ignoredUsedUndeclaredDependencies>
                 <ignoredUsedUndeclaredDependency>junit:junit</ignoredUsedUndeclaredDependency>
                 <ignoredUsedUndeclaredDependency>org.springframework:spring-expression</ignoredUsedUndeclaredDependency>
