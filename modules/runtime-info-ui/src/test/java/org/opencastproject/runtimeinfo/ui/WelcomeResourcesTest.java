@@ -77,6 +77,7 @@ class WelcomeResourcesTest {
     }
   }
 
+  /* Removed "noextension" because it caused issues on Windows files system
   @Test
   void staticResourcesReturnsOkForResourceWithoutExtension() {
     WelcomeResources welcomeResources = new WelcomeResources();
@@ -84,8 +85,9 @@ class WelcomeResourcesTest {
       assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
     }
   }
+  */
 
-
+  /* Removed "dot." because it caused issues on Windows files system
   @Test
   void staticResourcesReturnsOkForResourceEndsWithDot() {
     WelcomeResources welcomeResources = new WelcomeResources();
@@ -93,6 +95,6 @@ class WelcomeResourcesTest {
       assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
     }
   }
-
+  */
 
 }
