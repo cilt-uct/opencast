@@ -21,9 +21,7 @@
 package org.opencastproject.transcription.nibity;
 
 import org.opencastproject.assetmanager.api.AssetManager;
-import org.opencastproject.assetmanager.api.fn.Enrichments;
-import org.opencastproject.assetmanager.api.query.AQueryBuilder;
-import org.opencastproject.assetmanager.api.query.AResult;
+import org.opencastproject.assetmanager.api.Snapshot;
 import org.opencastproject.assetmanager.util.Workflows;
 import org.opencastproject.job.api.AbstractJobProducer;
 import org.opencastproject.job.api.Job;
@@ -52,7 +50,6 @@ import org.opencastproject.transcription.persistence.TranscriptionDatabaseExcept
 import org.opencastproject.transcription.persistence.TranscriptionJobControl;
 import org.opencastproject.transcription.persistence.TranscriptionProviderControl;
 import org.opencastproject.util.OsgiUtil;
-import org.opencastproject.util.data.Option;
 import org.opencastproject.workflow.api.ConfiguredWorkflow;
 import org.opencastproject.workflow.api.WorkflowDefinition;
 import org.opencastproject.workflow.api.WorkflowInstance;
@@ -98,6 +95,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -233,8 +231,8 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
     logger.info("Nibity Transcription Service enabled with client id {}", nibityClientId);
 
     // Cleanup submissions
-    Option<Boolean> cleanupOpt = OsgiUtil.getOptCfgAsBoolean(cc.getProperties(), CLEANUP_SUBMISSION);
-    if (cleanupOpt.isSome()) {
+    Optional<Boolean> cleanupOpt = OsgiUtil.getOptCfgAsBoolean(cc.getProperties(), CLEANUP_SUBMISSION);
+    if (cleanupOpt.orElse(false)) {
       cleanupSubmission = cleanupOpt.get();
     }
 
@@ -245,8 +243,8 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
     }
 
     // Language model to be used (not used by Nibity)
-    Option<String> languageOpt = OsgiUtil.getOptCfg(cc.getProperties(), NIBITY_LANGUAGE);
-    if (languageOpt.isSome()) {
+    Optional<String> languageOpt = OsgiUtil.getOptCfg(cc.getProperties(), NIBITY_LANGUAGE);
+    if (languageOpt.isPresent()) {
       language = languageOpt.get();
       logger.info("Language used is {}", language);
     } else {
@@ -254,15 +252,15 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
     }
 
     // Workflow to execute when getting callback (optional, with default)
-    Option<String> wfOpt = OsgiUtil.getOptCfg(cc.getProperties(), WORKFLOW_CONFIG);
-    if (wfOpt.isSome()) {
+    Optional<String> wfOpt = OsgiUtil.getOptCfg(cc.getProperties(), WORKFLOW_CONFIG);
+    if (wfOpt.isPresent()) {
       workflowDefinitionId = wfOpt.get();
     }
     logger.info("Workflow definition is {}", workflowDefinitionId);
 
     // Interval to check for completed transcription jobs and start workflows to attach transcripts
-    Option<String> intervalOpt = OsgiUtil.getOptCfg(cc.getProperties(), DISPATCH_WORKFLOW_INTERVAL_CONFIG);
-    if (intervalOpt.isSome()) {
+    Optional<String> intervalOpt = OsgiUtil.getOptCfg(cc.getProperties(), DISPATCH_WORKFLOW_INTERVAL_CONFIG);
+    if (intervalOpt.isPresent()) {
       try {
         workflowDispatchInterval = Long.parseLong(intervalOpt.get());
       } catch (NumberFormatException e) {
@@ -272,8 +270,8 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
     logger.info("Workflow dispatch interval is {} seconds", workflowDispatchInterval);
 
     // How long to wait after a transcription is supposed to finish before marking the job as canceled in the db
-    Option<String> maxProcessingOpt = OsgiUtil.getOptCfg(cc.getProperties(), MAX_PROCESSING_TIME_CONFIG);
-    if (maxProcessingOpt.isSome()) {
+    Optional<String> maxProcessingOpt = OsgiUtil.getOptCfg(cc.getProperties(), MAX_PROCESSING_TIME_CONFIG);
+    if (maxProcessingOpt.isPresent()) {
       try {
         maxProcessingSeconds = Long.parseLong(maxProcessingOpt.get());
       } catch (NumberFormatException e) {
@@ -283,8 +281,8 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
     logger.info("Maximum time a job is checked after it should have ended is {} seconds", maxProcessingSeconds);
 
     // How long to keep result files in the working file repository
-    Option<String> cleaupOpt = OsgiUtil.getOptCfg(cc.getProperties(), CLEANUP_RESULTS_DAYS_CONFIG);
-    if (cleaupOpt.isSome()) {
+    Optional<String> cleaupOpt = OsgiUtil.getOptCfg(cc.getProperties(), CLEANUP_RESULTS_DAYS_CONFIG);
+    if (cleaupOpt.isPresent()) {
       try {
         cleanupResultDays = Integer.parseInt(cleaupOpt.get());
       } catch (NumberFormatException e) {
@@ -307,13 +305,13 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
     scheduledExecutor.scheduleWithFixedDelay(new ResultsFileCleanup(), 1, 1, TimeUnit.DAYS);
 
     // Notification email passed in this service configuration?
-    Option<String> optTo = OsgiUtil.getOptCfg(cc.getProperties(), NOTIFICATION_EMAIL_CONFIG);
-    if (optTo.isSome()) {
+    Optional<String> optTo = OsgiUtil.getOptCfg(cc.getProperties(), NOTIFICATION_EMAIL_CONFIG);
+    if (optTo.isPresent()) {
       toEmailAddress = optTo.get();
     } else {
       // Use admin email informed in custom.properties
       optTo = OsgiUtil.getOptContextProperty(cc, OpencastConstants.ADMIN_EMAIL_PROPERTY);
-      if (optTo.isSome()) {
+      if (optTo.isPresent()) {
         toEmailAddress = optTo.get();
       }
     }
@@ -323,8 +321,8 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
       logger.warn("Email notification disabled");
     }
 
-    Option<String> optCluster = OsgiUtil.getOptContextProperty(cc, OpencastConstants.ENVIRONMENT_NAME_PROPERTY);
-    if (optCluster.isSome()) {
+    Optional<String> optCluster = OsgiUtil.getOptContextProperty(cc, OpencastConstants.ENVIRONMENT_NAME_PROPERTY);
+    if (optCluster.isPresent()) {
       clusterName = optCluster.get();
       logger.info("Environment name is {}", clusterName);
     }
@@ -1069,15 +1067,14 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
             securityService.setUser(SecurityUtil.createSystemUser(systemAccount, defaultOrg));
 
             // Find the episode
-            final AQueryBuilder q = assetManager.createQuery();
-            final AResult r = q.select(q.snapshot()).where(q.mediaPackageId(mpId).and(q.version().isLatest())).run();
-            if (r.getSize() == 0) {
+            Optional<Snapshot> snapshot = assetManager.getLatestSnapshot(mpId);
+            if (snapshot.isEmpty()) {
               // Media package not archived yet? Skip until next time.
               logger.warn("Media package {} has not been archived yet. Skipped.", mpId);
-              continue;
+              return;
             }
 
-            String org = Enrichments.enrich(r).getSnapshots().stream().findFirst().get().getOrganizationId();
+            String org = snapshot.get().getOrganizationId();
             Organization organization = organizationDirectoryService.getOrganization(org);
             if (organization == null) {
               logger.warn("Media package {} has an unknown organization {}. Skipped.", mpId, org);
@@ -1096,7 +1093,7 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
             Set<String> mpIds = new HashSet<String>();
             mpIds.add(mpId);
             List<WorkflowInstance> wfList = workflows
-                    .applyWorkflowToLatestVersion(mpIds, ConfiguredWorkflow.workflow(wfDef, params)).toList();
+                    .applyWorkflowToLatestVersion(mpIds, ConfiguredWorkflow.workflow(wfDef, params));
             String wfId = wfList.size() > 0 ? Long.toString(wfList.get(0).getId()) : "Unknown";
 
             // Update state in the database
