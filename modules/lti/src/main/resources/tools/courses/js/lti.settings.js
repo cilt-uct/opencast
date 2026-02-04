@@ -5,7 +5,6 @@ const seriesCaptionsLabel = document.getElementById("series_captions_label");
 const transcriptFeaturesField = document.getElementById('transcript_features');
 const transcriptFeaturesCheckboxes = document.querySelectorAll('#transcript_features_options .form-check-input');
 
-
 $(document).ready(function(){
     var seriesInfo = getSeries("/api/series/" + seriesID + "/metadata");
     var dublin = seriesInfo[0]?.fields;
@@ -31,18 +30,31 @@ $(document).ready(function(){
             }
         }
         if(ext[j].id == "caption-type") {
-            let captionValue = ext[j].value.trim();
+            let captionValue = (ext[j].value || '').trim();
 
             if(captionValue === "nibity") {
                 $('#series_captions').hide();
                 $('#series_captions_label').text("WayWithWords").show();
+                $('#div_transcript_features').show();
+                toggleAIFeatures();
             } else {
+                if (!captionValue || captionValue === 'no_selection') {
+                    captionValue = 'no_selection';
+                }
                 $('#series_captions').show();
                 $('#series_captions_label').hide();
                 $('#series_captions option[value=' + captionValue + ']').prop('selected', true);
+                $('#div_transcript_features').hide();
             }
-            toggleAIFeatures();
         }
+        if (ext[j].id == "transcript-features") {
+            if (ext[j].value != '') {
+               $('#transcript_features').val(ext[j].value);
+            } else {
+                $('#transcript_features').val('');
+            }
+        }
+
         if(ext[j].id == "series-locked") {
             if(ext[j].value == false) {
                 $('#locked_status').val("No");
@@ -62,13 +74,6 @@ $(document).ready(function(){
                 $('#notification_list').val(ext[j].value);
             } else {
                 $('#notification_list').val('');
-            }
-        }
-        if (ext[j].id == "transcript-features") {
-            if (ext[j].value != '') {
-                $('#transcript_features').val(ext[j].value);
-            } else {
-                $('#transcript_features').val('');
             }
         }
     }
@@ -98,10 +103,6 @@ $(document).ready(function(){
         var retention = $('#series_retention').val();
         var notificationList = $('#notification_list').val();
         var transcriptFeatures = $('#transcript_features').val();
-
-        console.log("Captions dropdown value:", $('#series_captions').val());
-        console.log("captions label value: ", captions);
-
         var notificationListArray = notificationList.split(';').map(email => email.trim()).filter(email => email.length > 0);
         var transcriptFeaturesArray = transcriptFeatures.split(',').map(feature => feature.trim()).filter(feature => feature.length > 0);
 
@@ -120,20 +121,17 @@ $(document).ready(function(){
                     return obj;
             }
         });
-
-        
         const updatedMetadata = seriesInfo.map(obj => obj.flavor === "ext/series" ? { ...obj, fields: newExt } : obj);
 
         var metadata = JSON.stringify(updatedMetadata);
         fd.append("metadata", metadata);
-        console.log("metadata to update: ", fd);
         $("#processingModal").modal('show');
         updateSeriesMetadata(fd);
     });
 });
 
 function toggleAIFeatures() {
-    const isNibitySelected = seriesCaptionsDropdown.value === "nibity" || 
+    const isNibitySelected = seriesCaptionsDropdown.value === "nibity" ||
         series_captions_label.style.display !== "none";
 
     if (isNibitySelected) {
