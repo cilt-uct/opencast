@@ -1,0 +1,20 @@
+id: nibity-start-transcription
+title: Start Nibity Transcription
+tags:
+  - archive
+description: Start the Nibity transcription
+operations:
+  # Start Nibity transcription job
+  operation:
+    - id: nibity-start-transcription
+      max-attempts: 3
+      retry-strategy: hold
+      fail-on-error: true
+      exception-handler-workflow: partial-error
+      description: Start Nibity captions job
+      configurations:
+        # Skip this operation if flavor already exists. Used for cases when mp already has captions.
+        - skip-if-flavor-exists: captions/vtt+en
+        - language-code: en-US
+        # Audio to be translated, produced in the previous compose operation
+        - source-flavor: presenter/source

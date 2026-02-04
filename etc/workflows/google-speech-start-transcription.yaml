@@ -1,0 +1,54 @@
+id: google-speech-start-transcription
+title: Start Google Speech Transcription
+tags: 
+  - archive
+description: Start the Google speech transcription service.
+configuration_panel:
+  # [{
+  #   <div id="workflow-configuration">
+  #     <fieldset>
+  #       <legend>Configuration values</legend>
+  #       <div>
+  #         <label for="skipFlavor: Flavor to skip:&nbsp;&nbsp;&nbsp;</label>
+  #         <input id="skipFlavor" name="skipFlavor" type="text" maxlength="255" class="configField" style="width: 200px;" value="captions/timedtext"/>
+  #       </div>
+  #       <br/>
+  #       <div>
+  #         <label for="languageCode"> Language code</label>
+  #         <input id="languageCode" name="languageCode" type="text" maxlength="25" class="configField" style="width: 200px;" value="en-US"/>
+  #       </div>
+  #     </fieldset>
+  #   </div>
+  # }]
+
+operations:
+  # Configuration values
+  - id: defaults
+    description: INIT- Applying default values
+    configurations:
+      - skipFlavor: captions/timedtext
+      - languageCode: en-GB
+
+  # Encode audio to flac
+  - id: compose
+    fail-on-error: true
+    exception-handler-workflow: partial-error
+    description: Extract audio for transcript generation
+    configurations:
+      - source-flavor: '*/source'
+      - target-flavor: audio/flac
+      - target-tags: transcript
+      - encoding-profile: audio-flac
+      - process-first-match-only: true
+
+  # Start Google Speech transcription job
+  - id: google-speech-start-transcription
+    fail-on-error: true
+    exception-handler-workflow: partial-error
+    description: Start Google Speech transcription job 
+    configurations:
+      # Skip this operation if flavor already exists. Used for cases when mp already has captions.
+      - skip-if-flavor-exists: ${skipFlavor}
+      - language-code: ${languageCode}
+      # Audio to be translated, produced in the previous compose operation
+      - source-tag: transcript
