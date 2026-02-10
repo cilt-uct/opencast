@@ -512,7 +512,11 @@ public class SchedulerServiceImpl extends AbstractIndexProducer implements Sched
           ids.add(id);
         }
         //Select the list of ids which already exist.  Hint: this needs to be zero
-        List<Snapshot> snapshots = assetManager.getLatestSnapshots(ids);
+        List<String> idStrings = ids.stream()
+            .map(Id::toString)
+            .collect(Collectors.toList());
+
+        List<Snapshot> snapshots = assetManager.getLatestSnapshots(idStrings);
 
         //If there is conflict, clear the list and start over
         if (snapshots.size() > 0) {
