@@ -145,15 +145,11 @@ public class NibityAttachTranscriptionOperationHandler extends AbstractWorkflowO
       MediaPackageElement transcription = service.
             getGeneratedTranscription(mediaPackage.getIdentifier().toString(), jobId, type);
 
-      String captionsZipNameVtt = mediaPackage + ".vtt";
-      String captionsZipNameDocx = mediaPackage + ".docx";
-      String captionsZipNameJson = mediaPackage + ".json";
       ZipFile zipFile = new ZipFile(workspace.get(transcription.getURI()));
-      ZipEntry zippedVtt = zipFile.getEntry(captionsZipNameVtt);
-      ZipEntry zippedDocx = zipFile.getEntry(captionsZipNameDocx);
-      ZipEntry zippedJson = zipFile.getEntry(captionsZipNameJson);
+      ZipEntry zippedVtt = findEntryByExtension(zipFile, ".vtt");
+      ZipEntry zippedJson = findEntryByExtension(zipFile, ".json");
 
-      if (zippedVtt == null && zippedDocx == null) {
+      if (zippedVtt == null && zippedJson == null) {
         logger.debug("Neither captions nor transcript found in zip file {}", transcription.getURI());
         throw new WorkflowOperationException("neither captions nor transcript found in the zip file");
       } else {
@@ -168,17 +164,6 @@ public class NibityAttachTranscriptionOperationHandler extends AbstractWorkflowO
                   mediaPackage, flavor, captionType, targetTagOption);
         } else {
           workflowInstance.setConfiguration(HAS_VTT, "false");
-        }
-
-        // Extract the transcript docx
-        if (zippedDocx != null) {
-          InputStream zis = zipFile.getInputStream(zippedDocx);
-          String transcriptMimeType = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
-          String transcriptIdentifier = "captions.docx";
-          String transcriptFileType = "docx";
-          MediaPackageElement.Type transcriptType = Attachment.TYPE;
-          mediaPackage = addTranscriptionElementToMediaPackage(zis, transcriptMimeType, transcriptIdentifier,
-                  transcriptFileType, mediaPackage, flavor, transcriptType, targetTagOption);
         }
 
         // Extract the transcript json
@@ -211,6 +196,13 @@ public class NibityAttachTranscriptionOperationHandler extends AbstractWorkflowO
   @Reference(target = "(provider=nibity)")
   public void setTranscriptionService(TranscriptionService service) {
     this.service = service;
+  }
+
+  private ZipEntry findEntryByExtension(ZipFile zip, String ext) {
+    return zip.stream()
+        .filter(e -> e.getName().toLowerCase().endsWith(ext))
+        .findFirst()
+        .orElse(null);
   }
 
   @Reference

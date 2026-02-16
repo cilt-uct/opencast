@@ -581,11 +581,8 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
         if (response != null) {
           response.close();
         }
-        // Clean up the submission file (if immediate cleanup)
-        if (cleanupSubmission) {
-          deleteStorageFile(filename);
-        }
       } catch (IOException e) {
+        logger.warn("Error closing HTTP resources", e);
       }
     }
   }

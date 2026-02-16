@@ -925,6 +925,11 @@
     </dependency>
     <dependency>
       <groupId>org.opencastproject</groupId>
+      <artifactId>opencast-transcription-service-nibity</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.opencastproject</groupId>
       <artifactId>opencast-transcription-service-persistence</artifactId>
       <version>${project.version}</version>
     </dependency>

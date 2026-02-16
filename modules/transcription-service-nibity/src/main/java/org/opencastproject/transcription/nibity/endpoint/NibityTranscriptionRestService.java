@@ -23,6 +23,7 @@ package org.opencastproject.transcription.nibity.endpoint;
 import static javax.servlet.http.HttpServletResponse.SC_NOT_FOUND;
 import static javax.servlet.http.HttpServletResponse.SC_OK;
 import static org.opencastproject.util.MimeTypes.getMimeType;
+import static org.opencastproject.util.RestUtil.fileResponse;
 import static org.opencastproject.util.doc.rest.RestParameter.Type.STRING;
 
 import org.opencastproject.job.api.JobProducer;
@@ -40,11 +41,11 @@ import org.osgi.service.component.ComponentContext;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.jaxrs.whiteboard.propertytypes.JaxrsResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.io.InputStream;
+import java.util.Optional;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -52,7 +53,7 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.core.Response;
 
 
-@Path("/")
+@Path("/transcripts/nibity")
 @RestService(name = "NibityTranscriptionRestService",
         title = "Transcription Service REST Endpoint (uses Nibity services)",
         abstractText = "Uses external service to generate transcriptions of recordings.",
@@ -68,6 +69,7 @@ import javax.ws.rs.core.Response;
         "opencast.service.jobproducer=true"
     }
 )
+@JaxrsResource
 public class NibityTranscriptionRestService extends AbstractJobProducerEndpoint {
 
   /**
@@ -137,20 +139,11 @@ public class NibityTranscriptionRestService extends AbstractJobProducerEndpoint 
   public Response restGetSubmission(@PathParam("fileName") String fileName) throws NotFoundException {
     logger.debug("Submission media requested: {}", fileName);
 
-    try {
-      InputStream in = wfr.get(NibityTranscriptionService.SUBMISSION_COLLECTION, fileName);
-      return Response.ok(in)
-        .type(getMimeType(fileName))
-        .header(
-          "Content-Disposition",
-          "inline; filename=\"" + fileName + "\""
-        )
-        .build();
-    } catch (IOException e) {
-      logger.error("Unable to read submission file {}", fileName, e);
-      return Response.serverError()
-        .entity("Unable to read submission file")
-        .build();
-    }
+    return fileResponse(wfr.getFileFromCollection(
+          NibityTranscriptionService.SUBMISSION_COLLECTION,
+          fileName),
+          getMimeType(fileName),
+          Optional.of(fileName)
+          ).build();
   }
 }
