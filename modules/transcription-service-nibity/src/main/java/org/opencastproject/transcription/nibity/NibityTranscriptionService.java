@@ -810,6 +810,22 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
       try {
         workspace.get(uri);
         logger.info("Found captions at URI: {}", uri);
+
+        if (cleanupSubmission) {
+          try {
+            String submissionFilename = mpId + "_media";
+
+            for (URI fileUri : wfr.getCollectionContents(SUBMISSION_COLLECTION)) {
+              String name = FilenameUtils.getName(fileUri.toString());
+              if (name.startsWith(submissionFilename)) {
+                deleteStorageFile(name);
+                break;
+              }
+            }
+          } catch (Exception cleanupEx) {
+            logger.warn("Submission cleanup failed for mp {}", mpId, cleanupEx);
+          }
+        }
       } catch (Exception e) {
         try {
           logger.info("Results not saved: getting from service for jobId {}", jobId);
