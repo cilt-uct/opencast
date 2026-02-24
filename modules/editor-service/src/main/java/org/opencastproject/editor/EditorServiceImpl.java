@@ -803,7 +803,9 @@ public class EditorServiceImpl implements EditorService {
     }
 
     if (!segments.isEmpty()) {
-      return segments;
+      processSegments(mediaPackage, segments);
+    }  else {
+      addDefaultDeletedSegments(mediaPackage, segments);
     }
 
     // Read from silence detection flavors
