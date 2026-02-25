@@ -935,6 +935,11 @@
     </dependency>
     <dependency>
       <groupId>org.opencastproject</groupId>
+      <artifactId>opencast-transcription-service-whisper</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.opencastproject</groupId>
       <artifactId>opencast-transcription-service-workflowoperation</artifactId>
       <version>${project.version}</version>
     </dependency>
