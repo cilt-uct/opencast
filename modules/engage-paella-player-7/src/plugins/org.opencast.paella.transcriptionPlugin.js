@@ -59,8 +59,10 @@ export default class transcriptionPlugin extends PopUpButtonPlugin {
     const seriesId = this.player.videoManifest.metadata.series;
     const seriesInfo = await fetch(getUrlFromOpencastServer(`/api/series/${ seriesId }/metadata`));
     const episode = await this.player.getEpisode({episodeId: this.player.videoId});
-    const tracks = episode?.mediapackage?.media?.track ?? [];
-    const attachments = episode?.mediapackage?.attachments?.attachment ?? [];
+
+    const toArray = (v) => Array.isArray(v) ? v : v ? [v] : [];
+    const tracks = toArray(episode?.mediapackage?.media?.track);
+    const attachments = toArray(episode?.mediapackage?.attachments?.attachment);
 
     this.seriesInfo = await seriesInfo.json();
     this._seriesData = this.seriesInfo[1].fields;
