@@ -23,9 +23,11 @@ package org.opencastproject.execute.impl;
 
 import org.opencastproject.execute.api.ExecuteException;
 import org.opencastproject.execute.api.ExecuteService;
+import org.opencastproject.job.api.Job;
 import org.opencastproject.mediapackage.MediaPackage;
 import org.opencastproject.mediapackage.MediaPackageElement;
 import org.opencastproject.mediapackage.MediaPackageElementBuilderFactory;
+import org.opencastproject.mediapackage.MediaPackageElementParser;
 import org.opencastproject.util.NotFoundException;
 import org.opencastproject.workspace.api.Workspace;
 
@@ -152,5 +154,33 @@ public class ExecuteServiceImplTest {
 
     // If it doesn't get a file not found, it is ok
     Assert.assertEquals(result, "");
+  }
+
+  @Test
+  public void testWithJobIdParam() throws Exception {
+    long jobId = 12345L;
+    MediaPackageElement element = MediaPackageElementBuilderFactory.newInstance().newElementBuilder()
+            .elementFromURI(baseDirURI);
+
+    // Build arguments for Execute_Element with #{job_id} in the params.
+    // After substitution, #{job_id} becomes "12345" and the command runs as: echo 12345
+    List<String> args = new ArrayList<>();
+    args.add("echo");
+    args.add(ExecuteService.JOB_ID_PATTERN);
+    args.add(MediaPackageElementParser.getAsXml(element));
+
+    Job job = EasyMock.createNiceMock(Job.class);
+    EasyMock.expect(job.getId()).andReturn(jobId).anyTimes();
+    EasyMock.expect(job.getOperation()).andReturn(ExecuteServiceImpl.Operation.Execute_Element.toString()).anyTimes();
+    EasyMock.expect(job.getArguments()).andReturn(args).anyTimes();
+    EasyMock.replay(job);
+
+    executor.allowedCommands.add("*");
+    try {
+      String result = executor.process(job);
+      Assert.assertEquals("", result);
+    } finally {
+      executor.allowedCommands.clear();
+    }
   }
 }

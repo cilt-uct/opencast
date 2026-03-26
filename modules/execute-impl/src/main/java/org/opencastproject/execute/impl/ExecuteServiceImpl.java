@@ -287,6 +287,10 @@ public class ExecuteServiceImpl extends AbstractJobProducer implements ExecuteSe
         outFileName = (outFileName == null) ? null : job.getId() + "_" + outFileName;
       }
 
+      // Substitute the job ID placeholder in the params argument (index 1).
+      // At this point arguments contains: [exec, params, serialized_mp_or_element], so index 1 is always the params.
+      arguments.set(1, arguments.get(1).replace(JOB_ID_PATTERN, String.valueOf(job.getId())));
+
       switch (op) {
         case Execute_Mediapackage:
           mp = MediaPackageParser.getFromXml(arguments.remove(2));
