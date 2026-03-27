@@ -183,7 +183,8 @@ public class HttpNotificationWorkflowOperationHandler extends AbstractWorkflowOp
       params.add(new BasicNameValuePair(HTTP_PARAM_WORKFLOW, Long.toString(workflowInstance.getId())));
 
       // Add the mediapackage id
-      params.add(new BasicNameValuePair(HTTP_PARAM_MEDIAPACKAGE, workflowInstance.getMediaPackage().getIdentifier().toString()));
+      params.add(new BasicNameValuePair(HTTP_PARAM_MEDIAPACKAGE,
+              workflowInstance.getMediaPackage().getIdentifier().toString()));
 
       request.setEntity(new UrlEncodedFormEntity(params, "UTF-8"));
     } catch (UnsupportedEncodingException e) {
