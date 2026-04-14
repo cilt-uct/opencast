@@ -663,6 +663,28 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
           JSONObject jsonObject = (JSONObject) jsonParser.parse(jsonString);
 
           JSONArray resultArray = (JSONArray) jsonObject.get("data");
+
+          if (resultArray == null || resultArray.isEmpty()) {
+            try {
+              logger.warn("Nibity returned empty data array for job {}, mp {}. Marking job as Error.",
+                  jobId, mpId);
+
+              TranscriptionJobControl jc = database.findByJob(jobId);
+
+              if (jc != null) {
+                database.updateJobControl(jobId, TranscriptionJobControl.Status.Error.name());
+              }
+
+              sendEmail("Transcription ERROR",
+                  String.format("Nibity returned empty transcription data for mpId=%s with jobId=%s. Marking job as Error.",
+                      mpId, jobId));
+
+            } catch (Exception e) {
+              logger.error("Failed handling empty Nibity response for mpId={}, jobId={}", mpId, jobId, e);
+            }
+            return false;
+          }
+
           JSONObject result = (JSONObject) resultArray.get(0);
 
           Long transcriptId = (Long) result.get("file_id");
