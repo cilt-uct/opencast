@@ -27,6 +27,7 @@ import org.opencastproject.job.api.AbstractJobProducer;
 import org.opencastproject.job.api.Job;
 import org.opencastproject.kernel.mail.SmtpService;
 import org.opencastproject.mediapackage.Attachment;
+import org.opencastproject.mediapackage.MediaPackage;
 import org.opencastproject.mediapackage.MediaPackageElement;
 import org.opencastproject.mediapackage.MediaPackageElementBuilder;
 import org.opencastproject.mediapackage.MediaPackageElementBuilderFactory;
@@ -676,7 +677,7 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
               }
 
               sendEmail("Transcription ERROR",
-                  String.format("Nibity returned empty transcription data for mpId=%s with jobId=%s. Marking job as Error.",
+                  String.format("Nibity returned empty response for mpId=%s with jobId=%s. Marking job as Error.",
                       mpId, jobId));
 
             } catch (Exception e) {
@@ -852,8 +853,8 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
         try {
           logger.info("Results not saved: getting from service for jobId {}", jobId);
           // Not saved yet so call the transcription service to get the results
-          checkJobResults(jobId, mpId);
-        } catch (IOException ex) {
+          // checkJobResults(jobId, mpId);
+        } catch (Exception ex) {
           logger.error("Unable to retrieve transcription job, error: {}", ex.toString());
         }
       }
@@ -945,6 +946,25 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
   private String buildResultsFileName(String jobId, String extension) {
     return workspace.toSafeName(jobId + "." + extension);
   }
+
+  private boolean hasCaptions(String mpId) {
+    try {
+      Optional<Snapshot> snapshot = assetManager.getLatestSnapshot(mpId);
+      if (snapshot.isEmpty()) {
+        logger.debug("Latest snapshot not found for mediapackage {}", mpId);
+        return false;
+      }
+
+      MediaPackage mp = snapshot.get().getMediaPackage();
+
+      return mp.getElementsByFlavor(new MediaPackageElementFlavor("captions", "source")).length > 0;
+
+    } catch (Exception e) {
+      logger.warn("Error checking captions for mp {}", mpId, e);
+      return false;
+    }
+  }
+
 
   @Reference
   public void setServiceRegistry(ServiceRegistry serviceRegistry) {
@@ -1116,6 +1136,14 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
               continue;
             }
             securityService.setOrganization(organization);
+
+            // Skip if captions already exist for this mp
+            if (hasCaptions(mpId)) {
+              logger.info("Captions already attached on mp {}, skipping nibity-attach-captions workflow", mpId);
+
+              database.updateJobControl(jobId, TranscriptionJobControl.Status.Closed.name());
+              continue;
+            }
 
             // Build workflow
             Map<String, String> params = new HashMap<String, String>();
