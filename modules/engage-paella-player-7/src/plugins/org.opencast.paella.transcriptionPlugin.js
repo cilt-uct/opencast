@@ -104,6 +104,27 @@ export default class transcriptionPlugin extends PopUpButtonPlugin {
   }
 
   async load() {
+    const CopyIcon = `      
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none"
+        stroke="currentColor" stroke-width="1.7" stroke-linecap="round"
+        stroke-linejoin="round">
+        <rect x="4" y="4" width="10" height="10" rx="2"></rect>
+        <rect x="10" y="10" width="10" height="10" rx="2"></rect>
+      </svg>
+    `;
+
+    const CheckCircleIcon = `
+      <svg viewBox="0 0 24 24" width="20" height="20">
+        <circle cx="12" cy="12" r="10" fill="green"></circle>
+        <path d="M7 12.5L10 15.5L17 8.5"
+              fill="none"
+              stroke="white"
+              stroke-width="2.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"/>
+      </svg>
+      `;
+
     const iconMapping = {
       icon: this.player.getCustomPluginIcon(this.name, 'buttonIcon') || ListIcon,
       transcriptIcon: ListIcon,
@@ -115,6 +136,8 @@ export default class transcriptionPlugin extends PopUpButtonPlugin {
       notesIcon: NotesIcon,
       summaryIcon: SummaryIcon,
       infoIcon: InfoIcon,
+      copyIcon: CopyIcon,
+      checkCircleIcon: CheckCircleIcon,
     };
 
     Object.entries(iconMapping).forEach(([key, value]) => {
@@ -192,6 +215,15 @@ export default class transcriptionPlugin extends PopUpButtonPlugin {
         <hr/>
       </div>`;
 
+    const transcriptCopyButton = `
+      <div class="transcript-copy-container">
+        <button class="copy-transcript-btn" aria-label="Copy transcript" type="button">
+          <span class="tab-icon">${this.copyIcon}</span>
+        </button>
+
+        <span class="copy-feedback" role="status" aria-live="polite"></span>
+      </div>`;
+
     const tabContents = [
       { id: 'transcript', class: 'active search-content', content: `
         <div class="input-container">
@@ -200,6 +232,7 @@ export default class transcriptionPlugin extends PopUpButtonPlugin {
             class="search-input form-control"/>
           <button class="clear-button" title="Clear search">&#x2715;</button>
         </div>
+        ${transcriptCopyButton}
         <div class="transcript-text tab-contents"></div>`
       },
       { id: 'summary', class: 'summary-content', content: `
@@ -505,6 +538,30 @@ export default class transcriptionPlugin extends PopUpButtonPlugin {
     container.appendChild(newLandscapeContainer);
   }
 
+  async copyTranscriptToClipboard(text) {
+    if (navigator.clipboard && window.isSecureContext) {
+      return navigator.clipboard.writeText(text);
+    }
+
+    const textArea = document.createElement('textarea');
+    textArea.value = text;
+
+    textArea.style.position = 'fixed';
+    textArea.style.left = '-9999px';
+    textArea.style.top = '-9999px';
+
+    document.body.appendChild(textArea);
+
+    textArea.focus();
+    textArea.select();
+
+    try {
+      document.execCommand('copy');
+    } finally {
+      textArea.remove();
+    }
+  }
+
   // Track User Event data
   async logEvent(eventType, details = {}) {
     try {
@@ -621,9 +678,12 @@ export default class transcriptionPlugin extends PopUpButtonPlugin {
         sourcePlugin._clearButton = document.querySelector('.clear-button');
         sourcePlugin._languageDropdown = document.querySelector('.summary-language-dropdown');
         sourcePlugin._summaryText = document.querySelector('.summary-text');
-        sourcePlugin.menuButton = document.querySelector('.menu-button');
-        sourcePlugin.burgerMenu = document.querySelector('.burger-menu');
+        sourcePlugin._menuButton = document.querySelector('.menu-button');
+        sourcePlugin._burgerMenu = document.querySelector('.burger-menu');
         const aiModelText = document.querySelector('.ai-model-text');
+        const copyBtn = document.querySelector('.copy-transcript-btn');
+        const feedbackSpan = document.querySelector('.copy-feedback');
+        const copyIconSpan = copyBtn ? copyBtn.querySelector('.tab-icon') : null;
 
         sourcePlugin.transcriptPopupContainer = Array.from(document.querySelectorAll('.popup-container'))
           .find(popup => popup.style.display === 'block');
@@ -675,13 +735,13 @@ export default class transcriptionPlugin extends PopUpButtonPlugin {
           });
         });
 
-        sourcePlugin.menuButton.addEventListener('click', async () => {
-          sourcePlugin.burgerMenu.classList.toggle('active');
+        sourcePlugin._menuButton.addEventListener('click', async () => {
+          sourcePlugin._burgerMenu.classList.toggle('active');
         });
 
         sourcePlugin._tabs.forEach(button => {
           button.addEventListener('click', () => {
-            sourcePlugin.burgerMenu.classList.remove('active');
+            sourcePlugin._burgerMenu.classList.remove('active');
           });
         });
 
@@ -698,6 +758,66 @@ export default class transcriptionPlugin extends PopUpButtonPlugin {
 
             evt.stopPropagation();
           });
+        });
+
+        let copyResetTimer = null;
+        feedbackSpan.textContent = 'Copy transcript';
+
+        copyBtn.addEventListener('click', async () => {
+          const transcriptText =
+            (this._cueElements?.length
+              ? this._cueElements.map(el => el.textContent).join(' ')
+              : document.querySelector('.transcript-text')?.textContent
+            )?.trim() || '';
+
+          if (!transcriptText) return;
+
+          try {
+            await this.copyTranscriptToClipboard(transcriptText);
+
+            copyBtn.classList.add('copied');
+            feedbackSpan.textContent = 'Copied to clipboard';
+            feedbackSpan.classList.add('show', 'active', 'success');
+            feedbackSpan.classList.remove('error');
+
+            copyIconSpan.innerHTML = this.checkCircleIcon;
+
+            clearTimeout(copyResetTimer);
+
+            copyResetTimer = setTimeout(() => {
+              copyBtn.classList.remove('copied');
+
+              feedbackSpan.textContent = 'Copy transcript';
+              feedbackSpan.classList.remove(
+                'show',
+                'active',
+                'success',
+                'error'
+              );
+
+              copyIconSpan.innerHTML = this.copyIcon;
+            }, 2000);
+
+          } catch (err) {
+            // eslint-disable-next-line no-console
+            console.error(err);
+
+            feedbackSpan.textContent = 'Copy failed';
+            feedbackSpan.classList.add('show', 'active', 'error');
+
+            clearTimeout(copyResetTimer);
+
+            copyResetTimer = setTimeout(() => {
+              feedbackSpan.textContent = 'Copy transcript';
+
+              feedbackSpan.classList.remove(
+                'show',
+                'active',
+                'success',
+                'error'
+              );
+            }, 2000);
+          }
         });
 
         sourcePlugin._input.addEventListener('keyup', (evt) => {

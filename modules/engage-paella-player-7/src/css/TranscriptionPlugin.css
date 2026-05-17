@@ -227,6 +227,110 @@ html {
   justify-content: center;
 }
 
+.transcript-copy-container {
+  position: relative;
+  display: flex;
+  justify-content: flex-end;
+  width: 100%;
+}
+
+.copy-transcript-btn {
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: transparent;
+  border-radius: 6px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  cursor: pointer;
+
+  transition:
+    background-color 0.15s ease,
+    transform 0.12s ease;
+
+  position: relative;
+}
+
+.copy-transcript-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.copy-transcript-btn:active {
+  transform: scale(0.96);
+}
+
+.copy-transcript-btn:focus-visible {
+  outline: 2px solid #4c9aff;
+  outline-offset: 2px;
+}
+
+.copy-transcript-btn .tab-icon svg {
+  width: 18px;
+  height: 18px;
+  fill: #dfe1e6;
+  transition: fill 0.2s ease;
+}
+
+.copy-transcript-btn:hover .tab-icon svg {
+  fill: #ffffff;
+}
+
+.copy-transcript-btn.copied .tab-icon svg {
+  fill: #36b37e;
+}
+
+.copy-feedback {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+
+  opacity: 0;
+  pointer-events: none;
+
+  padding: 6px 10px;
+  border-radius: 6px;
+
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+
+  transform: translateY(-4px);
+
+  transition:
+    opacity 0.18s ease,
+    transform 0.18s ease;
+
+  background: #172b4d;
+  color: white;
+
+  box-shadow: 0 4px 8px rgba(9, 30, 66, 0.15);
+
+  z-index: 20;
+}
+
+.copy-transcript-btn:hover + .copy-feedback:not(.active) {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.copy-feedback.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.copy-feedback.success {
+  background: #172b4d;
+  color: white;
+}
+
+.copy-feedback.error {
+  background: #de350b;
+  color: white;
+}
+
 .tabs {
   display: flex;
   padding: 20px 50px;
