@@ -31,8 +31,9 @@ import org.opencastproject.security.api.Role;
 import org.opencastproject.security.api.RoleProvider;
 import org.opencastproject.security.api.User;
 import org.opencastproject.security.api.UserProvider;
-import org.opencastproject.util.XmlSafeParser;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
@@ -43,14 +44,9 @@ import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
 
 import java.io.BufferedInputStream;
 import java.io.FileNotFoundException;
-import java.io.StringReader;
 import java.lang.management.ManagementFactory;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -69,7 +65,6 @@ import java.util.regex.PatternSyntaxException;
 import javax.management.InstanceNotFoundException;
 import javax.management.MBeanServer;
 import javax.management.ObjectName;
-import javax.xml.parsers.DocumentBuilder;
 
 /**
  * A UserProvider that reads user roles from Sakai.
@@ -83,6 +78,9 @@ public class SakaiUserProviderInstance implements UserProvider, RoleProvider, Ca
   public static final String PROVIDER_NAME = "sakai";
 
   private static final String OC_USERAGENT = "Opencast";
+
+  /** JSON object mapper for parsing Sakai responses */
+  private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
   /** The logger */
   private static final Logger logger = LoggerFactory.getLogger(SakaiUserProviderInstance.class);
@@ -433,7 +431,7 @@ public class SakaiUserProviderInstance implements UserProvider, RoleProvider, Ca
     logger.debug("getRolesFromSakai(" + userId + ")");
     try {
 
-      URL url = new URL(sakaiUrl + "/direct/membership/fastroles/" + userId + ".xml" + "?__auth=basic");
+      URL url = new URL(sakaiUrl + "/direct/membership/fastroles/" + userId + ".json" + "?__auth=basic");
       String encoded = Base64.encodeBase64String((sakaiUsername + ":" + sakaiPassword).getBytes("utf8"));
 
       HttpURLConnection connection = (HttpURLConnection) url.openConnection();
@@ -442,23 +440,20 @@ public class SakaiUserProviderInstance implements UserProvider, RoleProvider, Ca
       connection.setRequestProperty("Authorization", "Basic " + encoded);
       connection.setRequestProperty("User-Agent", OC_USERAGENT);
 
-      String xml = IOUtils.toString(new BufferedInputStream(connection.getInputStream()));
-      logger.debug(xml);
+      String json = IOUtils.toString(new BufferedInputStream(connection.getInputStream()));
+      logger.debug(json);
 
-      DocumentBuilder parser = XmlSafeParser.newDocumentBuilderFactory().newDocumentBuilder();
+      ObjectMapper mapper = OBJECT_MAPPER;
+      JsonNode rootNode = mapper.readTree(json);
+      JsonNode memberships = rootNode.path("membership_collection");
 
-      Document document = parser.parse(new org.xml.sax.InputSource(new StringReader(xml)));
-
-      Element root = document.getDocumentElement();
-      NodeList nodes = root.getElementsByTagName("membership");
       List<String> roleList = new ArrayList<String>();
-      for (int i = 0; i < nodes.getLength(); i++) {
-        Element element = (Element) nodes.item(i);
+      for (JsonNode element : memberships) {
         // The Role in sakai
-        String sakaiRole = getTagValue("memberRole", element);
+        String sakaiRole = element.path("memberRole").asText(null);
 
         // the location in sakai e.g. /site/admin
-        String sakaiLocationReference = getTagValue("locationReference", element);
+        String sakaiLocationReference = element.path("locationReference").asText(null);
         // we don't do the sakai admin role
         if ("/site/!admin".equals(sakaiLocationReference)) {
           continue;
@@ -495,7 +490,7 @@ public class SakaiUserProviderInstance implements UserProvider, RoleProvider, Ca
 
     try {
 
-      URL url = new URL(sakaiUrl + "/direct/user/" + eid + ".xml" + "?__auth=basic");
+      URL url = new URL(sakaiUrl + "/direct/user/" + eid + ".json" + "?__auth=basic");
       logger.debug("Sakai URL: " + sakaiUrl);
       String encoded = Base64.encodeBase64String((sakaiUsername + ":" + sakaiPassword).getBytes("utf8"));
       HttpURLConnection connection = (HttpURLConnection) url.openConnection();
@@ -504,17 +499,15 @@ public class SakaiUserProviderInstance implements UserProvider, RoleProvider, Ca
       connection.setRequestProperty("Authorization", "Basic " + encoded);
       connection.setRequestProperty("User-Agent", OC_USERAGENT);
 
-      String xml = IOUtils.toString(new BufferedInputStream(connection.getInputStream()));
-      logger.debug(xml);
+      String json = IOUtils.toString(new BufferedInputStream(connection.getInputStream()));
+      logger.debug(json);
 
-      // Parse the document
-      DocumentBuilder parser = XmlSafeParser.newDocumentBuilderFactory().newDocumentBuilder();
-      Document document = parser.parse(new org.xml.sax.InputSource(new StringReader(xml)));
-      Element root = document.getDocumentElement();
+      ObjectMapper mapper = OBJECT_MAPPER;
+      JsonNode root = mapper.readTree(json);
 
-      String sakaiID = getTagValue("id", root);
-      String sakaiEmail = getTagValue("email", root);
-      String sakaiDisplayName = getTagValue("displayName", root);
+      String sakaiID = root.path("id").asText(null);
+      String sakaiEmail = root.path("email").asText(null);
+      String sakaiDisplayName = root.path("displayName").asText(null);
 
       return new String[]{sakaiID, sakaiEmail, sakaiDisplayName};
 
@@ -556,23 +549,6 @@ public class SakaiUserProviderInstance implements UserProvider, RoleProvider, Ca
     String ltiRole = instructorRoles.contains(sakaiRole) ? LTI_INSTRUCTOR_ROLE : LTI_LEARNER_ROLE;
 
     return siteId + "_" + ltiRole;
-  }
-
-  /**
-   * Get a value for for a tag in the element
-   * 
-   * @param sTag
-   * @param eElement
-   * @return
-   */
-  private static String getTagValue(String sTag, Element eElement) {
-    if (eElement.getElementsByTagName(sTag) == null) {
-      return null;
-    }
-
-    NodeList nlList = eElement.getElementsByTagName(sTag).item(0).getChildNodes();
-    Node nValue = nlList.item(0);
-    return (nValue != null) ? nValue.getNodeValue() : null;
   }
 
   @Override
