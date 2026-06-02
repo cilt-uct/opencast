@@ -147,8 +147,8 @@
     <feature>opencast-services-processing-heavy-load</feature>
     <feature>opencast-services-processing-light-load</feature>
 
-    <bundle start-level="82">mvn:org.opencastproject/opencast-admin-ui/${project.version}</bundle>
-    <bundle start-level="82">mvn:org.opencastproject/opencast-admin-ui-interface/${project.version}</bundle>
+    <bundle start-level="82">mvn:org.opencastproject/opencast-admin-service/${project.version}</bundle>
+    <bundle start-level="82">mvn:org.opencastproject/opencast-admin/${project.version}</bundle>
     <bundle start-level="82">mvn:org.opencastproject/opencast-adopter-registration-api/${project.version}</bundle>
     <bundle start-level="82">mvn:org.opencastproject/opencast-adopter-registration-impl/${project.version}</bundle>
     <bundle start-level="82">mvn:org.opencastproject/opencast-analyze-mediapackage-workflowoperation/${project.version}</bundle>
@@ -194,6 +194,7 @@
     <bundle start-level="82">mvn:org.opencastproject/opencast-lti/${project.version}</bundle>
     <bundle start-level="82">mvn:org.opencastproject/opencast-lti-service-api/${project.version}</bundle>
     <bundle start-level="82">mvn:org.opencastproject/opencast-lti-service-impl/${project.version}</bundle>
+    <bundle start-level="82">mvn:org.opencastproject/opencast-matrix-notification-workflowoperation/${project.version}</bundle>
     <bundle start-level="82">mvn:org.opencastproject/opencast-mattermost-notification-workflowoperation/${project.version}</bundle>
     <bundle start-level="82">mvn:org.opencastproject/opencast-message-broker-api/${project.version}</bundle>
     <bundle start-level="82">mvn:org.opencastproject/opencast-metadata/${project.version}</bundle>
@@ -249,8 +250,8 @@
   <feature name="opencast-admin" version="${project.version}">
     <feature>opencast-core</feature>
 
-    <bundle start-level="82">mvn:org.opencastproject/opencast-admin-ui/${project.version}</bundle>
-    <bundle start-level="82">mvn:org.opencastproject/opencast-admin-ui-interface/${project.version}</bundle>
+    <bundle start-level="82">mvn:org.opencastproject/opencast-admin-service/${project.version}</bundle>
+    <bundle start-level="82">mvn:org.opencastproject/opencast-admin/${project.version}</bundle>
     <bundle start-level="82">mvn:org.opencastproject/opencast-adopter-registration-api/${project.version}</bundle>
     <bundle start-level="82">mvn:org.opencastproject/opencast-adopter-registration-impl/${project.version}</bundle>
     <bundle start-level="82">mvn:org.opencastproject/opencast-analyze-mediapackage-workflowoperation/${project.version}</bundle>
@@ -304,6 +305,7 @@
     <bundle start-level="82">mvn:org.opencastproject/opencast-lti/${project.version}</bundle>
     <bundle start-level="82">mvn:org.opencastproject/opencast-lti-service-api/${project.version}</bundle>
     <bundle start-level="82">mvn:org.opencastproject/opencast-lti-service-impl/${project.version}</bundle>
+    <bundle start-level="82">mvn:org.opencastproject/opencast-matrix-notification-workflowoperation/${project.version}</bundle>
     <bundle start-level="82">mvn:org.opencastproject/opencast-mattermost-notification-workflowoperation/${project.version}</bundle>
     <bundle start-level="82">mvn:org.opencastproject/opencast-message-broker-api/${project.version}</bundle>
     <bundle start-level="82">mvn:org.opencastproject/opencast-metadata/${project.version}</bundle>
@@ -372,8 +374,8 @@
   <feature name="opencast-adminpresentation" version="${project.version}">
     <feature>opencast-core</feature>
 
-    <bundle start-level="82">mvn:org.opencastproject/opencast-admin-ui/${project.version}</bundle>
-    <bundle start-level="82">mvn:org.opencastproject/opencast-admin-ui-interface/${project.version}</bundle>
+    <bundle start-level="82">mvn:org.opencastproject/opencast-admin-service/${project.version}</bundle>
+    <bundle start-level="82">mvn:org.opencastproject/opencast-admin/${project.version}</bundle>
     <bundle start-level="82">mvn:org.opencastproject/opencast-adopter-registration-api/${project.version}</bundle>
     <bundle start-level="82">mvn:org.opencastproject/opencast-adopter-registration-impl/${project.version}</bundle>
     <bundle start-level="82">mvn:org.opencastproject/opencast-analyze-mediapackage-workflowoperation/${project.version}</bundle>
@@ -430,6 +432,7 @@
     <bundle start-level="82">mvn:org.opencastproject/opencast-lti/${project.version}</bundle>
     <bundle start-level="82">mvn:org.opencastproject/opencast-lti-service-api/${project.version}</bundle>
     <bundle start-level="82">mvn:org.opencastproject/opencast-lti-service-impl/${project.version}</bundle>
+    <bundle start-level="82">mvn:org.opencastproject/opencast-matrix-notification-workflowoperation/${project.version}</bundle>
     <bundle start-level="82">mvn:org.opencastproject/opencast-mattermost-notification-workflowoperation/${project.version}</bundle>
     <bundle start-level="82">mvn:org.opencastproject/opencast-message-broker-api/${project.version}</bundle>
     <bundle start-level="82">mvn:org.opencastproject/opencast-metadata/${project.version}</bundle>

@@ -84,7 +84,6 @@ nav:
           - Overview: "configuration/https/index.md"
           - Using Nginx: "configuration/https/nginx.md"
           - Using Apache httpd: configuration/https/apache-httpd.md
-          - Internal HTTPS: "configuration/https/opencast.only.md"
           - Self-Signed Certificates: "configuration/https/self-signed-certificates.md"
       - Domain change/HTTPS migration: "configuration/migration-domain-https.md"
       - Admin UI Configuration:
@@ -235,6 +234,7 @@ nav:
       - Ingest-Download: "workflowoperationhandlers/ingestdownload-woh.md"
       - Inspect: "workflowoperationhandlers/inspect-woh.md"
       - Log: "workflowoperationhandlers/log-woh.md"
+      - Matrix Notification: "workflowoperationhandlers/matrix-notification-woh.md"
       - Mattermost Notification Module: "workflowoperationhandlers/mattermost-notify-woh.md"
       - Metadata to ACL: "workflowoperationhandlers/metadata-to-acl.md"
       - Microsoft Azure Attach Transcription: "workflowoperationhandlers/microsoft-azure-attach-transcription-woh.md"
