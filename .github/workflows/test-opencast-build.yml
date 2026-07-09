@@ -116,6 +116,10 @@ jobs:
         if: matrix.java == 21
         run: ./build/opencast-dist-worker/bin/start-opencast daemon &
 
+      - name: start workergpu
+        if: matrix.java == 21
+        run: ./build/opencast-dist-workergpu/bin/start-opencast daemon &
+
       - name: test admin
         if: matrix.java == 21
         run: >
@@ -182,6 +186,10 @@ jobs:
       - name: show worker logs
         if: always()
         run: cat build/opencast-dist-worker/data/log/opencast.log || true
+
+      - name: show workergpu logs
+        if: always()
+        run: cat build/opencast-dist-workergpu/data/log/opencast.log || true
 
       - name: save version
         working-directory: build

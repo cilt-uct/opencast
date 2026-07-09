@@ -3,7 +3,7 @@
 set -eux
 
 # Ensure the distribution tarballs exist
-test $(ls -1 build/*tar.gz | grep 'dist-admin-\|dist-presentation-\|dist-worker-' | wc -l) -eq 3
+test $(ls -1 build/*tar.gz | grep 'dist-admin-\|dist-presentation-\|dist-worker-\|dist-workergpu-' | wc -l) -eq 4
 
 # Remove old data directories
 cd build
@@ -12,17 +12,21 @@ find * -maxdepth 0 -type d -exec echo '{}' \; -exec rm -rI '{}' \;
 tar xf opencast-dist-admin-*.tar.gz
 tar xf opencast-dist-presentation-*.tar.gz
 tar xf opencast-dist-worker-*.tar.gz
+tar xf opencast-dist-workergpu-*.tar.gz
 
 mkdir -p shared-storage
 ln -s ../../shared-storage opencast-dist-admin/data/opencast
 ln -s ../../shared-storage opencast-dist-presentation/data/opencast
 ln -s ../../shared-storage opencast-dist-worker/data/opencast
+ln -s ../../shared-storage opencast-dist-workergpu/data/opencast
 
 sed -i 's_localhost:8080_localhost:8081_' opencast-dist-presentation/etc/custom.properties
 sed -i 's_localhost:8080_localhost:8082_' opencast-dist-worker/etc/custom.properties
+sed -i 's_localhost:8080_localhost:8082_' opencast-dist-workergpu/etc/custom.properties
 
 sed -i 's_port=8080_port=8081_' opencast-dist-presentation/etc/org.ops4j.pax.web.cfg
 sed -i 's_port=8080_port=8082_' opencast-dist-worker/etc/org.ops4j.pax.web.cfg
+sed -i 's_port=8080_port=8082_' opencast-dist-workergpu/etc/org.ops4j.pax.web.cfg
 
 for node in admin presentation worker; do
   # configure database
@@ -47,6 +51,7 @@ done
 sed -i 's_^.*dispatch.interval=.*$_dispatch.interval=2_' opencast-dist-admin/etc/org.opencastproject.serviceregistry.impl.ServiceRegistryJpaImpl.cfg
 sed -i 's_^.*dispatch.interval=.*$_dispatch.interval=0_' opencast-dist-presentation/etc/org.opencastproject.serviceregistry.impl.ServiceRegistryJpaImpl.cfg
 sed -i 's_^.*dispatch.interval=.*$_dispatch.interval=0_' opencast-dist-worker/etc/org.opencastproject.serviceregistry.impl.ServiceRegistryJpaImpl.cfg
+sed -i 's_^.*dispatch.interval=.*$_dispatch.interval=0_' opencast-dist-workergpu/etc/org.opencastproject.serviceregistry.impl.ServiceRegistryJpaImpl.cfg
 
 # start services
 cd ../docs/scripts/devel-dependency-containers/

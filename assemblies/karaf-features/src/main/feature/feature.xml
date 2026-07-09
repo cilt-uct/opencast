@@ -581,6 +581,20 @@
     <bundle start-level="82">mvn:org.opencastproject/opencast-workflow-service-remote/${project.version}</bundle>
   </feature>
 
+  <feature name="opencast-workergpu" version="${project.version}">
+    <feature>opencast-core</feature>
+    <feature>opencast-services-processing-heavy-load</feature>
+    <feature>opencast-services-processing-light-load</feature>
+
+    <bundle start-level="82">mvn:org.opencastproject/opencast-publication-service-api/${project.version}</bundle>
+    <bundle start-level="82">mvn:org.opencastproject/opencast-publication-service-youtube-v3/${project.version}</bundle>
+    <bundle start-level="82">mvn:org.opencastproject/opencast-runtime-info-ui/${project.version}</bundle>
+    <bundle start-level="82">mvn:org.opencastproject/opencast-runtime-info-openapi-ui/${project.version}</bundle>
+    <bundle start-level="82">mvn:org.opencastproject/opencast-series-service-remote/${project.version}</bundle>
+    <bundle start-level="82">mvn:org.opencastproject/opencast-termination-state-aws/${project.version}</bundle>
+    <bundle start-level="82">mvn:org.opencastproject/opencast-workflow-service-remote/${project.version}</bundle>
+  </feature>
+
   <feature name="opencast-presentation" version="${project.version}">
     <feature>opencast-core</feature>
 
@@ -738,6 +752,14 @@
   <feature name="opencast-plugin-crop_worker" version="${project.version}">
     <conditional>
       <condition>opencast-worker</condition>
+    </conditional>
+    <bundle start-level="82">mvn:org.opencastproject/opencast-crop-api/${project.version}</bundle>
+    <bundle start-level="82">mvn:org.opencastproject/opencast-crop-ffmpeg/${project.version}</bundle>
+  </feature>
+
+   <feature name="opencast-plugin-crop_workergpu" version="${project.version}">
+    <conditional>
+      <condition>opencast-workergpu</condition>
     </conditional>
     <bundle start-level="82">mvn:org.opencastproject/opencast-crop-api/${project.version}</bundle>
     <bundle start-level="82">mvn:org.opencastproject/opencast-crop-ffmpeg/${project.version}</bundle>
