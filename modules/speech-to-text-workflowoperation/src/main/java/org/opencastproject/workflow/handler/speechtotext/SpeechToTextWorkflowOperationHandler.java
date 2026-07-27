@@ -316,13 +316,6 @@ public class
     // subtitles file is generated now, put it into the media package
     try {
       String[] jobOutput = job.getPayload().split(",");
-      logger.debug("Payload = '{}'", job.getPayload());
-      logger.debug("Length = {}", jobOutput.length);
-
-      for (int i = 0; i < jobOutput.length; i++) {
-        logger.debug("{} -> {}", i, jobOutput[i]);
-      }
-
       URI output = new URI(jobOutput[0]);
       String outputLanguage = jobOutput[1];
       String engineType = jobOutput[2];
@@ -367,10 +360,6 @@ public class
       parentMediaPackage.add(subtitleMediaPackageElement);
 
       // attach json
-      logger.debug("STT job payload: {}", job.getPayload());
-      logger.debug("STT parsed output URI: {}", output);
-      logger.debug("STT parsed JSON URI: {}", jobOutput.length > 3 ? jobOutput[3] : "<missing>");
-
       try {
         AttachmentImpl jsonAttachment = new AttachmentImpl();
         jsonAttachment.generateIdentifier();
