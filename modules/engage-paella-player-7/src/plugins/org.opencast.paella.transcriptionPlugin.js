@@ -73,7 +73,7 @@ export default class transcriptionPlugin extends PopUpButtonPlugin {
     this._transcriptFeaturesAttachment = attachments.find(att => att.type === 'captions/json'
       && att.mimetype === 'application/json');
 
-    this._isWhisper = !!this._captions?.tags?.tag?.some(t =>
+    this._isWhisper = toArray(this._captions?.tags?.tag).some(t =>
       t.toLowerCase().includes('whisper')
     );
 
