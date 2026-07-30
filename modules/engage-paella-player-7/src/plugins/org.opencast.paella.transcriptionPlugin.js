@@ -73,7 +73,7 @@ export default class transcriptionPlugin extends PopUpButtonPlugin {
     this._transcriptFeaturesAttachment = attachments.find(att => att.type === 'captions/json'
       && att.mimetype === 'application/json');
 
-    this._isWhisper = toArray(this._captions?.tags?.tag).some(t =>
+    this._isWhisper = !!this._captions?.tags?.tag?.some(t =>
       t.toLowerCase().includes('whisper')
     );
 
@@ -332,6 +332,10 @@ export default class transcriptionPlugin extends PopUpButtonPlugin {
 
   // Show captions in transcript format
   showTranscript() {
+    // clear currently shown transcript to prevent duplication
+    this._transcriptContainer.innerHTML = '';
+    this._cueElements = [];
+
     const browserLanguage = navigator.language.substring(0, 2);
     const isCurrentLanguage = (lang) => {
       const currentLanguage = this.player.captionsCanvas.currentCaptions?.language || browserLanguage;
@@ -363,7 +367,7 @@ export default class transcriptionPlugin extends PopUpButtonPlugin {
     });
   }
 
-  highlightCurrentCaptions(currentTime, cueElements, transcriptContainer) {
+  highlightCurrentCaptions(currentTime, cueElements) {
     if (this.isSearching) return;
 
     cueElements.forEach((elem, index) => {
@@ -376,13 +380,7 @@ export default class transcriptionPlugin extends PopUpButtonPlugin {
         // Auto scroll only if user is not actively scrolling
         if (!this.userScrolling) {
           requestAnimationFrame(() => {
-            elem.scrollIntoView({ behavior: 'instant', block: 'nearest' });
-
-            // Adjust scroll to keep the element fully in view
-            const elemPosTop = elem.offsetTop - transcriptContainer.scrollTop;
-            if (elemPosTop < 0 || elemPosTop > transcriptContainer.clientHeight) {
-              transcriptContainer.scrollTo({ top: elem.offsetTop - 80, behavior: 'instant'});
-            }
+            elem.scrollIntoView({ behavior: 'instant', block: 'center' });
           });
         }
       } else {
@@ -635,7 +633,7 @@ export default class transcriptionPlugin extends PopUpButtonPlugin {
   // Bind video events
   bindVideoEvents() {
     this.player.bindEvent(Events.TIMEUPDATE, evt => {
-      this.highlightCurrentCaptions(evt.currentTime, this._cueElements, this._transcriptContainer);
+      this.highlightCurrentCaptions(evt.currentTime, this._cueElements);
     }, true);
 
     this.player.bindEvent(Events.ENDED, () => {
@@ -750,7 +748,7 @@ export default class transcriptionPlugin extends PopUpButtonPlugin {
           cueElem.addEventListener('click', async evt => {
             this._cueElements.forEach(elem => elem.classList.remove('current'));
             evt.target.classList.add('current');
-            evt.target.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            evt.target.scrollIntoView({ behavior: 'smooth', block: 'center' });
 
             const time = evt.target._cue.start;
             this.logEvent('AI_RESOURCE_INTERACTION', { resource: 'transcript', action: 'jump_to_time', time });
