@@ -56,7 +56,6 @@ import org.osgi.service.component.annotations.Reference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.util.ArrayList;
@@ -386,12 +385,6 @@ public class
       workspace.delete(output);
     } catch (Exception e) {
       throw new WorkflowOperationException("Error handling text-to-speech service output", e);
-    }
-
-    try {
-      workspace.cleanup(parentMediaPackage.getIdentifier());
-    } catch (IOException e) {
-      throw new WorkflowOperationException(e);
     }
   }
 
