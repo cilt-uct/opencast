@@ -53,6 +53,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -72,12 +73,18 @@ public class EncoderEngine implements AutoCloseable {
   static final String PROP_TRIMMING_START_TIME = "trim.start";
   /** The trimming duration property name */
   static final String PROP_TRIMMING_DURATION = "trim.duration";
+  /** Profile argument name used for ffmpeg GPU index substitution */
+  static final String PROP_GPU = "gpu";
+  /** Default number of available GPUs */
+  static final int NO_GPU_DEFAULT = 1;
   /** If true STDERR and STDOUT of the spawned process will be mixed so that both can be read via STDIN */
   private static final boolean REDIRECT_ERROR_STREAM = true;
 
   private static Logger logger = LoggerFactory.getLogger(EncoderEngine.class);
   /** the encoder binary */
   private String binary = "ffmpeg";
+  /** Number of available GPUs used to resolve #{gpu} profile variables */
+  private final int noGpu;
   /** Set of processes to clean up */
   private Set<Process> processes = new HashSet<>();
 
@@ -96,7 +103,15 @@ public class EncoderEngine implements AutoCloseable {
    * Creates a new abstract encoder engine with or without support for multiple job submission.
    */
   EncoderEngine(String binary) {
+    this(binary, NO_GPU_DEFAULT);
+  }
+
+  /**
+   * Creates a new abstract encoder engine and configures the number of GPUs available to ffmpeg profiles.
+   */
+  EncoderEngine(String binary, int noGpu) {
     this.binary = binary;
+    this.noGpu = Math.max(NO_GPU_DEFAULT, noGpu);
   }
 
   /**
@@ -181,6 +196,7 @@ public class EncoderEngine implements AutoCloseable {
     if (properties != null) {
       params.putAll(properties);
     }
+    params.put(PROP_GPU, Integer.toString(nextGpuIndex()));
     // build command
     if (source.isEmpty()) {
       throw new IllegalArgumentException("At least one track must be specified.");
@@ -428,6 +444,11 @@ public class EncoderEngine implements AutoCloseable {
         process.destroy();
       }
     }
+  }
+
+  int nextGpuIndex() {
+    // Randomly choose a GPU index in [0, noGpu - 1] for #{gpu} substitution.
+    return ThreadLocalRandom.current().nextInt(noGpu);
   }
 
   /**
@@ -1236,6 +1257,7 @@ public class EncoderEngine implements AutoCloseable {
 
   private Map<String, String> getParamsFromFile(File parentFile) {
     Map<String, String> params = new HashMap<>();
+    params.put(PROP_GPU, Integer.toString(nextGpuIndex()));
     String videoInput = FilenameUtils.normalize(parentFile.getAbsolutePath());
     params.put("in.video.path", videoInput);
     params.put("in.video.name", FilenameUtils.getBaseName(videoInput));

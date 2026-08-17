@@ -174,6 +174,12 @@ public class ComposerServiceImpl extends AbstractJobProducer implements Composer
   /** Configuration for the FFmpeg binary */
   private static final String CONFIG_FFMPEG_PATH = "org.opencastproject.composer.ffmpeg.path";
 
+  /** Configuration for the number of available GPUs used by #{gpu} profile parameter substitution */
+  private static final String CONFIG_FFMPEG_OPTIONS_NO_GPU = "org.opencastproject.composer.ffmpeg.options.no_gpu";
+
+  /** Default number of available GPUs */
+  private static final int FFMPEG_OPTIONS_NO_GPU_DEFAULT = 1;
+
   /** The collection name */
   private static final String COLLECTION = "composer";
 
@@ -254,6 +260,9 @@ public class ComposerServiceImpl extends AbstractJobProducer implements Composer
   /** Path to the FFmpeg binary */
   private String ffmpegBinary = FFMPEG_BINARY_DEFAULT;
 
+  /** Number of available GPUs used to resolve #{gpu} profile variables */
+  private int ffmpegOptionsNoGpu = FFMPEG_OPTIONS_NO_GPU_DEFAULT;
+
   /** Creates a new composer service instance. */
   public ComposerServiceImpl() {
     super(JOB_TYPE);
@@ -271,7 +280,11 @@ public class ComposerServiceImpl extends AbstractJobProducer implements Composer
     super.activate(cc);
     ffmpegBinary = StringUtils.defaultString(cc.getBundleContext().getProperty(CONFIG_FFMPEG_PATH),
             FFMPEG_BINARY_DEFAULT);
+    ffmpegOptionsNoGpu = Math.max(FFMPEG_OPTIONS_NO_GPU_DEFAULT,
+            NumberUtils.toInt(cc.getBundleContext().getProperty(CONFIG_FFMPEG_OPTIONS_NO_GPU),
+                    FFMPEG_OPTIONS_NO_GPU_DEFAULT));
     logger.debug("ffmpeg binary: {}", ffmpegBinary);
+    logger.debug("ffmpeg no_gpu options: {}", ffmpegOptionsNoGpu);
     logger.info("Activating composer service");
   }
 
@@ -1782,7 +1795,7 @@ public class ComposerServiceImpl extends AbstractJobProducer implements Composer
   }
 
   private EncoderEngine getEncoderEngine() {
-    EncoderEngine engine = new EncoderEngine(ffmpegBinary);
+    EncoderEngine engine = new EncoderEngine(ffmpegBinary, ffmpegOptionsNoGpu);
     activeEncoder.add(engine);
     return engine;
   }
