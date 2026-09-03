@@ -145,47 +145,66 @@ public class NibityAttachTranscriptionOperationHandler extends AbstractWorkflowO
       MediaPackageElement transcription = service.
             getGeneratedTranscription(mediaPackage.getIdentifier().toString(), jobId, type);
 
-      ZipFile zipFile = new ZipFile(workspace.get(transcription.getURI()));
-      ZipEntry zippedVtt = findEntryByExtension(zipFile, ".vtt");
-      ZipEntry zippedJson = findEntryByExtension(zipFile, ".json");
-
-      if (zippedVtt == null && zippedJson == null) {
-        logger.debug("Neither captions nor transcript found in zip file {}", transcription.getURI());
-        throw new WorkflowOperationException("neither captions nor transcript found in the zip file");
-      } else {
-        // Extract the transcript vtt
-        if (zippedVtt != null) {
-          InputStream zis = zipFile.getInputStream(zippedVtt);
-          String captionMimeType = "text/vtt";
-          String captionIdentifier = "captions.vtt";
-          String captionFileType = "vtt";
-          MediaPackageElement.Type captionType = Track.TYPE;
-          mediaPackage = addTranscriptionElementToMediaPackage(zis, captionMimeType, captionIdentifier, captionFileType,
-                  mediaPackage, flavor, captionType, targetTagOption);
-        } else {
-          workflowInstance.setConfiguration(HAS_VTT, "false");
-        }
-
-        // Extract the transcript json
-        if (zippedJson != null) {
-          InputStream zis = zipFile.getInputStream(zippedJson);
-          String jsonMimeType = "application/json";
-          String jsonIdentifier = "captions.json";
-          String jsonFileType = "json";
-          MediaPackageElementFlavor jsonFlavor = MediaPackageElementFlavor.parseFlavor("captions/json");
-          MediaPackageElement.Type jsonType = Attachment.TYPE;
-          mediaPackage = addTranscriptionElementToMediaPackage(zis, jsonMimeType, jsonIdentifier,
-                  jsonFileType, mediaPackage, jsonFlavor, jsonType, targetTagOption);
-        }
-
-        // Add the zip file to the media package
-        transcription.setIdentifier("nibity-transcript-" + jobId);
-        transcription.setURI(workspace.moveTo(transcription.getURI(), mediaPackage.getIdentifier().toString(),
-                transcription.getIdentifier(), "nibity-" + jobId + ".zip"));
-        mediaPackage.add(transcription);
-
-        logger.info("Added this URI to mediapackage {}: {}", mediaPackage.getIdentifier(), transcription.getURI());
+      if (transcription == null || transcription.getURI() == null) {
+        throw new WorkflowOperationException("Transcription element or URI is null for job " + jobId);
       }
+
+      java.io.File transcriptionFile;
+      try {
+        transcriptionFile = workspace.get(transcription.getURI());
+      } catch (org.opencastproject.util.NotFoundException e) {
+        logger.warn("Transcription file not found yet in workspace for job {} (URI: {}). Triggering workflow retry.",
+            jobId, transcription.getURI());
+        throw new WorkflowOperationException("Transcription file not found yet in workspace", e);
+      }
+
+      try (ZipFile zipFile = new ZipFile(transcriptionFile)) {
+        ZipEntry zippedVtt = findEntryByExtension(zipFile, ".vtt");
+        ZipEntry zippedJson = findEntryByExtension(zipFile, ".json");
+
+        if (zippedVtt == null && zippedJson == null) {
+          logger.debug("Neither captions nor transcript found in zip file {}", transcription.getURI());
+          throw new WorkflowOperationException("neither captions nor transcript found in the zip file");
+        } else {
+          // Extract the transcript vtt
+          if (zippedVtt != null) {
+            InputStream zis = zipFile.getInputStream(zippedVtt);
+            String captionMimeType = "text/vtt";
+            String captionIdentifier = "captions.vtt";
+            String captionFileType = "vtt";
+            MediaPackageElement.Type captionType = Track.TYPE;
+            mediaPackage = addTranscriptionElementToMediaPackage(zis, captionMimeType, captionIdentifier,
+             captionFileType, mediaPackage, flavor, captionType, targetTagOption);
+          } else {
+            workflowInstance.setConfiguration(HAS_VTT, "false");
+          }
+
+          // Extract the transcript json
+          if (zippedJson != null) {
+            InputStream zis = zipFile.getInputStream(zippedJson);
+            String jsonMimeType = "application/json";
+            String jsonIdentifier = "captions.json";
+            String jsonFileType = "json";
+            MediaPackageElementFlavor jsonFlavor = MediaPackageElementFlavor.parseFlavor("captions/json");
+            MediaPackageElement.Type jsonType = Attachment.TYPE;
+            mediaPackage = addTranscriptionElementToMediaPackage(zis, jsonMimeType, jsonIdentifier,
+                    jsonFileType, mediaPackage, jsonFlavor, jsonType, targetTagOption);
+          }
+
+          // Add the zip file to the media package
+          transcription.setIdentifier("nibity-transcript-" + jobId);
+          transcription.setURI(workspace.moveTo(transcription.getURI(), mediaPackage.getIdentifier().toString(),
+                  transcription.getIdentifier(), "nibity-" + jobId + ".zip"));
+          mediaPackage.add(transcription);
+
+          logger.info("Added this URI to mediapackage {}: {}", mediaPackage.getIdentifier(), transcription.getURI());
+        }
+      } catch (java.io.IOException e) {
+        logger.warn("Error while reading transcription zip file for job {}.", jobId, e);
+        throw new WorkflowOperationException("Error while reading transcription ZIP file", e);
+      }
+    } catch (WorkflowOperationException woe) {
+      throw woe;
     } catch (Exception e) {
       throw new WorkflowOperationException(e);
     }
