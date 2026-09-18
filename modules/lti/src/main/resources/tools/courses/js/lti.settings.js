@@ -1,7 +1,5 @@
 const urlParams = new URLSearchParams(window.location.search);
 const seriesID = urlParams.get('sid');
-const seriesCaptionsDropdown = document.getElementById("series_captions");
-const seriesCaptionsLabel = document.getElementById("series_captions_label");
 const transcriptFeaturesField = document.getElementById('transcript_features');
 const transcriptFeaturesCheckboxes = document.querySelectorAll('#transcript_features_options .form-check-input');
 
@@ -33,17 +31,11 @@ $(document).ready(function(){
             let captionValue = (ext[j].value || '').trim();
 
             if(captionValue === "nibity") {
-                $('#series_captions').hide();
-                $('#series_captions_label').text("WayWithWords").show();
+                $('#series_captions').val("WayWithWords");
                 $('#div_transcript_features').show();
                 toggleAIFeatures();
             } else {
-                if (!captionValue || captionValue === 'no_selection') {
-                    captionValue = 'no_selection';
-                }
-                $('#series_captions').show();
-                $('#series_captions_label').hide();
-                $('#series_captions option[value=' + captionValue + ']').prop('selected', true);
+                $('#series_captions').val("Whisper");
                 $('#div_transcript_features').hide();
             }
         }
@@ -99,7 +91,6 @@ $(document).ready(function(){
 
     $("#save_button").click(function(e) {
         e.preventDefault();
-        var captions = $('#series_captions').is(':visible') ? $('#series_captions').val() : 'nibity';
         var retention = $('#series_retention').val();
         var notificationList = $('#notification_list').val();
         var transcriptFeatures = $('#transcript_features').val();
@@ -109,8 +100,6 @@ $(document).ready(function(){
         var fd = new FormData();
         const newExt = ext.map(obj => {
             switch (obj.id) {
-                case "caption-type":
-                    return { ...obj, value: captions };
                 case "retention-cycle":
                     return { ...obj, value: retention };
                 case "notification-list":
@@ -131,8 +120,6 @@ $(document).ready(function(){
 });
 
 function toggleAIFeatures() {
-    const isNibitySelected = seriesCaptionsDropdown.value === "nibity" ||
-        series_captions_label.style.display !== "none";
 
     if (isNibitySelected) {
         transcriptFeaturesCheckboxes.forEach(checkbox => {
