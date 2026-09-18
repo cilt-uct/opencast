@@ -300,10 +300,10 @@ public class ExecuteServiceImpl extends AbstractJobProducer implements ExecuteSe
       switch (op) {
         case Execute_Mediapackage:
           mp = MediaPackageParser.getFromXml(arguments.remove(2));
-          return doProcess(arguments, mp, outFileName, expectedType);
+          return doProcess(arguments, mp, outFileName, expectedType, job);
         case Execute_Element:
           element = MediaPackageElementParser.getFromXml(arguments.remove(2));
-          return doProcess(arguments, element, outFileName, expectedType);
+          return doProcess(arguments, element, outFileName, expectedType, job);
         default:
           throw new IllegalStateException("Don't know how to handle operation '" + job.getOperation() + "'");
       }
@@ -328,11 +328,13 @@ public class ExecuteServiceImpl extends AbstractJobProducer implements ExecuteSe
    *          The name of the resulting file
    * @param expectedType
    *          The expected element type
+   * @param job
+   *          The job being processed
    * @return A {@code String} containing the command output
    * @throws ExecuteException
    *           if some internal error occurred
    */
-  protected String doProcess(List<String> arguments, MediaPackage mp, String outFileName, Type expectedType)
+  protected String doProcess(List<String> arguments, MediaPackage mp, String outFileName, Type expectedType, Job job)
           throws ExecuteException {
 
     String params = arguments.remove(1);
@@ -396,6 +398,8 @@ public class ExecuteServiceImpl extends AbstractJobProducer implements ExecuteSe
           matcher.appendReplacement(sb, outFile.getAbsolutePath());
         } else if (matcher.group(1).equals("org_id")) {
           matcher.appendReplacement(sb, securityService.getOrganization().getId());
+        } else if (matcher.group(1).equals("job_id")) {
+          matcher.appendReplacement(sb, String.valueOf(job.getId()));
         } else if (properties.get(matcher.group(1)) != null) {
           matcher.appendReplacement(sb, (String) properties.get(matcher.group(1)));
         } else if (bundleContext.getProperty(matcher.group(1)) != null) {
@@ -428,12 +432,14 @@ public class ExecuteServiceImpl extends AbstractJobProducer implements ExecuteSe
    *          The name of the resulting file
    * @param expectedType
    *          The expected element type
+   * @param job
+   *          The job being processed
    * @return A {@code String} containing the command output
    * @throws ExecuteException
    *           if some internal error occurred
    */
-  protected String doProcess(List<String> arguments, MediaPackageElement element, String outFileName, Type expectedType)
-          throws ExecuteException {
+  protected String doProcess(List<String> arguments, MediaPackageElement element, String outFileName, Type expectedType,
+          Job job) throws ExecuteException {
 
     // arguments(1) contains a list of space-separated arguments for the command
     String params = arguments.remove(1);
@@ -475,6 +481,10 @@ public class ExecuteServiceImpl extends AbstractJobProducer implements ExecuteSe
 
         if (arguments.get(i).contains(ORG_ID_PATTERN)) {
           arguments.set(i, arguments.get(i).replace(ORG_ID_PATTERN, securityService.getOrganization().getId()));
+        }
+
+        if (arguments.get(i).contains(JOB_ID_PATTERN)) {
+          arguments.set(i, arguments.get(i).replace(JOB_ID_PATTERN, String.valueOf(job.getId())));
         }
       }
 
