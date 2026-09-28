@@ -850,14 +850,23 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
           }
         }
       } catch (Exception e) {
+        // Results not saved in workspace yet: fetch from transcription service
+        logger.info("Results not saved: getting from service for jobId {}", jobId);
         try {
-          logger.info("Results not saved: getting from service for jobId {}", jobId);
-          // Not saved yet so call the transcription service to get the results
-          // checkJobResults(jobId, mpId);
+          boolean fetched = checkJobResults(jobId, mpId);
+          if (!fetched) {
+            throw new TranscriptionServiceException(
+              "Transcription results for job " + jobId + " are not yet available.");
+          }
+          // Verify it's now accessible in the workspace
+          workspace.get(uri);
         } catch (Exception ex) {
-          logger.error("Unable to retrieve transcription job, error: {}", ex.toString());
+          logger.error("Unable to retrieve transcription job results, error: {}", ex.toString());
+          throw new TranscriptionServiceException(
+            "Failed to download or locate transcription results for job " + jobId, ex);
         }
       }
+
       MediaPackageElementBuilder builder = MediaPackageElementBuilderFactory.newInstance().newElementBuilder();
       logger.debug("Returning MPE with results file URI: {}", uri);
       return builder.elementFromURI(uri, Attachment.TYPE, new MediaPackageElementFlavor("application", "zip"));
