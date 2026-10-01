@@ -962,7 +962,7 @@ ocManager.eventMgr.on('event.update.complete', function(details) {
 }.bind(ocManager.eventMgr));
 
 ocManager.eventMgr.on('event.update.acl', function(details) {
-  //ACLs were updated. Now republish event to make ACLs apply for other Vula sites
+  //ACLs were updated. Now republish event to make ACLs apply for other Amathuba sites
   ocManager.eventMgr.republish(details.id);
   $('.modal.in').addClass('republish').removeClass('updateAcl');
 });
