@@ -46,6 +46,9 @@ public interface ExecuteService {
   /** Placeholder to be replaced by the actual mediapackage id in the command line */
   String MP_ID_PATTERN = "#{id}";
 
+  /** Placeholder to be replaced by the actual job id in the command line */
+  String JOB_ID_PATTERN = "#{job_id}";
+
   /** The subdirectory of the REST endpoint for this service */
   String ENDPOINT_NAME = "execute";
 
