@@ -74,6 +74,9 @@ public class NibityAttachTranscriptionOperationHandler extends AbstractWorkflowO
   static final String TARGET_TYPE = "target-element-type";
   static final String HAS_VTT = "has-vtt";
 
+  /** Identifier prefix of the results zip element added to the media package */
+  static final String TRANSCRIPT_ELEMENT_PREFIX = "nibity-transcript-";
+
   /** The transcription service */
   private TranscriptionService service = null;
 
@@ -140,6 +143,16 @@ public class NibityAttachTranscriptionOperationHandler extends AbstractWorkflowO
       flavor = MediaPackageElementFlavor.parseFlavor(targetFlavorOption);
     }
 
+    // Results of this job already attached (e.g. by an earlier run of this workflow): the results file has been
+    // moved out of the transcripts collection, so there is nothing left to attach.
+    String transcriptElementId = TRANSCRIPT_ELEMENT_PREFIX + jobId;
+    if (mediaPackage.getElementById(transcriptElementId) != null) {
+      logger.info("Transcription results of job {} already attached to mediapackage {} as element {} "
+              + "(workflow {}). Skipping.", jobId, mediaPackage.getIdentifier(), transcriptElementId,
+              workflowInstance.getId());
+      return createResult(mediaPackage, Action.SKIP);
+    }
+
     try {
       // Get transcription result zip file from the service
       MediaPackageElement transcription = service.
@@ -149,12 +162,16 @@ public class NibityAttachTranscriptionOperationHandler extends AbstractWorkflowO
         throw new WorkflowOperationException("Transcription element or URI is null for job " + jobId);
       }
 
+      logger.info("Getting transcription results for job {}, mediapackage {}, workflow {} from {}",
+          jobId, mediaPackage.getIdentifier(), workflowInstance.getId(), transcription.getURI());
+
       java.io.File transcriptionFile;
       try {
         transcriptionFile = workspace.get(transcription.getURI());
       } catch (org.opencastproject.util.NotFoundException e) {
-        logger.warn("Transcription file not found yet in workspace for job {} (URI: {}). Triggering workflow retry.",
-            jobId, transcription.getURI());
+        logger.warn("Transcription file not found in workspace for job {}, mediapackage {}, workflow {} (URI: {}). "
+            + "Triggering workflow retry.", jobId, mediaPackage.getIdentifier(), workflowInstance.getId(),
+            transcription.getURI());
         throw new WorkflowOperationException("Transcription file not found yet in workspace", e);
       }
 
@@ -192,7 +209,7 @@ public class NibityAttachTranscriptionOperationHandler extends AbstractWorkflowO
           }
 
           // Add the zip file to the media package
-          transcription.setIdentifier("nibity-transcript-" + jobId);
+          transcription.setIdentifier(transcriptElementId);
           transcription.setURI(workspace.moveTo(transcription.getURI(), mediaPackage.getIdentifier().toString(),
                   transcription.getIdentifier(), "nibity-" + jobId + ".zip"));
           mediaPackage.add(transcription);
