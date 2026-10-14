@@ -1,3 +1,13 @@
+var NO_LECTURE_COMMENT = 'no lecture in venue.';
+
+function hasNoLectureComment(comments) {
+  return (Array.isArray(comments) ? comments : []).some(function(comment) {
+    return !!comment && !comment.resolvedStatus &&
+           typeof comment.text == 'string' &&
+           comment.text.trim().toLowerCase() === NO_LECTURE_COMMENT;
+  });
+}
+
 function EventManager(params) {
   this.events = [];
   this.filteredEvents = [];
@@ -13,6 +23,7 @@ function EventManager(params) {
 
   this.selections = [];
   this.eventRemovalCache = [];
+  this.reprocessRequests = [];
 
   var _metadata,
       _processing,
@@ -43,6 +54,7 @@ function EventManager(params) {
         conflictCheck: '/admin-ng/event/new/conflicts',
             startTask: '/admin-ng/tasks/new',
               comment: '/admin-ng/event/%ID%/comment',
+             comments: '/admin-ng/event/%ID%/comments',
       addLectureNotes: '/admin-ng/event/%ID%/assets',
             seriesACL: '/admin-ng/series/%ID%/access.json',
              eventACL: '/admin-ng/event/%ID%/access'
@@ -74,7 +86,8 @@ function EventManager(params) {
       params.org.on('complete', function() {
         _defaultWorkflows = {
           schedule: params.org.properties['lti.manage.workflow.schedule'],
-            upload: params.org.properties['lti.manage.workflow.upload']
+            upload: params.org.properties['lti.manage.workflow.upload'],
+         reprocess: params.org.properties['lti.manage.workflow.reprocess']
         };
 
         var api = ['external', 'admin'].filter(function(apiCandidate) {
@@ -350,6 +363,10 @@ function EventManager(params) {
 
   this.runAfterProcessed = {};
   this.on('event.processing.complete', function(eventId) {
+    var reprocessIndex = this.reprocessRequests.indexOf(eventId);
+    if (reprocessIndex > -1) {
+      this.reprocessRequests.splice(reprocessIndex, 1);
+    }
     if (this.runAfterProcessed[eventId]) {
       this.runAfterProcessed[eventId].fn();
       delete this.runAfterProcessed[eventId];
@@ -408,6 +425,9 @@ EventManager.prototype = {
     return $.Deferred(function(d) {
       this.fetchEventsViaAdmin()
         .then(function(events) {
+          return this.checkReprocessEligibility(events);
+        }.bind(this))
+        .then(function(events) {
           this.events = this.filteredEvents = events.map(function(event) {
                                                 event.agent_id = event.location || event.agent_id;
                                                 event.status = getStatus(event);
@@ -458,6 +478,9 @@ EventManager.prototype = {
     return $.Deferred(function(d) {
       this.fetchEvent(id)
         .then(function(event) {
+          return event ? this.checkReprocessEligibility([event]).then(function() { return event; }) : event;
+        }.bind(this))
+        .then(function(event) {
           if (!event) {
             return;
           }
@@ -491,6 +514,36 @@ EventManager.prototype = {
           d.resolve(event);
         }.bind(this))
     }.bind(this)).promise();
+  },
+  fetchEventComments: function(id) {
+    return $.Deferred(function(d) {
+      $.ajax({
+        url: this.adminEndpoints.comments.replace(/%ID%/g, id) + '?_' + (new Date()).getTime()
+      })
+      .done(function(res) {
+        d.resolve(Array.isArray(res) ? res : []);
+      })
+      .fail(function() {
+        d.resolve([]);
+      });
+    }.bind(this)).promise();
+  },
+  checkReprocessEligibility: function(events) {
+    var commentChecks = events.map(function(event) {
+      event.reprocess_eligible = false;
+      if (!event.has_open_comments) {
+        return null;
+      }
+      return this.fetchEventComments(event.id)
+               .then(function(comments) {
+                 event.reprocess_eligible = hasNoLectureComment(comments);
+               });
+    }.bind(this));
+
+    return $.when.apply($, commentChecks)
+             .then(function() {
+               return events;
+             });
   },
   checkConflicts: function(data) {
     return this.checkConflictViaAdmin(data);
@@ -1334,6 +1387,37 @@ EventManager.prototype = {
 
       this.emit('event.transaction.started', opts);
     }.bind(this)).promise();
+  },
+  reprocess: function(id, opts) {
+    return $.Deferred(function(d) {
+      opts = opts || {};
+      opts.id = id;
+
+      if (this.reprocessRequests.indexOf(id) > -1) {
+        d.reject({id: id, duplicate: true});
+        return;
+      }
+      this.reprocessRequests.push(id);
+      this.emit('event.transaction.started', opts);
+
+      this.startTask(id, this.workflows.reprocess, {})
+        .done(function() {
+          this.emit('event.reprocess.complete', opts);
+          this.emit('event.transaction.complete', opts);
+          this.checkProcessingStatus(id);
+          this.getEvent(id);
+          d.resolve(opts);
+        }.bind(this))
+        .fail(function() {
+          this.reprocessRequests.splice(this.reprocessRequests.indexOf(id), 1);
+          this.emit('event.reprocess.failed', opts);
+          this.emit('event.transaction.failed', opts);
+          d.reject(opts);
+        }.bind(this));
+    }.bind(this)).promise();
+  },
+  isReprocessRequested: function(id) {
+    return this.reprocessRequests.indexOf(id) > -1;
   },
   comment: function(id, comment, opts) {
     return $.Deferred(function(d) {

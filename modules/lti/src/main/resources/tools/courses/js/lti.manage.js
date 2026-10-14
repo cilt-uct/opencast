@@ -1076,15 +1076,34 @@ function getEditControls(ev) {
     return '';
   }
 
+  var controls = '';
   switch (ev.status) {
     case 'Upcoming':
-      return eventEditable(ev.id);
+      controls = eventEditable(ev.id);
       break;
 
     case 'Published':
-      return ocManager.isPersonalSeries ? personalEventEditable(ev.id, ev.has_preview) : editPublishedControls(ev.id);
+      controls = ocManager.isPersonalSeries ? personalEventEditable(ev.id, ev.has_preview) : editPublishedControls(ev.id);
       break;
   }
+
+  if (isReprocessable(ev)) {
+    controls += reprocessControls(ev.id);
+  }
+  return controls;
+}
+
+function isReprocessable(ev) {
+  return !!ev.reprocess_eligible &&
+         ev.status !== 'Processing' &&
+         !ocManager.eventMgr.isReprocessRequested(ev.id);
+}
+
+function reprocessControls(id) {
+  return '<button type="button" data-toggle="modal" data-event="' + id + '" data-target="#reprocessModal" ' +
+         'title="No lecture was detected in the venue. Click to re-process this recording." ' +
+         'aria-label="Re-process recording">' +
+         '  <i class="fa fa-repeat"></i></button>';
 }
 
 function eventEditable(id) {
@@ -1841,7 +1860,49 @@ $(document).ready(function() {
     $(this).addClass('committing');
   });
 
-  $('#grid-body').on('click', 'button[data-target="#retractModal"], button[data-target="#publishModal"]', function(e) {
+  $('#reprocessModal').on('submit', function(e) {
+    e.preventDefault();
+    var _modal = this;
+    var eventId = $(_modal).data('eventid');
+    if (!eventId || $(_modal).hasClass('committing')) {
+      return;
+    }
+    var title = $(_modal).find('p.focus').text();
+    $(_modal).addClass('committing');
+    $(_modal).find('.modal-footer .btn-success').prop('disabled', true);
+
+    ocManager.eventMgr.reprocess(eventId, {target: _modal})
+      .done(function() {
+        $('p[data-instruction=error]').removeClass('show');
+        $('p[data-instruction=info]')
+          .text('Re-processing of "' + title + '" has started. The recording will be made available to students once processing has completed.')
+          .addClass('show');
+
+        setTimeout(function() {
+          $('p[data-instruction=info]').removeClass('show');
+        }, 15000);
+      })
+      .fail(function(details) {
+        if (details && details.duplicate) {
+          $(_modal).modal('hide');
+          return;
+        }
+        $(_modal).modal('hide');
+        $('p[data-instruction=error]')
+          .text('Unable to re-process "' + title + '". Please try again later, or contact the helpdesk if the problem persists.')
+          .addClass('show');
+
+        setTimeout(function() {
+          $('p[data-instruction=error]').removeClass('show');
+        }, 15000);
+      })
+      .always(function() {
+        $(_modal).removeClass('committing').data('eventid', '');
+        $(_modal).find('.modal-footer .btn-success').prop('disabled', false);
+      });
+  });
+
+  $('#grid-body').on('click', 'button[data-target="#retractModal"], button[data-target="#publishModal"], button[data-target="#reprocessModal"]', function(e) {
     var target = $(this).data('target');
     try {
       var eventId = $(this).data('event');
