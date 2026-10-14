@@ -239,6 +239,30 @@
         </div>
       </div>
     </form>
+    <form class="modal fade" id="reprocessModal" data-backdrop="static" tabindex="-1" role="dialog" aria-labelledby="reprocessModalTitle">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-label="close">
+              <span aria-hidden="true" title="Close Popup">&times;</span>
+            </button>
+            <h4 class="modal-title" id="reprocessModalTitle">Re-process recording</h4>
+          </div>
+          <div class="modal-body">
+            <p>The following recording was automatically marked as unwanted because no lecture was detected in the venue:</p>
+            <p class="focus">Some Event</p>
+            <br>
+            <p>If you believe a lecture did take place, you can re-process the recording to make it available to students.</p>
+            <br>
+            <p>Would you like to re-process this recording?</p>
+          </div>
+          <div class="modal-footer">
+            <button type="reset" class="btn btn-default" name="cancel">Cancel</button>
+            <button class="btn btn-success" name="reprocess" aria-label="Re-process recording"><span class="loader"><i class="fa fa-cog fa-spin"></i></span><span class="text">Re-process recording</span></button>
+          </div>
+        </div>
+      </div>
+    </form>
     <div class="modal fade" id="delModal" data-backdrop="static" tabindex="-1" role="dialog" aria-labelledby="dModal">
       <div class="modal-dialog" role="document">
         <div class="modal-content">
