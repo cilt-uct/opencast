@@ -1238,10 +1238,6 @@
     content: 'Schedule';
   }
 
-  /* #reprocessModal .btn-success .text:empty:after {
-    content: 'Re-process';
-  } */
-
   /* Re-process modal */
   #reprocessModal .reprocess-modal-dialog {
       width: 720px;

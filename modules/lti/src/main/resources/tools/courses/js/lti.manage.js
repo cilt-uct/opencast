@@ -1087,7 +1087,7 @@ function getEditControls(ev) {
 
     case 'Published':
       return ocManager.isPersonalSeries ? personalEventEditable(ev.id, ev.has_preview) : editPublishedControls(ev.id);
-    break;
+      break;
   }
 
 }
@@ -1392,14 +1392,13 @@ $(document).ready(function() {
           '<p class="reprocess-confirmation">Would you like to continue?</p>'
       );
 
-      // if (target == '#reprocessModal') {
       ocManager.eventMgr.checkActiveTransaction(event.id, {target: target});
 
       $('#hiddenEvent').attr('data-event', event.id);
       $('#hiddenEvent').attr('data-title', event.title);
       $(target + ' #modalTitle').text(event.title);
+      
       return ocManager.eventMgr.getEventAssets(event.id, {target: target});
-      // }
   });
 
   $('.container').on('click',
