@@ -1500,7 +1500,7 @@ EventManager.prototype = {
   getEventComments: function(id) {
     return $.Deferred(function(d) {
       $.ajax({
-        url: this.endpoints.comments.replace(/%ID%/g, id),
+        url: this.adminEndpoints.comments.replace(/%ID%/g, id),
         type: 'get'
       })
       .done(function(data) {
