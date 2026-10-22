@@ -128,37 +128,54 @@ TableView.prototype = {
       return;
     }
 
-    // Fetch comments for events that are marked as unwanted
-    var requests = displayList.map(function(details) {
-      if (details.event_status !== 'EVENTS.EVENTS.STATUS.PROCESSED' || (details.publications && details.publications.length > 0) ||
-          details.has_open_comments || !details.has_comments || details.has_preview) {
-          return $.Deferred().resolve().promise();
+    var commentEvents = displayList.filter(function(details) {
+      return details.event_status === 'EVENTS.EVENTS.STATUS.PROCESSED' &&
+        (!details.publications || details.publications.length === 0) &&
+        !details.has_open_comments && details.has_comments && !details.has_preview;
+    });
+
+    $('#grid-body').html(this.isPersonal ? tmpl('tmpl-personalbody', displayList) : tmpl('tmpl-body', displayList));
+
+    $('#currentTotals')
+      .attr('data-start', this.tableCurrent + 1)
+      .attr('data-end', Math.min(this.tableCurrent + this.tableLimit, list.length));
+
+    this.eventMgr.once('selection', this.showTableSelections.bind(this));
+
+    if (cb) {
+      cb();
+    }
+
+    var eventMgr = this.eventMgr;
+    var nextCommentEvent = 0;
+    var fetchNextComment = function() {
+      if (nextCommentEvent >= commentEvents.length) {
+        return;
       }
 
-      return this.eventMgr.getEventComments(details.id)
+      var details = commentEvents[nextCommentEvent++];
+      eventMgr.getEventComments(details.id)
         .done(function(comments) {
           details.emptyVenue = comments.some(function(comment) {
             return comment.text && comment.text.trim().replace(/\.$/, '').toLowerCase() === 'no lecture in venue';
           });
+
+          if (details.emptyVenue) {
+            var row = $(document.getElementById('row-' + details.id));
+            if (row.length) {
+              var status = getStatus(details);
+              row.attr('data-status', status);
+              row.find('td').eq(5).attr('title', getTooltip(details)).text(status);
+              row.find('td').eq(6).html(getEditControls(details));
+            }
+          }
         })
-        .fail(function() {
-          details.emptyVenue = false;
-        });
-    }.bind(this));
+        .always(fetchNextComment);
+    };
 
-    $.when.apply($, requests).always(function() {
-      $('#grid-body').html(this.isPersonal ? tmpl('tmpl-personalbody', displayList) : tmpl('tmpl-body', displayList));
-
-      $('#currentTotals')
-        .attr('data-start', this.tableCurrent + 1)
-        .attr('data-end', Math.min(this.tableCurrent + this.tableLimit, list.length));
-
-      this.eventMgr.once('selection', this.showTableSelections.bind(this));
-
-      if (cb) {
-        cb();
-      }
-    }.bind(this));
+    for (var i = 0; i < Math.min(5, commentEvents.length); i++) {
+      fetchNextComment();
+    }
   },
   showTableSelections: function(selectedEvents) {
     var selectedIds = selectedEvents.map(function(event) { return event.id });
