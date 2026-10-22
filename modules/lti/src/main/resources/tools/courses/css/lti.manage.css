@@ -1237,6 +1237,175 @@
   #ttScheduleModal .btn-success .text:empty:after {
     content: 'Schedule';
   }
+
+  /* #reprocessModal .btn-success .text:empty:after {
+    content: 'Re-process';
+  } */
+
+  /* Re-process modal */
+  #reprocessModal .reprocess-modal-dialog {
+      width: 720px;
+      max-width: calc(100% - 30px);
+  }
+
+  #reprocessModal .modal-content {
+      border: 1px solid #d5dce5;
+      border-radius: 6px;
+      overflow: hidden;
+      box-shadow: 0 5px 20px rgba(0, 0, 0, 0.25);
+  }
+
+  /* Heading */
+  #reprocessModal .modal-header {
+      padding: 22px 24px 18px;
+      border-bottom: 1px solid #e1e6ed;
+  }
+
+  #reprocessModal .reprocess-modal-heading {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      padding-right: 25px;
+  }
+
+  #reprocessModal .reprocess-modal-icon {
+      color: #0077c8;
+      font-size: 25px;
+      line-height: 1.3;
+      padding-top: 15px;
+  }
+
+  #reprocessModal .modal-title {
+      color: #213b69;
+      font-size: 22px;
+      font-weight: 600;
+      line-height: 1.35;
+      margin: 0;
+  }
+
+  #reprocessModal .reprocess-recording-title {
+      color: #526b91;
+      font-size: 15px;
+      margin: 5px 0 0;
+      overflow-wrap: anywhere;
+  }
+
+  #reprocessModal .close {
+      font-size: 25px;
+      opacity: 0.55;
+  }
+
+  #reprocessModal .close:hover {
+      opacity: 0.9;
+  }
+
+  /* Message */
+  #reprocessModal .modal-body {
+      padding: 22px 24px 12px;
+      color: #404b5c;
+      font-size: 15px;
+      line-height: 1.65;
+  }
+
+  #reprocessModal .modal-body p {
+      margin: 0 0 16px;
+  }
+
+  #reprocessModal .modal-body .reprocess-confirmation {
+      margin-top: 22px;
+      margin-bottom: 8px;
+      font-weight: 600;
+      color: #263b5c;
+  }
+
+  /* Footer and buttons */
+  #reprocessModal .modal-footer {
+      padding: 16px 24px;
+      border-top: 1px solid #e1e6ed;
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      gap: 10px;
+  }
+
+  #reprocessModal .modal-footer .btn {
+      border-radius: 4px;
+      padding: 9px 10px;
+      font-size: 14px;
+      font-weight: 600;
+      min-height: 50px;
+  }
+
+  #reprocessModal .modal-footer .btn-default {
+      background: #fff;
+      color: #344966;
+      border: 1px solid #b8c5d6;
+  }
+
+  #reprocessModal .modal-footer .btn-default:hover,
+  #reprocessModal .modal-footer .btn-default:focus {
+      background: #f2f6fa;
+      border-color: #8298b5;
+  }
+
+  #reprocessModal .modal-footer .btn-primary {
+      background: #0077c8;
+      border-color: #0077c8;
+      color: #fff;
+  }
+
+  #reprocessModal .modal-footer .btn-primary:hover,
+  #reprocessModal .modal-footer .btn-primary:focus {
+      background: #005fa3;
+      border-color: #005fa3;
+  }
+
+  #reprocessModal .modal-footer .btn-primary:focus,
+  #reprocessModal .modal-footer .btn-default:focus {
+      outline: 2px solid #80bdff;
+      outline-offset: 2px;
+  }
+
+  /* Re-process button label */
+  #reprocessModal .btn-primary .text:empty:after {
+      content: 'Re-process';
+  }
+
+  /* Loading indicator */
+  #reprocessModal .loader {
+      display: none;
+      margin-right: 5px;
+  }
+
+  #reprocessModal .btn-primary.loading .loader {
+      display: inline-block;
+  }
+
+  /* Responsive layout */
+  @media (max-width: 767px) {
+      #reprocessModal .reprocess-modal-dialog {
+          width: auto;
+          margin: 15px;
+          max-width: none;
+      }
+
+      #reprocessModal .modal-header {
+          padding: 18px;
+      }
+
+      #reprocessModal .modal-body {
+          padding: 18px 20px 10px;
+      }
+
+      #reprocessModal .modal-footer {
+          padding: 14px 18px;
+          flex-wrap: wrap;
+      }
+
+      #reprocessModal .modal-title {
+          font-size: 19px;
+      }
+  }
   
   .checkConflicts#ttScheduleModal .btn-success {
     pointer-events: none;
@@ -1516,6 +1685,11 @@
   
   #grid .fa-times-circle {
     color: #d9534f;
+    font-size: 1.3rem;
+  }
+
+  #grid .fa-repeat {
+    color: #7a7878;
     font-size: 1.3rem;
   }
   

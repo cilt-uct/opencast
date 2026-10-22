@@ -100,6 +100,7 @@ Organization.prototype = {
       this.properties['lti.manage.downloads'] = this.properties['lti.manage.downloads'] ? this.properties['lti.manage.downloads'] === 'true' : false;
       this.properties['lti.manage.workflow.schedule'] = this.properties['lti.manage.workflow.schedule'] || 'uct-process-before-edit';
       this.properties['lti.manage.workflow.upload'] = this.properties['lti.manage.workflow.upload'] || 'uct-process-upload';
+       this.properties['lti.manage.workflow.reprocess'] = this.properties['lti.manage.workflow.reprocess'] || 'uct-update-previews';
       this.properties['lti.manage.scheduling.api'] = this.properties['lti.manage.scheduling.api'] || 'admin';
 
       this.resolved = true;

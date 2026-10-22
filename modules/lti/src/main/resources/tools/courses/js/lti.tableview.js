@@ -127,13 +127,38 @@ TableView.prototype = {
       $('#grid-body').append(emptyRow);
       return;
     }
-    $('#grid-body').html(this.isPersonal ? tmpl('tmpl-personalbody', displayList) : tmpl('tmpl-body', displayList));
 
-    $('#currentTotals')
-      .attr('data-start', this.tableCurrent + 1)
-      .attr('data-end', Math.min(this.tableCurrent + this.tableLimit, list.length));
+    // Fetch comments for events that are marked as unwanted
+    var requests = displayList.map(function(details) {
+      if (details.event_status !== 'EVENTS.EVENTS.STATUS.PROCESSED' || (details.publications && details.publications.length > 0) ||
+          details.has_open_comments || !details.has_comments || details.has_preview) {
+          return $.Deferred().resolve().promise();
+      }
 
-    this.eventMgr.once('selection', this.showTableSelections.bind(this));
+      return this.eventMgr.getEventComments(details.id)
+        .done(function(comments) {
+          details.emptyVenue = comments.some(function(comment) {
+            return comment.text && comment.text.trim().replace(/\.$/, '').toLowerCase() === 'no lecture in venue';
+          });
+        })
+        .fail(function() {
+          details.emptyVenue = false;
+        });
+    }.bind(this));
+
+    $.when.apply($, requests).always(function() {
+      $('#grid-body').html(this.isPersonal ? tmpl('tmpl-personalbody', displayList) : tmpl('tmpl-body', displayList));
+
+      $('#currentTotals')
+        .attr('data-start', this.tableCurrent + 1)
+        .attr('data-end', Math.min(this.tableCurrent + this.tableLimit, list.length));
+
+      this.eventMgr.once('selection', this.showTableSelections.bind(this));
+
+      if (cb) {
+        cb();
+      }
+    }.bind(this));
   },
   showTableSelections: function(selectedEvents) {
     var selectedIds = selectedEvents.map(function(event) { return event.id });
