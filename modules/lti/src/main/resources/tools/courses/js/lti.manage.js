@@ -1907,6 +1907,7 @@ $(document).ready(function() {
     e.preventDefault();
 
     var $modal = $('#reprocessModal');
+    var $button = $modal.find('#reprocessEmptyVenue');
     var eventId = $modal.data('eventid');
 
     if (!eventId) {
@@ -1915,8 +1916,18 @@ $(document).ready(function() {
     }
 
     $modal.addClass('committing');
+    $button.prop('disabled', true);
 
-    ocManager.eventMgr.reprocess(eventId, {target: $modal[0]});
+    ocManager.eventMgr.reprocess(eventId, {target: $modal[0]}).fail(function() {
+      $modal.removeClass('committing');
+      $button.prop('disabled', false);
+    });
+  });
+
+  $('#reprocessModal').on('hidden.bs.modal', function() {
+    if (!$(this).hasClass('committing')) {
+      $(this).find('#reprocessEmptyVenue').prop('disabled', false);
+    }
   });
 
   $('.container').on('click', 'button[data-target="#delModal"]', function(e) {
