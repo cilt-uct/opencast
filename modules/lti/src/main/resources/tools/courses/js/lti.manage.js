@@ -1072,7 +1072,7 @@ ocManager.eventMgr.on('event.transaction.complete', function(details) {
 });
 
 function getEditControls(ev) {
-  if (ev.emptyVenue && ev.status === 'Unwanted') {
+  if (ev.emptyVenue && ev.status === 'Empty venue') {
     return editEmptyVenueControls(ev.id);
   }
 
