@@ -105,6 +105,7 @@ TableView.prototype = {
     this.requestPopulate();
   },
   populateTable: function(list, cb) {
+    var renderId = this.renderId = (this.renderId || 0) + 1;
     var displayList = list.filter(function(details, i) {
                         return i >= this.tableCurrent && i < this.tableCurrent + this.tableLimit;
                       }.bind(this));
@@ -147,15 +148,20 @@ TableView.prototype = {
     }
 
     var eventMgr = this.eventMgr;
+    var tableView = this;
     var nextCommentEvent = 0;
     var fetchNextComment = function() {
-      if (nextCommentEvent >= commentEvents.length) {
+      if (renderId !== tableView.renderId || nextCommentEvent >= commentEvents.length) {
         return;
       }
 
       var details = commentEvents[nextCommentEvent++];
       eventMgr.getEventComments(details.id)
         .done(function(comments) {
+          if (renderId !== tableView.renderId) {
+            return;
+          }
+
           details.emptyVenue = comments.some(function(comment) {
             return comment.text && comment.text.trim().replace(/\.$/, '').toLowerCase() === 'no lecture in venue';
           });
