@@ -105,6 +105,7 @@ TableView.prototype = {
     this.requestPopulate();
   },
   populateTable: function(list, cb) {
+    var renderId = this.renderId = (this.renderId || 0) + 1;
     var displayList = list.filter(function(details, i) {
                         return i >= this.tableCurrent && i < this.tableCurrent + this.tableLimit;
                       }.bind(this));
@@ -127,6 +128,13 @@ TableView.prototype = {
       $('#grid-body').append(emptyRow);
       return;
     }
+
+    var commentEvents = displayList.filter(function(details) {
+      return details.event_status === 'EVENTS.EVENTS.STATUS.PROCESSED' &&
+        (!details.publications || details.publications.length === 0) &&
+        !details.has_open_comments && details.has_comments && !details.has_preview && !details.emptyVenue;
+    });
+
     $('#grid-body').html(this.isPersonal ? tmpl('tmpl-personalbody', displayList) : tmpl('tmpl-body', displayList));
 
     $('#currentTotals')
@@ -134,6 +142,56 @@ TableView.prototype = {
       .attr('data-end', Math.min(this.tableCurrent + this.tableLimit, list.length));
 
     this.eventMgr.once('selection', this.showTableSelections.bind(this));
+
+    if (cb) {
+      cb();
+    }
+
+    var eventMgr = this.eventMgr;
+    var tableView = this;
+    var nextCommentEvent = 0;
+    var fetchNextComment = function() {
+      if (renderId !== tableView.renderId || nextCommentEvent >= commentEvents.length) {
+        return;
+      }
+
+      var details = commentEvents[nextCommentEvent++];
+      eventMgr.getEventComments(details.id)
+        .done(function(comments) {
+          if (renderId !== tableView.renderId) {
+            return;
+          }
+
+          details.emptyVenue = comments.some(function(comment) {
+            return comment.text && comment.text.trim().replace(/\.$/, '').toLowerCase() === 'no lecture in venue';
+          });
+
+          if (details.emptyVenue) {
+            var previousStatus = details.status;
+            details.status = getStatus(details);
+            var row = $(document.getElementById('row-' + details.id));
+            if (row.length) {
+              var status = getStatus(details);
+              row.attr('data-status', status);
+              row.find('td').eq(5).attr('title', getTooltip(details)).text(status);
+              row.find('td').eq(6).html(getEditControls(details));
+            }
+
+            if (details.status !== previousStatus) {
+              var statuses = eventMgr.events
+                .map(function(event) { return event.status; })
+                .filter(function(status, index, allStatuses) { return allStatuses.indexOf(status) === index; });
+              eventMgr.emit('event.statuses', statuses);
+              eventMgr.filterEvents();
+            }
+          }
+        })
+        .always(fetchNextComment);
+    };
+
+    for (var i = 0; i < Math.min(5, commentEvents.length); i++) {
+      fetchNextComment();
+    }
   },
   showTableSelections: function(selectedEvents) {
     var selectedIds = selectedEvents.map(function(event) { return event.id });

@@ -1072,6 +1072,10 @@ ocManager.eventMgr.on('event.transaction.complete', function(details) {
 });
 
 function getEditControls(ev) {
+  if (ev.emptyVenue && ev.status === 'Empty venue') {
+    return editEmptyVenueControls(ev.id);
+  }
+
   if (!ev.status) {
     return '';
   }
@@ -1085,6 +1089,7 @@ function getEditControls(ev) {
       return ocManager.isPersonalSeries ? personalEventEditable(ev.id, ev.has_preview) : editPublishedControls(ev.id);
       break;
   }
+
 }
 
 function eventEditable(id) {
@@ -1103,6 +1108,12 @@ function editPublishedControls(id) {
             '&nbsp;<button type="button" id="btnCaptions_' + id + '" disabled style="display:none;">' +
             '  <i class="fa fa-cc"></i></button>';
   checkCaptions(id);
+  return str;
+}
+
+function editEmptyVenueControls(id) {
+  var str = '<button type="button" id="btnUpdatePreviews" data-toggle="modal" data-event="' + id + '" data-target="#reprocessModal" title="Re-process the recording">' +
+            '  <i class="fa fa-repeat"></i></button>';
   return str;
 }
 
@@ -1136,16 +1147,15 @@ function getTooltip(details) {
     var status = getStatus(details);
 
     if (status == "Processing") {
-        return "Processing: please check back later";
-    }
-    else if (status == "Unwanted") {
-        return "No event, no consent provided, or recording was published and later retracted.";
-    }
-    else if(status == "Awaiting Review") {
-        return "Queued for editing, or waiting for consent to be provided (if requested)";
-    }
-    else if(status == "Failed") {
-        return "Technical failure: event not recorded successfully";
+      return "Processing: please check back later";
+    } else if (status == "Unwanted") {
+      return "No event, no consent provided, or recording was published and later retracted.";
+    } else if (status === "Empty venue") {
+      return "Automatically marked as unwanted because no lecture was detected in the recording.";
+    } else if(status == "Awaiting Review") {
+      return "Queued for editing, or waiting for consent to be provided (if requested)";
+    } else if(status == "Failed") {
+      return "Technical failure: event not recorded successfully";
     }
 }
 
@@ -1179,15 +1189,16 @@ function getStatus(details) {
           evStatus = 'Upcoming';
       } else {
           if (details.publications && details.publications.length > 0) {
-              evStatus = 'Published';
+            evStatus = 'Published';
+          } else if (details.has_open_comments) {
+            evStatus = 'Awaiting Review';
+          } else if (details.has_comments && !details.has_preview) {
+            evStatus = details.emptyVenue ? 'Empty venue' : 'Unwanted';
           } else {
-              if (!details.has_open_comments){
-                  evStatus = 'Unwanted';
-              } else {
-                  evStatus = 'Awaiting Review';
-              }
+            evStatus = 'Unwanted';
           }
       }
+
       break;
     }
   return evStatus;
@@ -1355,6 +1366,39 @@ $(document).ready(function() {
       e.preventDefault();
       e.stopImmediatePropagation();
     }
+  });
+
+  $('.container').on('click', 'button[data-target="#reprocessModal"]', function(e) {
+      var target = $(this).data('target');
+      var event = (target == '#reprocessModal' || target == '#reprocessModal' ? ocManager.eventMgr.getEventDetails($(this).data('event')) : ocManager.eventMgr.getCommonSelections());
+
+      if (!event || (Array.isArray(event) && event.length === 0)) return;
+
+      event.target = target;
+      event.isAttachmentAllowed = ocManager.isAttachmentAllowed;
+      event.isPersonal = ocManager.isPersonalSeries;
+
+      $(target).data('eventid', event.id);
+
+      $(target + ' .modal-title').text('Re-process recording?');
+      $(target + ' .reprocess-recording-title').text(event.title || '');
+
+      // Provide the specific explanation for an empty-venue recording.
+      $(target + ' .modal-body').html(
+          '<p>This recording was automatically marked as an Empty venue ' +
+          'because no lecture was detected.</p>' +
+          '<p>If a lecture was recorded, re-process the recording to make it ' +
+          'available for publication.</p>' +
+          '<p class="reprocess-confirmation">Would you like to continue?</p>'
+      );
+
+      ocManager.eventMgr.checkActiveTransaction(event.id, {target: target});
+
+      $('#hiddenEvent').attr('data-event', event.id);
+      $('#hiddenEvent').attr('data-title', event.title);
+      $(target + ' #modalTitle').text(event.title);
+      
+      return ocManager.eventMgr.getEventAssets(event.id, {target: target});
   });
 
   $('.container').on('click',
@@ -1841,7 +1885,7 @@ $(document).ready(function() {
     $(this).addClass('committing');
   });
 
-  $('#grid-body').on('click', 'button[data-target="#retractModal"], button[data-target="#publishModal"]', function(e) {
+  $('#grid-body').on('click', 'button[data-target="#retractModal"], button[data-target="#reprocessModal"], button[data-target="#publishModal"]', function(e) {
     var target = $(this).data('target');
     try {
       var eventId = $(this).data('event');
@@ -1857,6 +1901,33 @@ $(document).ready(function() {
   $('body').on('click', '#delModal .modal-footer .btn-success', function(e) {
     $('#delModal').addClass('committing');
     ocManager.eventMgr.deleteEvents();
+  });
+
+  $('body').on('click', '#reprocessEmptyVenue', function(e) {
+    e.preventDefault();
+
+    var $modal = $('#reprocessModal');
+    var $button = $modal.find('#reprocessEmptyVenue');
+    var eventId = $modal.data('eventid');
+
+    if (!eventId) {
+      console.error('Cannot re-process: event ID is missing.');
+      return;
+    }
+
+    $modal.addClass('committing');
+    $button.prop('disabled', true);
+
+    ocManager.eventMgr.reprocess(eventId, {target: $modal[0]}).fail(function() {
+      $modal.removeClass('committing');
+      $button.prop('disabled', false);
+    });
+  });
+
+  $('#reprocessModal').on('hidden.bs.modal', function() {
+    if (!$(this).hasClass('committing')) {
+      $(this).find('#reprocessEmptyVenue').prop('disabled', false);
+    }
   });
 
   $('.container').on('click', 'button[data-target="#delModal"]', function(e) {

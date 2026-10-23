@@ -193,6 +193,43 @@
       </div>
     </div>
 
+     <div class="modal fade" id="reprocessModal" data-backdrop="static" tabindex="-1" role="dialog" aria-labelledby="repModal" aria-label="reprocessEmptyVenue">
+      <div class="modal-dialog reprocess-modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-label="close">
+              <span aria-hidden="true" title="Close Popup">&times;</span>
+            </button>
+            <div class="reprocess-modal-heading">
+                    <span class="reprocess-modal-icon" aria-hidden="true"><i class="fa fa-repeat"></i></span>
+
+                    <div>
+                      <h4 class="modal-title" id="reprocessModalTitle">Re-process recording?</h4>
+                      <p class="reprocess-recording-title"></p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-body" id="reprocessModalDescription">
+                <p>This recording was automatically marked as an empty venue because no lecture was detected.</p>
+
+                <p>If a lecture was recorded, re-process the recording to make it available for publication.</p>
+
+                <p class="reprocess-confirmation"> Would you like to continue?</p>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal" name="cancel">Cancel</button>
+
+                <button type="button" class="btn btn-primary" id="reprocessEmptyVenue" aria-label="Re-process recording">
+                  <span class="loader" aria-hidden="true"><i class="fa fa-cog fa-spin"></i></span>
+                  <span class="text"></span>
+                </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <form class="modal fade" id="retractModal" data-backdrop="static" tabindex="-1" role="dialog" aria-labelledby="rModal">
       <div class="modal-dialog" role="document" style="width: 720px;">
         <div class="modal-content">
@@ -624,6 +661,16 @@
                 </div>
             </nav>
         </div>
+    </script>
+    <script type="text/x-tmpl" id="tmpl-reprocessmodal">
+      <p>This recording was automatically marked as an empty venue because no lecture was detected.</p> 
+      <p>If a lecture was recorded, re-process the event to make it available for publication.</p><br/>
+      <p>Would you like to continue?</p>
+      <div class="instruction" data-instruction="warning">
+      </div>
+      <div class="instruction" data-instruction="success">
+        <p>This event has been successfully scheduled for re-processing and will be published later.</p>
+      </div>
     </script>
     <script type="text/x-tmpl" id="tmpl-editormodal">
         <div class="instruction" data-instruction="warning">

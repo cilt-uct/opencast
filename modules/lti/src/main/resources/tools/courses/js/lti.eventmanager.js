@@ -43,6 +43,7 @@ function EventManager(params) {
         conflictCheck: '/admin-ng/event/new/conflicts',
             startTask: '/admin-ng/tasks/new',
               comment: '/admin-ng/event/%ID%/comment',
+             comments: '/admin-ng/event/%ID%/comments',
       addLectureNotes: '/admin-ng/event/%ID%/assets',
             seriesACL: '/admin-ng/series/%ID%/access.json',
              eventACL: '/admin-ng/event/%ID%/access'
@@ -74,7 +75,8 @@ function EventManager(params) {
       params.org.on('complete', function() {
         _defaultWorkflows = {
           schedule: params.org.properties['lti.manage.workflow.schedule'],
-            upload: params.org.properties['lti.manage.workflow.upload']
+          upload: params.org.properties['lti.manage.workflow.upload'],
+          reprocess: params.org.properties['lti.manage.workflow.reprocess']
         };
 
         var api = ['external', 'admin'].filter(function(apiCandidate) {
@@ -1335,6 +1337,33 @@ EventManager.prototype = {
       this.emit('event.transaction.started', opts);
     }.bind(this)).promise();
   },
+  reprocess: function(id, opts) {
+    return $.Deferred(function(d) {
+        opts = opts || {};
+        opts.id = id;
+
+        this.emit('event.transaction.started', opts);
+
+        this.startTask(id, this.workflows.reprocess, {})
+            .done(function() {
+                this.emit('event.reprocess.complete', opts);
+                this.emit('event.transaction.complete', opts);
+
+                this.checkProcessingStatus(id);
+                this.getEvent(id);
+
+                d.resolve(opts);
+            }.bind(this))
+            .fail(function() {
+                this.emit('event.reprocess.failed', opts);
+                this.emit('event.transaction.failed', opts);
+
+                this.checkProcessingStatus(id);
+
+                d.reject(opts);
+            }.bind(this));
+    }.bind(this)).promise();
+  },
   comment: function(id, comment, opts) {
     return $.Deferred(function(d) {
       var fd = new FormData();
@@ -1467,6 +1496,20 @@ EventManager.prototype = {
      }
 
      return common;
+  },
+  getEventComments: function(id) {
+    return $.Deferred(function(d) {
+      $.ajax({
+        url: this.adminEndpoints.comments.replace(/%ID%/g, id),
+        type: 'get'
+      })
+      .done(function(data) {
+        d.resolve(data);
+      })
+      .fail(function() {
+        d.reject();
+      });
+    }.bind(this)).promise();
   },
   getEventAssets: function(id, opts) {
     return $.Deferred(function(d) {
