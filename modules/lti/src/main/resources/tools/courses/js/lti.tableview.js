@@ -132,7 +132,7 @@ TableView.prototype = {
     var commentEvents = displayList.filter(function(details) {
       return details.event_status === 'EVENTS.EVENTS.STATUS.PROCESSED' &&
         (!details.publications || details.publications.length === 0) &&
-        !details.has_open_comments && details.has_comments && !details.has_preview;
+        !details.has_open_comments && details.has_comments && !details.has_preview && !details.emptyVenue;
     });
 
     $('#grid-body').html(this.isPersonal ? tmpl('tmpl-personalbody', displayList) : tmpl('tmpl-body', displayList));
@@ -167,12 +167,22 @@ TableView.prototype = {
           });
 
           if (details.emptyVenue) {
+            var previousStatus = details.status;
+            details.status = getStatus(details);
             var row = $(document.getElementById('row-' + details.id));
             if (row.length) {
               var status = getStatus(details);
               row.attr('data-status', status);
               row.find('td').eq(5).attr('title', getTooltip(details)).text(status);
               row.find('td').eq(6).html(getEditControls(details));
+            }
+
+            if (details.status !== previousStatus) {
+              var statuses = eventMgr.events
+                .map(function(event) { return event.status; })
+                .filter(function(status, index, allStatuses) { return allStatuses.indexOf(status) === index; });
+              eventMgr.emit('event.statuses', statuses);
+              eventMgr.filterEvents();
             }
           }
         })
