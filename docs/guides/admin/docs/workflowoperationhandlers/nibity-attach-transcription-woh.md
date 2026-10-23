@@ -8,6 +8,9 @@ ID: `nibity-attach-transcription`
 Nibity Attach Transcription attaches the results file received from the Nibity Transcription Service
 to the media package. If the results file includes a captions file, the captions are also attached.
 
+If the results of the transcription job were already attached to the media package (element
+`nibity-transcript-<transcription-job-id>`), the operation is skipped.
+
 ## Parameter Table
 
 |configuration keys|description|default value|example|
