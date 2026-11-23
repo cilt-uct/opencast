@@ -50,6 +50,7 @@ import org.opencastproject.transcription.persistence.TranscriptionDatabase;
 import org.opencastproject.transcription.persistence.TranscriptionDatabaseException;
 import org.opencastproject.transcription.persistence.TranscriptionJobControl;
 import org.opencastproject.transcription.persistence.TranscriptionProviderControl;
+import org.opencastproject.util.NotFoundException;
 import org.opencastproject.util.OsgiUtil;
 import org.opencastproject.workflow.api.ConfiguredWorkflow;
 import org.opencastproject.workflow.api.WorkflowDefinition;
@@ -124,6 +125,9 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
   private static final String TRANSCRIPT_COLLECTION = "nibity-transcripts";
   private static final String SUBMISSION_PATH = "/transcripts/nibity/submission/";
 
+  // Identifier of the results zip element added to the media package by the attach workflow operation
+  private static final String TRANSCRIPT_ELEMENT_PREFIX = "nibity-transcript-";
+
   // http timeouts
   private static final int CONNECTION_TIMEOUT = 60000; // ms, 1 minute
   private static final int SOCKET_TIMEOUT = 60000; // ms, 1 minute
@@ -136,6 +140,7 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
   // Cleans up results files that are older than 7 days
   private static final int DEFAULT_CLEANUP_RESULTS_DAYS = 7;
   private static final String DEFAULT_LANGUAGE = "en-US";
+  private static final String DEFAULT_SKIP_IF_FLAVOR_EXISTS = "captions/source";
 
   // Nibity API
   private static final String NIBITY_BASE_URL = "https://news.waywithwords.net/api/private";
@@ -179,6 +184,7 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
   public static final String NOTIFICATION_EMAIL_CONFIG = "notification.email";
   public static final String CLEANUP_RESULTS_DAYS_CONFIG = "cleanup.results.days";
   public static final String CLEANUP_SUBMISSION = "cleanup.submission";
+  public static final String SKIP_IF_FLAVOR_EXISTS_CONFIG = "skip.if.flavor.exists";
   public static final String NIBITY_CLIENT_ID = "nibity.client.id";
   public static final String NIBITY_CLIENT_KEY = "nibity.client.key";
   public static final String NIBITY_CLIENT_TOKEN = "nibity.client.token";
@@ -194,6 +200,7 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
   private String toEmailAddress;
   private int cleanupResultDays = DEFAULT_CLEANUP_RESULTS_DAYS;
   private boolean cleanupSubmission = true; // Remove submissions immediately
+  private List<MediaPackageElementFlavor> skipIfFlavorsExist = parseFlavors(DEFAULT_SKIP_IF_FLAVOR_EXISTS);
   private String serviceType = "252";
   private String turnAround = "1";
   private String captionFormat = "vtt";
@@ -292,6 +299,12 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
     }
     logger.info("Cleanup result files after {} days", cleanupResultDays);
 
+    // Don't start the attach workflow if the media package already has captions with one of these flavors
+    Optional<String> skipFlavorsOpt = OsgiUtil.getOptCfg(cc.getProperties(), SKIP_IF_FLAVOR_EXISTS_CONFIG);
+    skipIfFlavorsExist = parseFlavors(skipFlavorsOpt.orElse(DEFAULT_SKIP_IF_FLAVOR_EXISTS));
+    logger.info("Attach workflow will not be started if the media package has elements with flavors {}",
+        skipIfFlavorsExist);
+
     serverUrl = OsgiUtil.getContextProperty(cc, OpencastConstants.SERVER_URL_PROPERTY);
     systemAccount = OsgiUtil.getContextProperty(cc, OpencastConstants.DIGEST_USER_PROPERTY);
 
@@ -369,7 +382,8 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
   }
 
   // Called from checkJobResults()
-  private void transcriptionDone(String mpId, String jobId, Long transcriptId) throws TranscriptionServiceException {
+  private void transcriptionDone(String mpId, String jobId, Long transcriptId, boolean updateStatus)
+          throws TranscriptionServiceException {
     JSONObject jsonObj = null;
 
     try {
@@ -380,10 +394,15 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
 
         // Save results in file system
         if (getAndSaveJobResult(jobId, transcriptId)) {
-          // Update state in database
-          // If there's an optimistic lock exception here, it's ok because the workflow dispatcher
-          // may be doing the same thing
-          database.updateJobControl(jobId, TranscriptionJobControl.Status.TranscriptionComplete.name());
+          if (updateStatus) {
+            // Update state in database
+            // If there's an optimistic lock exception here, it's ok because the workflow dispatcher
+            // may be doing the same thing
+            database.updateJobControl(jobId, TranscriptionJobControl.Status.TranscriptionComplete.name());
+          } else {
+            logger.info("Transcription results for mpId {}, job_id {} saved without changing the job status",
+                mpId, jobId);
+          }
         } else {
           logger.debug("Unable to get and save the transcription result for mpId {}", mpId);
         }
@@ -600,6 +619,19 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
    * Called by WorkflowDispatcher.run() every WorkflowDispatchInterval
    */
   boolean checkJobResults(String jobId, String mpId) throws TranscriptionServiceException, IOException {
+    return checkJobResults(jobId, mpId, true);
+  }
+
+  /**
+   * Check the job status and save the results if the job has finished.
+   *
+   * @param updateStatus
+   *          whether to set the job status to TranscriptionComplete once the results are saved. Must be false when
+   *          only re-fetching the results of a job that is already being attached, otherwise the workflow dispatcher
+   *          would start another attach workflow for the same job.
+   */
+  boolean checkJobResults(String jobId, String mpId, boolean updateStatus)
+          throws TranscriptionServiceException, IOException {
 
     String captionsVtt = null;
 
@@ -706,7 +738,7 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
             // Notify that captions are ready (types array includes "transcript" and "vtt")
             // TODO only if we have at least a transcript and captions.
             // What would happen if caption alignment failed because of suboptimal audio?
-            transcriptionDone(mpId, jobId, transcriptId);
+            transcriptionDone(mpId, jobId, transcriptId, updateStatus);
 
             return true;
           }
@@ -828,7 +860,8 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
       // Results already saved?
       URI uri = workspace.getCollectionURI(TRANSCRIPT_COLLECTION, buildResultsFileName(jobId, "zip"));
 
-      logger.info("Looking for transcript at URI: {}", uri);
+      logger.info("Looking for transcript of job {} (status {}) for mp {} at URI {} (in working file repository: {})",
+          jobId, getJobStatus(jobId), mpId, uri, existsInTranscriptCollection(jobId));
 
       try {
         workspace.get(uri);
@@ -851,9 +884,11 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
         }
       } catch (Exception e) {
         // Results not saved in workspace yet: fetch from transcription service
-        logger.info("Results not saved: getting from service for jobId {}", jobId);
+        logger.info("Results not found at {} ({}): getting from service for jobId {}", uri, e.toString(), jobId);
         try {
-          boolean fetched = checkJobResults(jobId, mpId);
+          // Don't change the job status: the job is already being attached, and setting it back to
+          // TranscriptionComplete would make the workflow dispatcher start another attach workflow
+          boolean fetched = checkJobResults(jobId, mpId, false);
           if (!fetched) {
             throw new TranscriptionServiceException(
               "Transcription results for job " + jobId + " are not yet available.");
@@ -956,7 +991,39 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
     return workspace.toSafeName(jobId + "." + extension);
   }
 
-  private boolean hasCaptions(String mpId) {
+  private static List<MediaPackageElementFlavor> parseFlavors(String flavors) {
+    List<MediaPackageElementFlavor> result = new ArrayList<>();
+    for (String flavor : flavors.split(",")) {
+      if (!flavor.isBlank()) {
+        result.add(MediaPackageElementFlavor.parseFlavor(flavor.trim()));
+      }
+    }
+    return result;
+  }
+
+  /** Returns the job status in the database, for diagnostic logging only */
+  private String getJobStatus(String jobId) {
+    try {
+      TranscriptionJobControl jc = database.findByJob(jobId);
+      return jc != null ? jc.getStatus() : "unknown job";
+    } catch (Exception e) {
+      return "unavailable: " + e.getMessage();
+    }
+  }
+
+  /** Returns whether the results file of the job exists in the working file repository, for diagnostic logging only */
+  private String existsInTranscriptCollection(String jobId) {
+    try {
+      return Boolean.toString(
+          wfr.getFileFromCollection(TRANSCRIPT_COLLECTION, buildResultsFileName(jobId, "zip")).isFile());
+    } catch (NotFoundException e) {
+      return "false";
+    } catch (Exception e) {
+      return "unknown: " + e.getMessage();
+    }
+  }
+
+  private boolean hasCaptions(String mpId, String jobId) {
     try {
       Optional<Snapshot> snapshot = assetManager.getLatestSnapshot(mpId);
       if (snapshot.isEmpty()) {
@@ -966,8 +1033,19 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
 
       MediaPackage mp = snapshot.get().getMediaPackage();
 
-      return mp.getElementsByFlavor(new MediaPackageElementFlavor("captions", "source")).length > 0;
+      // Results of this job already attached by an earlier attach workflow?
+      if (mp.getElementById(TRANSCRIPT_ELEMENT_PREFIX + jobId) != null) {
+        logger.info("Results of job {} already attached to mp {}", jobId, mpId);
+        return true;
+      }
 
+      for (MediaPackageElementFlavor flavor : skipIfFlavorsExist) {
+        if (mp.getElementsByFlavor(flavor).length > 0) {
+          logger.info("Mp {} already has captions with flavor {}", mpId, flavor);
+          return true;
+        }
+      }
+      return false;
     } catch (Exception e) {
       logger.warn("Error checking captions for mp {}", mpId, e);
       return false;
@@ -1135,7 +1213,7 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
             if (snapshot.isEmpty()) {
               // Media package not archived yet? Skip until next time.
               logger.warn("Media package {} has not been archived yet. Skipped.", mpId);
-              return;
+              continue;
             }
 
             String org = snapshot.get().getOrganizationId();
@@ -1146,8 +1224,8 @@ public class NibityTranscriptionService extends AbstractJobProducer implements T
             }
             securityService.setOrganization(organization);
 
-            // Skip if captions already exist for this mp
-            if (hasCaptions(mpId)) {
+            // Skip if captions already exist for this mp, or the results of this job were already attached
+            if (hasCaptions(mpId, jobId)) {
               logger.info("Captions already attached on mp {}, skipping nibity-attach-captions workflow", mpId);
 
               database.updateJobControl(jobId, TranscriptionJobControl.Status.Closed.name());
