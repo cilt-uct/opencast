@@ -46,7 +46,7 @@
             <h2>Manage Recordings</h2>
             <span class="btn btn-default pull-right scheduler" data-toggle="modal" data-target="#ttScheduleModal" id="btnTtScheduler"><i class="glyphicon fa fa-clipboard"></i>Timetable Scheduling</span>
             <span class="btn btn-default pull-right scheduler" data-toggle="modal" data-target="#scheduleModal" id="btnSchedule"><i class="glyphicon fa fa-clipboard"></i>Schedule</span>
-            <!-- <span class="btn btn-default pull-right scheduler" data-toggle="modal" data-target="#uploadModal" id="btnUpload"><i class="glyphicon fa fa-upload"></i>Upload</span> -->
+            <span class="btn btn-default pull-right scheduler" data-toggle="modal" data-target="#uploadModal" id="btnUpload"><i class="glyphicon fa fa-cloud-upload"></i>Upload to Amathuba</span>
             <a id="recorder" class="btn btn-default pull-right scheduler" target="_blank"><i class="glyphicon glyphicon-facetime-video"></i>Record</a>
           </div>
           <p class="instruction" data-instruction="info"></p>
@@ -488,70 +488,17 @@
             <button type="button" class="close" data-dismiss="modal" aria-label="close">
               <span aria-hidden="true" title="Close Popup">&times;</span>
             </button>
-            <h4 class="modal-title" id="dModal">Upload video</h4>
+            <h4 class="modal-title" id="dModal"><b>Upload a video to Amathuba</b></h4>
           </div>
           <div class="modal-body">
-            <ul class="modal-page active infoList">
-              <li>
-                <span><label for="title">Title</label></span>
-                <span><input autocomplete="off" type="text" name="title" id="title" required /></span>
-              </li>
-              <li data-field="presenters">
-                <span><label for="presenters1">Presenters</label></span>
-                <span><textarea id="presenters1" name="presenters" rows="2" required></textarea></span>
-              </li>
-              <li>
-                <span><label for="description">Description</label></span>
-                <span><textarea id="description" name="description" placeholder="(Optional)" rows="2"></textarea></span>
-              </li>
-              <li>
-                <span>Date</span>
-                <span>
-                  <input autocomplete="off" type="text" name="start_date" id="upload_start" required />
-                  <label class="valueContainer choose_start" data-target="#upload_start" for="upload_start"><i class="glyphicon glyphicon-time fa fa-clock-o"></i><span class="selectedValue"></span><span class="single">Choose</span><span class="multiple">Start</span> <span>date</span></label>
-                </span>
-              </li>
-              <hr/>
-              <li data-field="presenter">
-                <span><label for="populatedPresVid">Webcam video or audio file</label></span>
-                <input autocomplete="off" type="checkbox" id="populatedPresVid" class="filePopulated" />
-                <span class="fileContainer" data-mediatype="video" >
-                  <input autocomplete="off" type="file" name="presenter" data-mediatype="video" title="Choose a presenter/webcam video or audio file" aria-label="Choose a file"/>
-                  <progress min="0" value=0 max="100"></progress>
-                </span>
-                  <label for="populatedPresVid" class="removeFile"></label>
-                  <span class="videoPreview">
-                    <img alt="empty image tag" />
-                  </span>
-              </li>
-              <li>
-                <span><label for="populatedPresentationVid">Screenshare video</label></span>
-                <input autocomplete="off" type="checkbox" id="populatedPresentationVid" class="filePopulated" />
-                <span class="presentationContainer" data-mediatype="video" >
-                   <input autocomplete="off" type="file" name="presentation" data-mediatype="video" title="Choose a presentation/screenshare video"/>
-                   <div id="uploadProgress">
-                    <progress min="0" value="0" max="100"></progress>
-                   </div>
-                </span>
-                <label for="populatedPresentationVid" class="removeFile"></label>
-                <span class="presentationPreview">
-                    <img alt="empty image tag" />
-                </span>
-              </li>
-              <li style="line-height:120%;margin-bottom:15px;font-size:0.8em;">
-                  <p class="text-info"><b><u>NOTE:</u></b> 
-                      Upload either a webcam video file, screenshare video, or both provided they are the same length.
-                      If two videos have different lengths, the shorter video will be modified to match the length of the longer video.
-                  </p>
-              </li>
-              <hr/>
-                <li class="errors"></li>
-              </ul>
-              <p class="instruction show" data-instruction="warning">I hereby confirm that I own the copyright to, or have the authorisation to distribute, all performances attached to this submission.</p>
-            </div>
+              <p>To upload your videos use the Amathuba Asset Library.</p><br/>
+              <p>See the <a href="https://cilt.uct.ac.za/sites/default/files/media/documents/cilt_uct_ac_za/2486/asset-library.pdf" target="_blank">
+                  Asset Library step-by-step guide</a> for instructions on uploading and embedding videos in your course 
+                  Content pages, or click the button below to open the Asset Library.</p>
+          </div>
             <div class="modal-footer">
-              <button type="reset" class="btn btn-default">Cancel</button>
-              <button class="btn btn-success" aria-label="loading"><span class="loader"><i class="fa fa-cog fa-spin"></i></span><span class="text"></span></button>
+              <button type="reset" class="btn btn-default">Close</button>
+              <a class="btn btn-primary" aria-label="uploading" target="_blank" href="https://amathuba.uct.ac.za/d2l/createspace/6606/content/files">Open Asset Library<i class="glyphicon fa fa-external-link"></i></a>
             </div>
           </form>
         </div>
