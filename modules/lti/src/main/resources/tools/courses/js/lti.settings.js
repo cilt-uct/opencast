@@ -1,7 +1,7 @@
 const urlParams = new URLSearchParams(window.location.search);
 const seriesID = urlParams.get('sid');
-const transcriptFeaturesField = document.getElementById('transcript_features');
-const transcriptFeaturesCheckboxes = document.querySelectorAll('#transcript_features_options .form-check-input');
+// const transcriptFeaturesField = document.getElementById('transcript_features');
+// const transcriptFeaturesCheckboxes = document.querySelectorAll('#transcript_features_options .form-check-input');
 
 $(document).ready(function(){
     var seriesInfo = getSeries("/api/series/" + seriesID + "/metadata");
@@ -29,27 +29,28 @@ $(document).ready(function(){
         }
         if(ext[j].id == "caption-type") {
             let captionValue = (ext[j].value || '').trim();
+            $('#series_captions').val(captionValue);
 
-            if(captionValue === "nibity") {
-                $('#series_captions').val("WayWithWords");
-                $('#div_transcript_features').show();
-                toggleAIFeatures();
-            } else {
-                if(captionValue === "whisper") {
-                    $('#series_captions').val("Whisper");
-                } else {
-                    $('#series_captions').val("No option selected");
-                }
-                $('#div_transcript_features').hide();
-            }
+            // if(captionValue === "nibity") {
+            //     $('#series_captions').val("WayWithWords");
+            //     $('#div_transcript_features').show();
+            //     toggleAIFeatures();
+            // } else {
+            //  if(captionValue === "whisper") {
+                    // $('#series_captions').val("Whisper");
+                // } else {
+                //     $('#series_captions').val("No option selected");
+                // }
+                // $('#div_transcript_features').hide();
+            // }
         }
-        if (ext[j].id == "transcript-features") {
-            if (ext[j].value != '') {
-               $('#transcript_features').val(ext[j].value);
-            } else {
-                $('#transcript_features').val('');
-            }
-        }
+        // if (ext[j].id == "transcript-features") {
+        //     if (ext[j].value != '') {
+        //        $('#transcript_features').val(ext[j].value);
+        //     } else {
+        //         $('#transcript_features').val('');
+        //     }
+        // }
 
         if(ext[j].id == "series-locked") {
             if(ext[j].value == false) {
@@ -75,31 +76,31 @@ $(document).ready(function(){
     }
 
     // Pre-check transcription checkboxes based on hidden input value
-    const transcriptFeatures = transcriptFeaturesField.value.split(',').map(feature => feature.trim());
+    // const transcriptFeatures = transcriptFeaturesField.value.split(',').map(feature => feature.trim());
 
-    transcriptFeaturesCheckboxes.forEach(checkbox => {
-        if (transcriptFeatures.includes(checkbox.value)) {
-            checkbox.checked = true;
-        }
-    });
+    // transcriptFeaturesCheckboxes.forEach(checkbox => {
+    //     if (transcriptFeatures.includes(checkbox.value)) {
+    //         checkbox.checked = true;
+    //     }
+    // });
 
     // Update transcript-features hidden input when checkboxes are checked/unchecked
-    transcriptFeaturesCheckboxes.forEach(checkbox => {
-        checkbox.addEventListener('change', () => {
-            const selectedFeatures = Array.from(transcriptFeaturesCheckboxes)
-                .filter(cb => cb.checked)
-                .map(cb => cb.value);
-            transcriptFeaturesField.value = selectedFeatures.join(',');
-       });
-    });
+    // transcriptFeaturesCheckboxes.forEach(checkbox => {
+    //     checkbox.addEventListener('change', () => {
+    //         const selectedFeatures = Array.from(transcriptFeaturesCheckboxes)
+    //             .filter(cb => cb.checked)
+    //             .map(cb => cb.value);
+    //         transcriptFeaturesField.value = selectedFeatures.join(',');
+    //    });
+    // });
 
     $("#save_button").click(function(e) {
         e.preventDefault();
         var retention = $('#series_retention').val();
         var notificationList = $('#notification_list').val();
-        var transcriptFeatures = $('#transcript_features').val();
+        // var transcriptFeatures = $('#transcript_features').val();
         var notificationListArray = notificationList.split(';').map(email => email.trim()).filter(email => email.length > 0);
-        var transcriptFeaturesArray = transcriptFeatures.split(',').map(feature => feature.trim()).filter(feature => feature.length > 0);
+        // var transcriptFeaturesArray = transcriptFeatures.split(',').map(feature => feature.trim()).filter(feature => feature.length > 0);
 
         var fd = new FormData();
         const newExt = ext.map(obj => {
@@ -108,8 +109,8 @@ $(document).ready(function(){
                     return { ...obj, value: retention };
                 case "notification-list":
                     return { ...obj, value: notificationListArray };
-                case "transcript-features":
-                    return { ...obj, value: transcriptFeaturesArray};
+                // case "transcript-features":
+                //     return { ...obj, value: transcriptFeaturesArray};
                 default:
                     return obj;
             }
@@ -123,20 +124,20 @@ $(document).ready(function(){
     });
 });
 
-function toggleAIFeatures() {
+// function toggleAIFeatures() {
 
-    if (isNibitySelected) {
-        transcriptFeaturesCheckboxes.forEach(checkbox => {
-            checkbox.disabled = false;
-        });
-    } else {
-        transcriptFeaturesCheckboxes.forEach(checkbox => {
-            checkbox.checked = false;
-            checkbox.disabled = true;
-        });
-        transcriptFeaturesField.value = '';
-    }
-}
+//     if (isNibitySelected) {
+//         transcriptFeaturesCheckboxes.forEach(checkbox => {
+//             checkbox.disabled = false;
+//         });
+//     } else {
+//         transcriptFeaturesCheckboxes.forEach(checkbox => {
+//             checkbox.checked = false;
+//             checkbox.disabled = true;
+//         });
+//         transcriptFeaturesField.value = '';
+//     }
+// }
 
 function getSeries(url) {
     return JSON.parse($.ajax({
